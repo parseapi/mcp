@@ -1,0 +1,55 @@
+{
+	"name": "parseapi-mcp",
+	"version": "0.1.0",
+	"description": "Official parseAPI MCP server. Location, validate, and decode lookups for AI agents: geo, email, phone, weather, currency.",
+	"keywords": [
+		"parseapi",
+		"mcp",
+		"model context protocol",
+		"agents",
+		"geolocation",
+		"email validation",
+		"weather"
+	],
+	"license": "MIT",
+	"author": "parseAPI <hello@parseapi.com> (https://parseapi.com)",
+	"homepage": "https://parseapi.com",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/parseapi/parseapi-mcp.git"
+	},
+	"bugs": {
+		"url": "https://github.com/parseapi/parseapi-mcp/issues"
+	},
+	"type": "module",
+	"bin": {
+		"parseapi-mcp": "./dist/stdio.js"
+	},
+	"exports": {
+		".": "./dist/registry.js",
+		"./http": "./dist/http.js"
+	},
+	"files": [
+		"dist"
+	],
+	"engines": {
+		"node": ">=20"
+	},
+	"scripts": {
+		"build": "tsup",
+		"typecheck": "tsc --noEmit",
+		"smoke": "npm run build && node smoke/smoke.mjs",
+		"serve": "npm run build && node dist/http.js"
+	},
+	"dependencies": {
+		"@modelcontextprotocol/server": "^2.0.0",
+		"@modelcontextprotocol/node": "^2.0.0",
+		"parseapi": "file:../js",
+		"zod": "^4.0.0"
+	},
+	"devDependencies": {
+		"@types/node": "^22.10.0",
+		"tsup": "^8.3.5",
+		"typescript": "^5.7.0"
+	}
+}
