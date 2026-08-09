@@ -2,7 +2,7 @@ app = "parsemcp"
 primary_region = "iad"
 
 [build]
-  dockerfile = "mcp/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [http_service]
   internal_port = 8080
