@@ -184,14 +184,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'weather',
-		'Current weather observation at coordinates from official national agencies. Deep adds forecast and alerts where available.',
+		'Current weather observation at coordinates from official national agencies. Every measurement ships metric and imperial side by side. Deep adds forecast and alerts where available.',
 		{
 			lat,
 			lon,
-			unit: z.enum(['metric', 'imperial']).optional().describe('Unit system, default metric'),
 			deep,
 		},
-		(c, a) => c.weather(a.lat, a.lon, { unit: a.unit, deep: a.deep })
+		(c, a) => c.weather(a.lat, a.lon, { deep: a.deep })
 	);
 
 	// Validate
