@@ -252,10 +252,10 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'timezone',
 		'Look up an IANA timezone: current offset, DST state, local time. Pass at for a specific instant.',
 		{
-			id: z.string().describe('IANA timezone id, e.g. America/New_York'),
+			timezone: z.string().describe('IANA timezone id, e.g. America/New_York'),
 			at: z.string().optional().describe('ISO 8601 instant to evaluate, default now'),
 		},
-		(c, a) => c.timezone(a.id, { at: a.at })
+		(c, a) => c.timezone(a.timezone, { at: a.at })
 	);
 	tool(
 		'holiday',
