@@ -259,7 +259,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'holiday',
-		'Public holidays for a country and year.',
+		'Public holidays and cultural observances for a country and year. Each row carries type: public or observance.',
 		{
 			country: iso2('country code'),
 			year: z.number().int().optional().describe('Year, default current'),
@@ -268,7 +268,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'holiday_date',
-		'Whether a specific date is a public holiday in a country. holiday is null when it is not.',
+		'Whether a specific date is a holiday or observance in a country. holiday is null when it is not.',
 		{ country: iso2('country code'), date: z.string().describe('Date as YYYY-MM-DD') },
 		(c, a) => c.holiday.date(a.country, a.date)
 	);
