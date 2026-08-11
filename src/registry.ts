@@ -275,8 +275,8 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	tool(
 		'emoji',
 		'Look up an emoji by name or character: unicode, hex, skin tones.',
-		{ query: z.string().describe('Emoji name or the character itself, e.g. rocket') },
-		(c, a) => c.emoji(a.query)
+		{ emoji: z.string().describe('Emoji name or the character itself, e.g. rocket') },
+		(c, a) => c.emoji(a.emoji)
 	);
 	tool(
 		'emoji_search',
