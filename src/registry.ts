@@ -68,10 +68,10 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	if (transport === 'stdio') {
 		tool(
-			'ip_me',
+			'ip_self',
 			'Look up the public IP of the machine running this MCP server.',
 			{ deep },
-			(c, a) => c.ip.me({ deep: a.deep })
+			(c, a) => c.ip.self({ deep: a.deep })
 		);
 	}
 	tool(

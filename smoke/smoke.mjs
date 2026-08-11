@@ -87,7 +87,7 @@ async function smokeStdio() {
 	const list = await bare.request('tools/list', {});
 	const names = list.result.tools.map((t) => t.name);
 	check('stdio tools/list has 32 tools', names.length === 32, `got ${names.length}`);
-	check('stdio has ip_me', names.includes('ip_me'));
+	check('stdio has ip_self', names.includes('ip_self'));
 	const funnel = await bare.request('tools/call', {
 		name: 'postal',
 		arguments: { code: '28202', country: 'US' },
@@ -177,7 +177,7 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 31 tools (no ip_me)', names.length === 31 && !names.includes('ip_me'), `got ${names.length}`);
+		check('http tools/list has 31 tools (no ip_self)', names.length === 31 && !names.includes('ip_self'), `got ${names.length}`);
 
 		const funnel = await postRpc(port, {
 			jsonrpc: '2.0',
