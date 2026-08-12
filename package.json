@@ -44,7 +44,7 @@
 	"dependencies": {
 		"@modelcontextprotocol/server": "^2.0.0",
 		"@modelcontextprotocol/node": "^2.0.0",
-		"parseapi": "file:../js",
+		"@parseapi/sdk": "file:../js",
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {

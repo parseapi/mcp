@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/server';
-import { parseAPI } from 'parseapi';
+import { parseAPI } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 

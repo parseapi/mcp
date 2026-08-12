@@ -1,4 +1,4 @@
-import { ParseAPIError } from 'parseapi';
+import { ParseAPIError } from '@parseapi/sdk';
 
 export interface ToolResult {
 	content: { type: 'text'; text: string }[];
