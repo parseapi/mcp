@@ -16,10 +16,10 @@
 	"homepage": "https://parseapi.com",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/parseapi/parseapi-mcp.git"
+		"url": "git+https://github.com/parseapi/mcp.git"
 	},
 	"bugs": {
-		"url": "https://github.com/parseapi/parseapi-mcp/issues"
+		"url": "https://github.com/parseapi/mcp/issues"
 	},
 	"type": "module",
 	"bin": {
