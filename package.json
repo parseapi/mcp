@@ -1,6 +1,7 @@
 {
 	"name": "parseapi-mcp",
-	"version": "0.1.1",
+	"version": "0.1.2",
+	"mcpName": "io.github.parseapi/mcp",
 	"description": "Official parseAPI MCP server. Location, validate, and decode lookups for AI agents: geo, email, phone, weather, currency.",
 	"keywords": [
 		"parseapi",
