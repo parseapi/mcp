@@ -249,6 +249,12 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a) => c.language(a.code)
 	);
 	tool(
+		'name',
+		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation. Junk input returns valid false. Gender comes from dictionary data and is null when the data does not decide.',
+		{ name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL') },
+		(c, a) => c.name(a.name)
+	);
+	tool(
 		'timezone',
 		'Look up an IANA timezone: current offset, DST state, local time. Pass at for a specific instant.',
 		{
