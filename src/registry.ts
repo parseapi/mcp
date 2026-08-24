@@ -62,7 +62,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	// Locate
 	tool(
 		'ip',
-		'Look up an IPv4 or IPv6 address: country, region, ASN, timezone. Deep adds datacenter, relay and tor flags.',
+		'Look up an IPv4 or IPv6 address: country, region, ASN, timezone. Deep adds datacenter, relay, tor and vpn flags.',
 		{ ip: z.string().describe('IPv4 or IPv6 address, e.g. 8.8.8.8'), deep },
 		(c, a) => c.ip(a.ip, { deep: a.deep })
 	);
@@ -216,7 +216,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep },
 		(c, a) => c.domain(a.domain, { deep: a.deep })
 	);
-	tool('mx', 'MX records and mail provider for a domain.', { domain: z.string().describe('Domain name') }, (c, a) =>
+	tool('mx', 'MX records for a domain.', { domain: z.string().describe('Domain name') }, (c, a) =>
 		c.mx(a.domain)
 	);
 	tool(
