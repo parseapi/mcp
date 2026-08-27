@@ -256,12 +256,28 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'timezone',
-		'Look up an IANA timezone: current offset, DST state, local time. Pass at for a specific instant.',
+		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Open ocean returns timezone null.',
 		{
-			timezone: z.string().describe('IANA timezone id, e.g. America/New_York'),
+			timezone: z.string().optional().describe('IANA timezone id, e.g. America/New_York'),
+			lat: lat.optional(),
+			lon: lon.optional(),
 			at: z.string().optional().describe('ISO 8601 instant to evaluate, default now'),
 		},
-		(c, a) => c.timezone(a.timezone, { at: a.at })
+		(c, a) => {
+			if (a.lat != null && a.lon != null) {
+				return (
+					c.timezone as unknown as (
+						lat: number,
+						lon: number,
+						opts?: { at?: string }
+					) => ReturnType<Client['timezone']>
+				)(a.lat, a.lon, { at: a.at });
+			}
+			if (!a.timezone) {
+				return Promise.reject(new Error('Pass timezone or lat and lon'));
+			}
+			return c.timezone(a.timezone, { at: a.at });
+		}
 	);
 	tool(
 		'holiday',
