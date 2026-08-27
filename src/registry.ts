@@ -256,7 +256,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'timezone',
-		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Open ocean returns timezone null.',
+		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Open ocean answers the nautical Etc/GMT zone.',
 		{
 			timezone: z.string().optional().describe('IANA timezone id, e.g. America/New_York'),
 			lat: lat.optional(),
