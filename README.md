@@ -4,22 +4,26 @@ Official parseAPI MCP server. Every parseAPI lookup as a tool for AI agents: IP 
 
 ## Hosted
 
-One URL, nothing to install. Sign in once in the browser and tools work. Free plan works.
+One URL, nothing to install. Add the server and sign in once in the browser. Free plan works.
 
 ```json
 {
   "mcpServers": {
-    "parseapi": { "url": "https://mcp.parseapi.com" }
+    "parseAPI": { "url": "https://mcp.parseapi.com" }
   }
 }
 ```
+
+**Cursor:** [Add to Cursor](cursor://anysphere.cursor-deeplink/mcp/install?name=parseAPI&config=eyJ1cmwiOiJodHRwczovL21jcC5wYXJzZWFwaS5jb20ifQ==)
+
+Repo-root `.mcp.json` is keyless on purpose. [cursor.directory](https://cursor.directory/plugins/parseapi) auto-detects it when you submit or refresh the listing.
 
 CI and headless setups skip the browser with a key from [parseapi.com](https://parseapi.com):
 
 ```json
 {
   "mcpServers": {
-    "parseapi": {
+    "parseAPI": {
       "url": "https://mcp.parseapi.com",
       "headers": { "X-API-Key": "your-api-key" }
     }
@@ -32,7 +36,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 ```json
 {
   "mcpServers": {
-    "parseapi": {
+    "parseAPI": {
       "command": "npx",
       "args": ["-y", "parseapi-mcp"],
       "env": { "PARSEAPI_KEY": "your-api-key" }

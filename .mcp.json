@@ -1,10 +1,7 @@
 {
 	"mcpServers": {
-		"parseapi": {
-			"url": "https://mcp.parseapi.com",
-			"headers": {
-				"X-API-Key": "${env:PARSEAPI_KEY}"
-			}
+		"parseAPI": {
+			"url": "https://mcp.parseapi.com"
 		}
 	}
 }
