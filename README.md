@@ -2,11 +2,19 @@
 
 Official parseAPI MCP server. Every parseAPI lookup as a tool for AI agents: IP and place data, email, phone and domain validation, weather, currency, timezones, holidays.
 
-Get a key at [parseapi.com](https://parseapi.com). Free plan works.
-
 ## Hosted
 
-One URL, nothing to install.
+One URL, nothing to install. Sign in once in the browser and tools work. Free plan works.
+
+```json
+{
+  "mcpServers": {
+    "parseapi": { "url": "https://mcp.parseapi.com" }
+  }
+}
+```
+
+CI and headless setups skip the browser with a key from [parseapi.com](https://parseapi.com):
 
 ```json
 {

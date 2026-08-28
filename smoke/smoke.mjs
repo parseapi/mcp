@@ -159,9 +159,32 @@ async function smokeHttp() {
 	});
 	await sleep(600);
 
+	// The gate passes any key-shaped credential through; the SDK answers
+	// invalid_api_key on calls. Keyless is a 401 at the door (OAuth funnel).
+	const dummyKey = { 'x-api-key': 'parse_smoke00000000000000000' };
+
 	try {
 		const health = await fetch(`http://127.0.0.1:${port}/health`);
 		check('http /health 200', health.status === 200);
+
+		const resource = await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource`);
+		const resourceBody = await resource.json().catch(() => null);
+		check(
+			'http protected-resource metadata points at the auth server',
+			resource.status === 200 && Array.isArray(resourceBody?.authorization_servers) && resourceBody.authorization_servers.length === 1,
+			JSON.stringify(resourceBody).slice(0, 200)
+		);
+
+		const keyless = await fetch(`http://127.0.0.1:${port}/`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+			body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+		});
+		check(
+			'http keyless is 401 with WWW-Authenticate',
+			keyless.status === 401 && (keyless.headers.get('www-authenticate') ?? '').includes('resource_metadata'),
+			`status ${keyless.status}`
+		);
 
 		const init = await postRpc(port, {
 			jsonrpc: '2.0',
@@ -172,10 +195,10 @@ async function smokeHttp() {
 				capabilities: {},
 				clientInfo: { name: 'parseapi-mcp-smoke', version: '0.0.0' },
 			},
-		});
+		}, dummyKey);
 		check('http initialize answers', init.result?.serverInfo?.name === 'parseapi', JSON.stringify(init).slice(0, 200));
 
-		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} });
+		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
 		check('http tools/list has 32 tools (no ip_self)', names.length === 32 && !names.includes('ip_self'), `got ${names.length}`);
 
@@ -184,10 +207,10 @@ async function smokeHttp() {
 			id: 3,
 			method: 'tools/call',
 			params: { name: 'postal', arguments: { code: '28202', country: 'US' } },
-		});
+		}, dummyKey);
 		const funnelBody = toolText(funnel.result);
 		check(
-			'http keyless call funnels to signup',
+			'http bad-key call funnels to signup',
 			funnel.result?.isError === true && funnelBody.code === 'invalid_api_key',
 			JSON.stringify(funnel).slice(0, 300)
 		);
