@@ -211,6 +211,33 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a) => c.phone(a.number, { country: a.country, deep: a.deep })
 	);
 	tool(
+		'carrier',
+		'Look up the current carrier serving a phone number: carrier name, network type including voip, burner app flag, issuing city and state. Metered per lookup on a valid number.',
+		{
+			number: z.string().describe('Phone number, e.g. +14155552671'),
+			country: iso2('country code for national-format numbers').optional(),
+		},
+		(c, a) => c.carrier(a.number, { country: a.country })
+	);
+	tool(
+		'caller',
+		'Look up the caller ID name (CNAM) for a US or Canada phone number. caller is the record verbatim, null when no record or outside NANP. Metered per lookup on a NANP number.',
+		{
+			number: z.string().describe('Phone number, e.g. +18004633339'),
+			country: iso2('country code for national-format numbers').optional(),
+		},
+		(c, a) => c.caller(a.number, { country: a.country })
+	);
+	tool(
+		'hlr',
+		'Live network status for a phone number worldwide: live means assigned, connected means the handset is reachable right now. Outside North America adds roaming and network details. Metered per lookup on a valid number.',
+		{
+			number: z.string().describe('Phone number, e.g. +447712345678'),
+			country: iso2('country code for national-format numbers').optional(),
+		},
+		(c, a) => c.hlr(a.number, { country: a.country })
+	);
+	tool(
 		'domain',
 		'Look up a domain: registration, DNS, mail setup. Deep adds richer checks.',
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep },
