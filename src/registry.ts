@@ -87,6 +87,40 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a) => c.continent.countries(a.code)
 	);
 	tool(
+		'bloc',
+		'Look up a country group by code: EU, EEA, Schengen, Eurozone, SEPA, NATO, and more. Returns the official name and the current member count.',
+		{
+			code: z
+				.string()
+				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
+		},
+		(c, a) => {
+			const client = c as unknown as {
+				bloc: ((code: string) => Promise<unknown>) & {
+					countries: (code: string) => Promise<unknown>;
+				};
+			};
+			return client.bloc(a.code);
+		}
+	);
+	tool(
+		'bloc_countries',
+		'List the current members of a country group, each with name, flag, and calling code.',
+		{
+			code: z
+				.string()
+				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
+		},
+		(c, a) => {
+			const client = c as unknown as {
+				bloc: ((code: string) => Promise<unknown>) & {
+					countries: (code: string) => Promise<unknown>;
+				};
+			};
+			return client.bloc.countries(a.code);
+		}
+	);
+	tool(
 		'country',
 		'Look up a country: names, capital, currency, languages, calling code, timezones.',
 		{ code: iso2('country code') },
