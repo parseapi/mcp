@@ -184,13 +184,17 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'weather',
-		'Current weather observation at coordinates from official national agencies. Every measurement ships metric and imperial side by side. Deep adds forecast and alerts where available.',
+		'Current weather observation at coordinates from official national agencies. Every measurement ships metric and imperial side by side. Deep adds minute-by-minute rain, hourly and daily rows worldwide, alerts, and air quality. With deep, date returns a past day as deep.history.',
 		{
 			lat,
 			lon,
 			deep,
+			date: z
+				.string()
+				.optional()
+				.describe('A past UTC day, YYYY-MM-DD. Requires deep. Returns that day as deep.history'),
 		},
-		(c, a) => c.weather(a.lat, a.lon, { deep: a.deep })
+		(c, a) => c.weather(a.lat, a.lon, { deep: a.deep, date: a.date })
 	);
 
 	// Validate
@@ -283,12 +287,21 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'timezone',
-		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Open ocean answers the nautical Etc/GMT zone.',
+		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Pass to with another IANA id to convert a time between zones: the response appends at (wall time in the from zone) and to.at (the converted time). Open ocean answers the nautical Etc/GMT zone.',
 		{
 			timezone: z.string().optional().describe('IANA timezone id, e.g. America/New_York'),
 			lat: lat.optional(),
 			lon: lon.optional(),
-			at: z.string().optional().describe('ISO 8601 instant to evaluate, default now'),
+			at: z
+				.string()
+				.optional()
+				.describe(
+					'ISO 8601 time, default now. With to and no UTC offset, reads as wall time in the from zone'
+				),
+			to: z
+				.string()
+				.optional()
+				.describe('Convert: the other IANA zone, e.g. Asia/Tokyo. Requires timezone, not lat/lon'),
 		},
 		(c, a) => {
 			if (a.lat != null && a.lon != null) {
@@ -303,7 +316,39 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			if (!a.timezone) {
 				return Promise.reject(new Error('Pass timezone or lat and lon'));
 			}
-			return c.timezone(a.timezone, { at: a.at });
+			return (
+				c.timezone as unknown as (
+					id: string,
+					opts?: { at?: string; to?: string }
+				) => ReturnType<Client['timezone']>
+			)(a.timezone, { at: a.at, to: a.to });
+		}
+	);
+	tool(
+		'date',
+		'Parse a date in any common format (2026-03-29, March 29, 2026, 3/29/2026, 20260829) into calendar facts: ISO date, weekday, ISO week, day of year, quarter, leap year, unix time. Ambiguous numeric dates answer valid false unless format asserts a reading, never a guess. Pass to with another date for the signed days between. Omit date for today (UTC), so to alone answers days from today.',
+		{
+			date: z
+				.string()
+				.optional()
+				.describe('The date as you have it, any common format. Omit for today (UTC)'),
+			format: z
+				.enum(['mdy', 'dmy'])
+				.optional()
+				.describe('Breaks the month-first / day-first tie on numeric dates like 03/04/2026'),
+			to: z
+				.string()
+				.optional()
+				.describe('Another date. Appends to (normalized ISO) and days (signed days between)'),
+		},
+		(c, a) => {
+			const client = c as unknown as {
+				date: ((date: string, opts?: { format?: 'mdy' | 'dmy'; to?: string }) => Promise<unknown>) & {
+					today: (opts?: { to?: string }) => Promise<unknown>;
+				};
+			};
+			if (a.date == null || a.date === '') return client.date.today({ to: a.to });
+			return client.date(a.date, { format: a.format, to: a.to });
 		}
 	);
 	tool(
