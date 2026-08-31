@@ -356,12 +356,29 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'currency_rate',
-		'Exchange rate between two currencies from official central bank data.',
+		'Exchange rate between two currencies from official central bank data. Pass date for a past business day, amount to convert.',
 		{
 			base: z.string().describe('Base currency ISO 4217 code, e.g. USD'),
 			quote: z.string().describe('Quote currency ISO 4217 code, e.g. EUR'),
+			date: z
+				.string()
+				.optional()
+				.describe(
+					'YYYY-MM-DD. Official rate for that business day. A weekend or holiday resolves to the last published day on or before it'
+				),
+			amount: z
+				.number()
+				.optional()
+				.describe('Appends amount and converted, rounded to the quote currency minor-unit digits'),
 		},
-		(c, a) => c.currency.rate(a.base, a.quote)
+		(c, a) =>
+			(
+				c.currency.rate as (
+					base: string,
+					quote: string,
+					opts?: { date?: string; amount?: number }
+				) => ReturnType<typeof c.currency.rate>
+			)(a.base, a.quote, { date: a.date, amount: a.amount })
 	);
 	tool(
 		'language',
