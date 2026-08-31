@@ -31,7 +31,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			version: VERSION,
 			title: 'parseAPI',
 			description:
-				'Lookups for agents: IP and place data, email, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, email, VAT, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -274,6 +274,25 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'Validate an email address: syntax, domain, MX, disposable, role, and a typo suggestion when the host looks misspelled. Deep runs a live mailbox verification.',
 		{ email: z.string().describe('Email address to validate'), deep },
 		(c, a) => c.email(a.email, { deep: a.deep })
+	);
+	tool(
+		'vat',
+		'Validate a VAT number: format and checksum on every call. Deep asks the live EU registry for registered, legal name, and address. Pass from with your own VAT for a consultation identifier.',
+		{
+			number: z.string().describe('VAT number, with or without the country prefix'),
+			country: iso2('country code when the number has no prefix').optional(),
+			from: z.string().optional().describe('Your own VAT number. Returns a consultation identifier for your audit file'),
+			deep,
+		},
+		(c, a) =>
+			(
+				c as Client & {
+					vat: (
+						number: string,
+						opts?: { country?: string; from?: string; deep?: boolean }
+					) => Promise<unknown>;
+				}
+			).vat(a.number, { country: a.country, from: a.from, deep: a.deep })
 	);
 	tool(
 		'phone',
