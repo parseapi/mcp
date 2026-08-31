@@ -296,7 +296,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'iban',
-		'Parse an IBAN: checksum and structure. Returns the normalized number, country, checksum digits, and the bank, branch, and account identifiers sitting inside it. bank and branch are codes, not names. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
+		'Parse an IBAN: checksum and structure. Returns the normalized number, the print form for display, country, checksum digits, and the bank, branch, and account identifiers sitting inside it. bank and branch are codes, not names. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
 		{
 			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
 			country: iso2('country code when the number has no prefix').optional(),
