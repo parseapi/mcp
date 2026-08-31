@@ -15,6 +15,10 @@ const deep = z
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
+const countryOpt = z
+	.string()
+	.optional()
+	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
 /**
  * One server, every parseAPI lookup as a tool. `key` null serves the funnel:
@@ -134,28 +138,38 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'state',
-		'Look up a state, province or region by its code within a country.',
-		{ code: z.string().describe('State code, e.g. NC'), country: iso2('country code') },
+		'Look up a state, province or region by code or name. Unique names resolve without a country. A colliding code 404s asking for ?country=. Country takes ISO2, ISO3, or a name.',
+		{
+			code: z.string().describe('State code or name, e.g. colorado, NC'),
+			country: countryOpt,
+		},
 		(c, a) => c.state(a.code, { country: a.country })
 	);
 	tool(
 		'state_districts',
 		'List the districts, counties or departments of a state.',
-		{ code: z.string().describe('State code, e.g. NC'), country: iso2('country code') },
+		{
+			code: z.string().describe('State code or name, e.g. NC, colorado'),
+			country: countryOpt,
+		},
 		(c, a) => c.state.districts(a.code, { country: a.country })
 	);
 	tool(
 		'district',
-		'Look up a district, county or department by code.',
-		{ code: z.string().describe('District code, e.g. 37081'), country: iso2('country code').optional() },
-		(c, a) => c.district(a.code, { country: a.country })
+		'Look up a district, county or department by code or name. Pass state when a name collides.',
+		{
+			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
+			country: countryOpt,
+			state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
+		},
+		(c, a) => c.district(a.code, { country: a.country, state: a.state })
 	);
 	tool(
 		'city',
-		'Look up a city by name: coordinates, state, population, timezone. Pass country to disambiguate name ties.',
+		'Look up a city by name: type, capital, district, elevation, land area, coordinates, timezone. Pass country or state to disambiguate name ties.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
-			country: iso2('country code').optional(),
+			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate, e.g. NC'),
 		},
 		(c, a) => c.city(a.name, { country: a.country, state: a.state })
@@ -171,7 +185,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'Search cities by name prefix. Use when the exact name is unknown.',
 		{
 			q: z.string().describe('Name prefix, e.g. char'),
-			country: iso2('country code').optional(),
+			country: countryOpt,
 			state: z.string().optional().describe('State code filter'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
 		},
@@ -181,17 +195,40 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		c.city.nearest(a.lat, a.lon)
 	);
 	tool(
+		'city_nearby',
+		'List cities around a named city, nearest first, with distance. Default radius 40 km.',
+		{
+			name: z.string().describe('Anchor city name, e.g. denver'),
+			country: countryOpt,
+			state: z.string().optional().describe('State code to disambiguate the anchor'),
+			radius: z.number().positive().optional().describe('Search radius, default 40 km'),
+			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
+			limit: z.number().int().min(1).max(50).optional().describe('Max results, default 10'),
+		},
+		(c, a) =>
+			c.city.nearby(a.name, {
+				country: a.country,
+				state: a.state,
+				radius: a.radius,
+				unit: a.unit,
+				limit: a.limit,
+			})
+	);
+	tool(
 		'postal',
-		'Look up a postal code: place name, coordinates, state, district, timezone, elevation. Country is required.',
-		{ code: z.string().describe('Postal code, e.g. 28202'), country: iso2('country code') },
+		'Look up a postal or ZIP code: place name, country name, coordinates, state, district, area, timezone, elevation. Unique codes resolve without a country. A collision 404s asking for ?country=. Never defaults to US.',
+		{
+			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
+			country: countryOpt,
+		},
 		(c, a) => c.postal(a.code, { country: a.country })
 	);
 	tool(
 		'postal_nearby',
-		'List postal codes near a given one, sorted by distance.',
+		'List postal codes near a given one, sorted by distance. Unique codes resolve without a country.',
 		{
 			code: z.string().describe('Postal code to search around'),
-			country: iso2('country code'),
+			country: countryOpt,
 			radius: z.number().positive().optional().describe('Search radius'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 		},
@@ -199,11 +236,11 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'postal_distance',
-		'Distance between two postal codes in the same country.',
+		'Distance between two postal codes in the same country. Unique codes resolve without a country.',
 		{
 			from: z.string().describe('First postal code'),
 			to: z.string().describe('Second postal code'),
-			country: iso2('country code'),
+			country: countryOpt,
 		},
 		(c, a) => c.postal.distance(a.from, a.to, { country: a.country })
 	);

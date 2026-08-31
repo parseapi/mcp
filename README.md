@@ -47,7 +47,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## Tools
 
-One tool per endpoint, named after the route: `ip`, `postal`, `city`, `city_search`, `email`, `phone`, `carrier`, `caller`, `hlr`, `weather`, `currency_rate`, `timezone`, `holiday`, `point`, `elevation`, and the rest. Every tool returns the same minimal JSON the API serves.
+One tool per endpoint, named after the route: `ip`, `postal`, `city`, `city_search`, `city_nearby`, `email`, `phone`, `carrier`, `caller`, `hlr`, `weather`, `currency_rate`, `timezone`, `holiday`, `point`, `elevation`, and the rest. Every tool returns the same minimal JSON the API serves.
 
 Errors come back as JSON with a machine-readable `code`. Branch on `code`, never on message text. A miss is `not_found`. No key is `invalid_api_key`.
 
