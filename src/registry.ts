@@ -31,7 +31,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			version: VERSION,
 			title: 'parseAPI',
 			description:
-				'Lookups for agents: IP and place data, email, VAT, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, email, VAT, IBAN, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -293,6 +293,20 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 					) => Promise<unknown>;
 				}
 			).vat(a.number, { country: a.country, from: a.from, deep: a.deep })
+	);
+	tool(
+		'iban',
+		'Parse an IBAN: checksum and structure. Returns the normalized number, country, checksum digits, and the bank, branch, and account identifiers sitting inside it. bank and branch are codes, not names. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
+		{
+			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
+			country: iso2('country code when the number has no prefix').optional(),
+		},
+		(c, a) =>
+			(
+				c as Client & {
+					iban: (iban: string, opts?: { country?: string }) => Promise<unknown>;
+				}
+			).iban(a.iban, { country: a.country })
 	);
 	tool(
 		'phone',
