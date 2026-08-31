@@ -86,10 +86,11 @@ async function smokeStdio() {
 	await bare.init();
 	const list = await bare.request('tools/list', {});
 	const names = list.result.tools.map((t) => t.name);
-	check('stdio tools/list has 42 tools', names.length === 42, `got ${names.length}`);
+	check('stdio tools/list has 43 tools', names.length === 43, `got ${names.length}`);
 	check('stdio has ip_self', names.includes('ip_self'));
 	check('stdio has vat', names.includes('vat'));
 	check('stdio has iban', names.includes('iban'));
+	check('stdio has vin', names.includes('vin'));
 	check(
 		'stdio has the phone family',
 		names.includes('carrier') && names.includes('caller') && names.includes('hlr')
@@ -206,9 +207,10 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 41 tools (no ip_self)', names.length === 41 && !names.includes('ip_self'), `got ${names.length}`);
+		check('http tools/list has 42 tools (no ip_self)', names.length === 42 && !names.includes('ip_self'), `got ${names.length}`);
 		check('http has vat', names.includes('vat'));
 		check('http has iban', names.includes('iban'));
+		check('http has vin', names.includes('vin'));
 
 		const funnel = await postRpc(port, {
 			jsonrpc: '2.0',

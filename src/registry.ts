@@ -363,6 +363,17 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 
 	// Decode
 	tool(
+		'vin',
+		'Decode a 17-character VIN: year, make, model, trim, body, engine, drive, transmission, manufacturer, and assembly plant. Junk or a failed check digit answers valid false, never a 404. Deep adds open recall campaigns on paid plans.',
+		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
+		(c, a) =>
+			(
+				c as Client & {
+					vin: (vin: string, opts?: { deep?: boolean }) => Promise<unknown>;
+				}
+			).vin(a.vin, { deep: a.deep })
+	);
+	tool(
 		'currency',
 		'Look up a currency: name, symbol, decimal places, countries using it.',
 		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
