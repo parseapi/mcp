@@ -31,7 +31,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			version: VERSION,
 			title: 'parseAPI',
 			description:
-				'Lookups for agents: IP and place data, email, VAT, IBAN, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, email, VAT, IBAN, NPI, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -387,6 +387,32 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			).vin(a.vin, { deep: a.deep })
 	);
 	tool(
+		'hts',
+		'Look up a US Harmonized Tariff Schedule code: description, duty rates verbatim (general, special, column 2), units, parent lineage, and the official revision that answered. Deep with an origin country resolves the Chapter 99 tariff measures that apply from that origin, with a composed effective_rate when the components compose cleanly (null otherwise, null beats a guess). Unknown code is a 404.',
+		{
+			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
+			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
+			deep,
+		},
+		(c, a) =>
+			(
+				c as Client & {
+					hts: (code: string, opts?: { deep?: boolean; origin?: string }) => Promise<unknown>;
+				}
+			).hts(a.code, { deep: a.deep, origin: a.origin })
+	);
+	tool(
+		'hts_search',
+		'Search US tariff schedule descriptions by product. Returns up to 20 lines, best match first, each with hts, description, and the general duty rate.',
+		{ q: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
+		(c, a) =>
+			(
+				c as Client & {
+					hts: { search: (q: string) => Promise<unknown> };
+				}
+			).hts.search(a.q)
+	);
+	tool(
 		'currency',
 		'Look up a currency: name, symbol, decimal places, countries using it.',
 		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
@@ -429,6 +455,12 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation. Junk input returns valid false. Gender comes from dictionary data and is null when the data does not decide.',
 		{ name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL') },
 		(c, a) => c.name(a.name)
+	);
+	tool(
+		'sanctions',
+		'Screen a name against the official OFAC sanctions lists (SDN and Consolidated). Exact match after case, accent, punctuation, and spacing folds, primary names plus published aliases. Never fuzzy, never a score. A match returns the official records: OFAC uid, list, type, program codes. sanctioned false means not on the list as published, never clearance.',
+		{ name: z.string().describe('Person, company, vessel, or aircraft name') },
+		(c, a) => c.sanctions(a.name)
 	);
 	tool(
 		'timezone',
