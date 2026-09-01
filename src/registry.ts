@@ -457,12 +457,6 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a) => c.name(a.name)
 	);
 	tool(
-		'sanctions',
-		'Screen a name against the official OFAC sanctions lists (SDN and Consolidated). Exact match after case, accent, punctuation, and spacing folds, primary names plus published aliases. Never fuzzy, never a score. A match returns the official records: OFAC uid, list, type, program codes. sanctioned false means not on the list as published, never clearance.',
-		{ name: z.string().describe('Person, company, vessel, or aircraft name') },
-		(c, a) => c.sanctions(a.name)
-	);
-	tool(
 		'timezone',
 		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Pass to with another IANA id to convert a time between zones: the response appends at (wall time in the from zone) and to.at (the converted time). Open ocean answers the nautical Etc/GMT zone.',
 		{
