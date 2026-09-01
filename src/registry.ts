@@ -310,16 +310,17 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'npi',
-		'Look up an NPI in the CMS NPPES registry: US healthcare provider name, specialty, practice address, active status, and the OIG exclusion flag.',
+		'Look up an NPI in the CMS NPPES registry: US healthcare provider name, specialty, practice address, active status, and the OIG exclusion flag. Deep adds Medicare enrollment on paid plans.',
 		{
 			npi: z.string().describe('10-digit NPI number'),
+			deep,
 		},
 		(c, a) =>
 			(
 				c as Client & {
-					npi: (npi: string) => Promise<unknown>;
+					npi: (npi: string, opts?: { deep?: boolean }) => Promise<unknown>;
 				}
-			).npi(a.npi)
+			).npi(a.npi, { deep: a.deep })
 	);
 	tool(
 		'phone',
