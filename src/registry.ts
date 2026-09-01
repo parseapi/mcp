@@ -166,7 +166,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'city',
-		'Look up a city by name: type, capital, district, elevation, land area, coordinates, timezone. Pass country or state to disambiguate name ties.',
+		'Look up a city by name: type, capital status (capital_of), district, elevation, area in km2, coordinates, timezone. Pass country or state to disambiguate name ties.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
 			country: countryOpt,
