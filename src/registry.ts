@@ -324,7 +324,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'phone',
-		'Validate and parse a phone number: country, type, formats. Pass country for national-format numbers.',
+		'Validate and parse a phone number: country, type, area-code state, timezone, formats. Pass country for national-format numbers.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -388,8 +388,8 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			).vin(a.vin, { deep: a.deep })
 	);
 	tool(
-		'hts',
-		'Look up a US Harmonized Tariff Schedule code: description, duty rates verbatim (general, special, column 2), units, parent lineage, and the official revision that answered. Deep with an origin country resolves the Chapter 99 tariff measures that apply from that origin, with a composed effective_rate when the components compose cleanly (null otherwise, null beats a guess). Unknown code is a 404.',
+		'tariff',
+		'US import duty. Look up an HTS code: description, duty rates verbatim (general, special, column 2), units, parent lineage, and the official revision that answered. Deep with an origin country resolves the Chapter 99 tariff measures that apply from that origin, with a composed effective_rate when the components compose cleanly (null otherwise, null beats a guess). Unknown code is a 404. US schedule only.',
 		{
 			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
 			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
@@ -398,20 +398,20 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a) =>
 			(
 				c as Client & {
-					hts: (code: string, opts?: { deep?: boolean; origin?: string }) => Promise<unknown>;
+					tariff: (code: string, opts?: { deep?: boolean; origin?: string }) => Promise<unknown>;
 				}
-			).hts(a.code, { deep: a.deep, origin: a.origin })
+			).tariff(a.code, { deep: a.deep, origin: a.origin })
 	);
 	tool(
-		'hts_search',
+		'tariff_search',
 		'Search US tariff schedule descriptions by product. Returns up to 20 lines, best match first, each with hts, description, and the general duty rate.',
 		{ q: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
 		(c, a) =>
 			(
 				c as Client & {
-					hts: { search: (q: string) => Promise<unknown> };
+					tariff: { search: (q: string) => Promise<unknown> };
 				}
-			).hts.search(a.q)
+			).tariff.search(a.q)
 	);
 	tool(
 		'currency',

@@ -93,7 +93,7 @@ async function smokeStdio() {
 	check('stdio has npi', names.includes('npi'));
 	check('stdio has vin', names.includes('vin'));
 	check('stdio has no sanctions', !names.includes('sanctions'));
-	check('stdio has hts', names.includes('hts') && names.includes('hts_search'));
+	check('stdio has tariff', names.includes('tariff') && names.includes('tariff_search'));
 	check(
 		'stdio has the phone family',
 		names.includes('carrier') && names.includes('caller') && names.includes('hlr')
@@ -216,7 +216,7 @@ async function smokeHttp() {
 		check('http has npi', names.includes('npi'));
 		check('http has vin', names.includes('vin'));
 		check('http has no sanctions', !names.includes('sanctions'));
-		check('http has hts', names.includes('hts') && names.includes('hts_search'));
+		check('http has tariff', names.includes('tariff') && names.includes('tariff_search'));
 
 		const funnel = await postRpc(port, {
 			jsonrpc: '2.0',
