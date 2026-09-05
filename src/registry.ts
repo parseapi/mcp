@@ -1,9 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/server';
-import { parseAPI } from '@parseapi/sdk';
+import { parseAPI, type RequestOptions } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 
-export const VERSION = '0.2.1';
+export const VERSION = '0.3.0';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
@@ -11,7 +11,7 @@ export type Transport = 'stdio' | 'http';
 const deep = z
 	.boolean()
 	.optional()
-	.describe('Include the nested deep object with richer fields. Paid on most endpoints.');
+	.describe('Include the nested deep object when available. Pricing depends on the operation.');
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
@@ -31,7 +31,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			version: VERSION,
 			title: 'parseAPI',
 			description:
-				'Lookups for agents: IP and place data, email, VAT, IBAN, NPI, phone and domain validation, weather, currency, timezones, holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, VAT, IBAN, NPI, phone, domains, weather, currency, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -43,19 +43,20 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		name: string,
 		description: string,
 		shape: S,
-		fn: (client: Client, args: z.infer<z.ZodObject<S>>) => Promise<unknown>
+		fn: (client: Client, args: z.infer<z.ZodObject<S>>, options: RequestOptions) => Promise<unknown>,
+		refine?: (schema: z.ZodObject<S>) => z.ZodObject<S>
 	): void {
 		server.registerTool(
 			name,
 			{
 				description,
-				inputSchema: z.object(shape),
+				inputSchema: refine ? refine(z.object(shape)) : z.object(shape),
 				annotations: { readOnlyHint: true },
 			},
-			async (args): Promise<ToolResult> => {
+			async (args, context): Promise<ToolResult> => {
 				if (!parse) return noKeyResult(transport);
 				try {
-					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>));
+					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, { signal: context.mcpReq.signal }));
 				} catch (err) {
 					return toErrorResult(err);
 				}
@@ -68,27 +69,27 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'ip',
 		'Look up an IPv4 or IPv6 address: country, region, ASN, timezone. Deep adds datacenter, relay, tor and vpn flags.',
 		{ ip: z.string().describe('IPv4 or IPv6 address, e.g. 8.8.8.8'), deep },
-		(c, a) => c.ip(a.ip, { deep: a.deep })
+		(c, a, request) => c.ip(a.ip, { ...request, deep: a.deep })
 	);
 	if (transport === 'stdio') {
 		tool(
 			'ip_self',
 			'Look up the public IP of the machine running this MCP server.',
 			{ deep },
-			(c, a) => c.ip.self({ deep: a.deep })
+			(c, a, request) => c.ip.self({ ...request, deep: a.deep })
 		);
 	}
 	tool(
 		'continent',
 		'Look up a continent by code: name, area, population.',
 		{ code: z.string().describe('Continent code: AF, AN, AS, EU, NA, OC, SA') },
-		(c, a) => c.continent(a.code)
+		(c, a, request) => c.continent(a.code, request)
 	);
 	tool(
 		'continent_countries',
 		'List every country on a continent.',
 		{ code: z.string().describe('Continent code: AF, AN, AS, EU, NA, OC, SA') },
-		(c, a) => c.continent.countries(a.code)
+		(c, a, request) => c.continent.countries(a.code, request)
 	);
 	tool(
 		'bloc',
@@ -98,14 +99,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.string()
 				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
 		},
-		(c, a) => {
-			const client = c as unknown as {
-				bloc: ((code: string) => Promise<unknown>) & {
-					countries: (code: string) => Promise<unknown>;
-				};
-			};
-			return client.bloc(a.code);
-		}
+		(c, a, request) => c.bloc(a.code, request)
 	);
 	tool(
 		'bloc_countries',
@@ -115,26 +109,19 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.string()
 				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
 		},
-		(c, a) => {
-			const client = c as unknown as {
-				bloc: ((code: string) => Promise<unknown>) & {
-					countries: (code: string) => Promise<unknown>;
-				};
-			};
-			return client.bloc.countries(a.code);
-		}
+		(c, a, request) => c.bloc.countries(a.code, request)
 	);
 	tool(
 		'country',
 		'Look up a country: names, capital, currency, languages, calling code, timezones.',
 		{ code: iso2('country code') },
-		(c, a) => c.country(a.code)
+		(c, a, request) => c.country(a.code, request)
 	);
 	tool(
 		'country_states',
 		'List the states, provinces or regions of a country.',
 		{ code: iso2('country code') },
-		(c, a) => c.country.states(a.code)
+		(c, a, request) => c.country.states(a.code, request)
 	);
 	tool(
 		'state',
@@ -143,7 +130,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
 		},
-		(c, a) => c.state(a.code, { country: a.country })
+		(c, a, request) => c.state(a.code, { ...request, country: a.country })
 	);
 	tool(
 		'state_districts',
@@ -152,7 +139,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			code: z.string().describe('State code or name, e.g. NC, colorado'),
 			country: countryOpt,
 		},
-		(c, a) => c.state.districts(a.code, { country: a.country })
+		(c, a, request) => c.state.districts(a.code, { ...request, country: a.country })
 	);
 	tool(
 		'district',
@@ -162,7 +149,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			country: countryOpt,
 			state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
 		},
-		(c, a) => c.district(a.code, { country: a.country, state: a.state })
+		(c, a, request) => c.district(a.code, { ...request, country: a.country, state: a.state })
 	);
 	tool(
 		'city',
@@ -172,27 +159,27 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate, e.g. NC'),
 		},
-		(c, a) => c.city(a.name, { country: a.country, state: a.state })
+		(c, a, request) => c.city(a.name, { ...request, country: a.country, state: a.state })
 	);
 	tool(
 		'city_id',
 		'Refetch a city by its stable parse id from an earlier response.',
 		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb') },
-		(c, a) => c.city.id(a.id)
+		(c, a, request) => c.city.id(a.id, request)
 	);
 	tool(
 		'city_search',
 		'Search cities by name prefix. Use when the exact name is unknown.',
 		{
-			q: z.string().describe('Name prefix, e.g. char'),
+			query: z.string().describe('Name prefix, e.g. char'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code filter'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
 		},
-		(c, a) => c.city.search(a.q, { country: a.country, state: a.state, limit: a.limit })
+		(c, a, request) => c.city.search(a.query, { ...request, country: a.country, state: a.state, limit: a.limit })
 	);
-	tool('city_nearest', 'Find the nearest city to coordinates.', { lat, lon }, (c, a) =>
-		c.city.nearest(a.lat, a.lon)
+	tool('city_nearest', 'Find the nearest city to coordinates.', { lat, lon }, (c, a, request) =>
+		c.city.nearest(a.lat, a.lon, request)
 	);
 	tool(
 		'city_nearby',
@@ -205,8 +192,9 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results, default 10'),
 		},
-		(c, a) =>
+		(c, a, request) =>
 			c.city.nearby(a.name, {
+				...request,
 				country: a.country,
 				state: a.state,
 				radius: a.radius,
@@ -221,7 +209,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
 		},
-		(c, a) => c.postal(a.code, { country: a.country })
+		(c, a, request) => c.postal(a.code, { ...request, country: a.country })
 	);
 	tool(
 		'postal_nearby',
@@ -232,7 +220,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			radius: z.number().positive().optional().describe('Search radius'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 		},
-		(c, a) => c.postal.nearby(a.code, { country: a.country, radius: a.radius, unit: a.unit })
+		(c, a, request) => c.postal.nearby(a.code, { ...request, country: a.country, radius: a.radius, unit: a.unit })
 	);
 	tool(
 		'postal_distance',
@@ -242,20 +230,54 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			to: z.string().describe('Second postal code'),
 			country: countryOpt,
 		},
-		(c, a) => c.postal.distance(a.from, a.to, { country: a.country })
+		(c, a, request) => c.postal.distance(a.from, a.to, { ...request, country: a.country })
 	);
+	tool(
+		'address',
+		'Look up a US or French street address: house number, street, unit, city, state, postal code and registration status. Registration does not establish deliverability or verify an apartment. Deep is currently an empty object.',
+		{
+			address: z.string().describe('Street address, e.g. 1600 Pennsylvania Ave NW, Washington, DC 20500'),
+			country: z.string().optional().describe('Country: US or FR. Use FR or a written France suffix for France. Defaults to US.'),
+			deep,
+		},
+		(c, a, request) => c.address(a.address, { ...request, country: a.country, deep: a.deep })
+	);
+	tool(
+		'address_search',
+		'Search US or French street addresses from a partial address. Postal code, city, state and user IP can narrow or rank matches. French search requires country FR and either postal or city.',
+		{
+			query: z.string().describe('Partial street address, e.g. 1600 Pennsylvania'),
+			country: z.string().optional().describe('Country: US or FR. Defaults to US.'),
+			postal: z.string().optional().describe('Postal code filter'),
+			city: z.string().optional().describe('City filter'),
+			state: z.string().optional().describe('State code filter'),
+			ip: z.string().optional().describe('User IP address for ranking nearby matches'),
+		},
+		(c, a, request) => c.address.search(a.query, { ...request, country: a.country, postal: a.postal, city: a.city, state: a.state, ip: a.ip })
+	);
+	tool(
+		'company',
+		'Look up a company registration number: validity, registration status, name, activity and address when available. Pass country when more than one scheme can match. Deep adds country, postal and city data.',
+		{
+			number: z.string().describe('Company registration number, e.g. 552100554 with country FR'),
+			country: countryOpt,
+			deep,
+		},
+		(c, a, request) => c.company(a.number, { ...request, country: a.country, deep: a.deep })
+	);
+
 	tool(
 		'point',
 		'Reverse geocode coordinates to country, state, district and nearest city. Deep adds richer admin data.',
 		{ lat, lon, deep },
-		(c, a) => c.point(a.lat, a.lon, { deep: a.deep })
+		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
-	tool('elevation', 'Elevation in meters at coordinates.', { lat, lon }, (c, a) =>
-		c.elevation(a.lat, a.lon)
+	tool('elevation', 'Elevation in meters at coordinates.', { lat, lon }, (c, a, request) =>
+		c.elevation(a.lat, a.lon, request)
 	);
 	tool(
 		'weather',
-		'Current weather observation at coordinates from official national agencies. Every measurement ships metric and imperial side by side. Deep adds minute-by-minute rain, hourly and daily rows worldwide, alerts, and air quality. With deep, date returns a past day as deep.history.',
+		'Current weather observation at coordinates. Every measurement ships metric and imperial side by side. Deep adds minute-by-minute rain, hourly and daily rows worldwide, alerts, and air quality. With deep, date returns a past day as deep.history.',
 		{
 			lat,
 			lon,
@@ -265,7 +287,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.optional()
 				.describe('A past UTC day, YYYY-MM-DD. Requires deep. Returns that day as deep.history'),
 		},
-		(c, a) => c.weather(a.lat, a.lon, { deep: a.deep, date: a.date })
+		(c, a, request) => c.weather(a.lat, a.lon, { ...request, deep: a.deep, date: a.date })
 	);
 
 	// Validate
@@ -273,7 +295,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'email',
 		'Validate an email address: syntax, domain, MX, disposable, role, and a typo suggestion when the host looks misspelled. Deep runs a live mailbox verification.',
 		{ email: z.string().describe('Email address to validate'), deep },
-		(c, a) => c.email(a.email, { deep: a.deep })
+		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);
 	tool(
 		'vat',
@@ -284,43 +306,25 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			from: z.string().optional().describe('Your own VAT number. Returns a consultation identifier for your audit file'),
 			deep,
 		},
-		(c, a) =>
-			(
-				c as Client & {
-					vat: (
-						number: string,
-						opts?: { country?: string; from?: string; deep?: boolean }
-					) => Promise<unknown>;
-				}
-			).vat(a.number, { country: a.country, from: a.from, deep: a.deep })
+		(c, a, request) => c.vat(a.number, { ...request, country: a.country, from: a.from, deep: a.deep })
 	);
 	tool(
 		'iban',
-		'Parse an IBAN: checksum and structure. Returns the normalized number, the print form for display, country, checksum digits, bank, branch, and account identifiers, plus bank_name and bic from official national directories when that country is sourced. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
+		'Parse an IBAN: checksum and structure. Returns the normalized number, the print form for display, country, checksum digits, bank, branch, and account identifiers, plus bank_name and bic when available. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
 		{
 			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
 			country: iso2('country code when the number has no prefix').optional(),
 		},
-		(c, a) =>
-			(
-				c as Client & {
-					iban: (iban: string, opts?: { country?: string }) => Promise<unknown>;
-				}
-			).iban(a.iban, { country: a.country })
+		(c, a, request) => c.iban(a.iban, { ...request, country: a.country })
 	);
 	tool(
 		'npi',
-		'Look up an NPI in the CMS NPPES registry: US healthcare provider name, specialty, practice address, deactivation date, and the OIG exclusion flag. Deep adds Medicare enrollment on paid plans.',
+		'Look up a US healthcare provider by NPI: name, specialty, practice address, deactivation date, and exclusion status. Deep adds Medicare enrollment on paid plans.',
 		{
 			npi: z.string().describe('10-digit NPI number'),
 			deep,
 		},
-		(c, a) =>
-			(
-				c as Client & {
-					npi: (npi: string, opts?: { deep?: boolean }) => Promise<unknown>;
-				}
-			).npi(a.npi, { deep: a.deep })
+		(c, a, request) => c.npi(a.npi, { ...request, deep: a.deep })
 	);
 	tool(
 		'phone',
@@ -330,7 +334,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			country: iso2('country code for national-format numbers').optional(),
 			deep,
 		},
-		(c, a) => c.phone(a.number, { country: a.country, deep: a.deep })
+		(c, a, request) => c.phone(a.number, { ...request, country: a.country, deep: a.deep })
 	);
 	tool(
 		'carrier',
@@ -339,7 +343,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
 		},
-		(c, a) => c.carrier(a.number, { country: a.country })
+		(c, a, request) => c.carrier(a.number, { ...request, country: a.country })
 	);
 	tool(
 		'caller',
@@ -348,7 +352,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			number: z.string().describe('Phone number, e.g. +18004633339'),
 			country: iso2('country code for national-format numbers').optional(),
 		},
-		(c, a) => c.caller(a.number, { country: a.country })
+		(c, a, request) => c.caller(a.number, { ...request, country: a.country })
 	);
 	tool(
 		'hlr',
@@ -357,22 +361,30 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			number: z.string().describe('Phone number, e.g. +447712345678'),
 			country: iso2('country code for national-format numbers').optional(),
 		},
-		(c, a) => c.hlr(a.number, { country: a.country })
+		(c, a, request) => c.hlr(a.number, { ...request, country: a.country })
 	);
 	tool(
 		'domain',
 		'Look up a domain: registration, DNS, mail setup. Deep adds richer checks.',
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep },
-		(c, a) => c.domain(a.domain, { deep: a.deep })
+		(c, a, request) => c.domain(a.domain, { ...request, deep: a.deep })
 	);
-	tool('mx', 'MX records for a domain.', { domain: z.string().describe('Domain name') }, (c, a) =>
-		c.mx(a.domain)
+	tool('asn', 'Network name and country for an autonomous system number.', { asn: z.string().describe('Autonomous system number, such as AS13335 or 13335') }, (c, a, request) =>
+		c.asn(a.asn, request)
+	);
+
+	tool('mac', 'Normalize a 48-bit MAC address and return its registered assignment holder, local flag, and multicast flag. Vendor is null for local or multicast addresses.', { mac: z.string().describe('MAC address') }, (c, a, request) =>
+		c.mac(a.mac, request)
+	);
+
+	tool('mx', 'MX records for a domain.', { domain: z.string().describe('Domain name') }, (c, a, request) =>
+		c.mx(a.domain, request)
 	);
 	tool(
 		'useragent',
 		'Parse a User-Agent string: browser, OS, device, bot detection.',
 		{ ua: z.string().describe('The User-Agent string to parse'), deep },
-		(c, a) => c.useragent(a.ua, { deep: a.deep })
+		(c, a, request) => c.useragent(a.ua, { ...request, deep: a.deep })
 	);
 
 	// Decode
@@ -380,12 +392,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		'vin',
 		'Decode a 17-character VIN: year, make, model, trim, body, engine, drive, transmission, manufacturer, and assembly plant. Junk or a failed check digit answers valid false, never a 404. Deep adds open recall campaigns on paid plans.',
 		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
-		(c, a) =>
-			(
-				c as Client & {
-					vin: (vin: string, opts?: { deep?: boolean }) => Promise<unknown>;
-				}
-			).vin(a.vin, { deep: a.deep })
+		(c, a, request) => c.vin(a.vin, { ...request, deep: a.deep })
 	);
 	tool(
 		'tariff',
@@ -395,33 +402,23 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
 			deep,
 		},
-		(c, a) =>
-			(
-				c as Client & {
-					tariff: (code: string, opts?: { deep?: boolean; origin?: string }) => Promise<unknown>;
-				}
-			).tariff(a.code, { deep: a.deep, origin: a.origin })
+		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin })
 	);
 	tool(
 		'tariff_search',
 		'Search US tariff schedule descriptions by product. Returns up to 20 lines, best match first, each with hts, description, and the general duty rate.',
-		{ q: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
-		(c, a) =>
-			(
-				c as Client & {
-					tariff: { search: (q: string) => Promise<unknown> };
-				}
-			).tariff.search(a.q)
+		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
+		(c, a, request) => c.tariff.search(a.query, request)
 	);
 	tool(
 		'currency',
 		'Look up a currency: name, symbol, decimal places, countries using it.',
 		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
-		(c, a) => c.currency(a.code)
+		(c, a, request) => c.currency(a.code, request)
 	);
 	tool(
 		'currency_rate',
-		'Exchange rate between two currencies from official central bank data. Pass date for a past business day, amount to convert.',
+		'Reference exchange rate between two currencies. Pass date for a past business day, amount to convert.',
 		{
 			base: z.string().describe('Base currency ISO 4217 code, e.g. USD'),
 			quote: z.string().describe('Quote currency ISO 4217 code, e.g. EUR'),
@@ -436,32 +433,25 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.optional()
 				.describe('Appends amount and converted, rounded to the quote currency minor-unit digits'),
 		},
-		(c, a) =>
-			(
-				c.currency.rate as (
-					base: string,
-					quote: string,
-					opts?: { date?: string; amount?: number }
-				) => ReturnType<typeof c.currency.rate>
-			)(a.base, a.quote, { date: a.date, amount: a.amount })
+		(c, a, request) => c.currency.rate(a.base, a.quote, { ...request, date: a.date, amount: a.amount })
 	);
 	tool(
 		'language',
 		'Look up a language by BCP 47 or ISO 639-3 code: names, script, direction.',
 		{ code: z.string().describe('Language code, e.g. en, ja, gsw') },
-		(c, a) => c.language(a.code)
+		(c, a, request) => c.language(a.code, request)
 	);
 	tool(
 		'name',
 		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation. Junk input returns valid false. Gender comes from dictionary data and is null when the data does not decide.',
 		{ name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL') },
-		(c, a) => c.name(a.name)
+		(c, a, request) => c.name(a.name, request)
 	);
 	tool(
 		'timezone',
 		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Pass to with another IANA id to convert a time between zones: the response appends at (wall time in the from zone) and to.at (the converted time). Open ocean answers the nautical Etc/GMT zone.',
 		{
-			timezone: z.string().optional().describe('IANA timezone id, e.g. America/New_York'),
+			timezone: z.string().min(1).optional().describe('IANA timezone id, e.g. America/New_York'),
 			lat: lat.optional(),
 			lon: lon.optional(),
 			at: z
@@ -475,26 +465,21 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.optional()
 				.describe('Convert: the other IANA zone, e.g. Asia/Tokyo. Requires timezone, not lat/lon'),
 		},
-		(c, a) => {
+		(c, a, request) => {
 			if (a.lat != null && a.lon != null) {
-				return (
-					c.timezone as unknown as (
-						lat: number,
-						lon: number,
-						opts?: { at?: string }
-					) => ReturnType<Client['timezone']>
-				)(a.lat, a.lon, { at: a.at });
+				return c.timezone.at(a.lat, a.lon, { ...request, at: a.at });
 			}
 			if (!a.timezone) {
 				return Promise.reject(new Error('Pass timezone or lat and lon'));
 			}
-			return (
-				c.timezone as unknown as (
-					id: string,
-					opts?: { at?: string; to?: string }
-				) => ReturnType<Client['timezone']>
-			)(a.timezone, { at: a.at, to: a.to });
-		}
+			return c.timezone(a.timezone, { ...request, at: a.at, to: a.to });
+		},
+		(schema) => schema.refine(
+			(a) => a.timezone !== undefined
+				? a.lat === undefined && a.lon === undefined
+				: a.lat !== undefined && a.lon !== undefined && a.to === undefined,
+			{ message: 'Pass either timezone (with optional to), or both lat and lon.' }
+		)
 	);
 	tool(
 		'date',
@@ -502,6 +487,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		{
 			date: z
 				.string()
+				.min(1)
 				.optional()
 				.describe('The date as you have it, any common format. Omit for today (UTC)'),
 			format: z
@@ -513,15 +499,14 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.optional()
 				.describe('Another date. Appends to (normalized ISO) and days (signed days between)'),
 		},
-		(c, a) => {
-			const client = c as unknown as {
-				date: ((date: string, opts?: { format?: 'mdy' | 'dmy'; to?: string }) => Promise<unknown>) & {
-					today: (opts?: { to?: string }) => Promise<unknown>;
-				};
-			};
-			if (a.date == null || a.date === '') return client.date.today({ to: a.to });
-			return client.date(a.date, { format: a.format, to: a.to });
-		}
+		(c, a, request) => {
+			if (a.date == null) return c.date.today({ ...request, to: a.to });
+			return c.date(a.date, { ...request, format: a.format, to: a.to });
+		},
+		(schema) => schema.refine(
+			(a) => a.format === undefined || a.date !== undefined,
+			{ message: 'Pass date when specifying format; omit both for today.' }
+		)
 	);
 	tool(
 		'holiday',
@@ -530,28 +515,28 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			country: iso2('country code'),
 			year: z.number().int().optional().describe('Year, default current'),
 		},
-		(c, a) => c.holiday(a.country, { year: a.year })
+		(c, a, request) => c.holiday(a.country, { ...request, year: a.year })
 	);
 	tool(
 		'holiday_date',
 		'Whether a specific date is a holiday or observance in a country. holiday is null when it is not.',
 		{ country: iso2('country code'), date: z.string().describe('Date as YYYY-MM-DD') },
-		(c, a) => c.holiday.date(a.country, a.date)
+		(c, a, request) => c.holiday.date(a.country, a.date, request)
 	);
 	tool(
 		'emoji',
 		'Look up an emoji by name or character: unicode, hex, skin tones.',
 		{ emoji: z.string().describe('Emoji name or the character itself, e.g. rocket') },
-		(c, a) => c.emoji(a.emoji)
+		(c, a, request) => c.emoji(a.emoji, request)
 	);
 	tool(
 		'emoji_search',
 		'Search emoji by keyword.',
 		{
-			q: z.string().describe('Search keyword, e.g. fire'),
+			query: z.string().describe('Search keyword, e.g. fire'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
 		},
-		(c, a) => c.emoji.search(a.q, { limit: a.limit })
+		(c, a, request) => c.emoji.search(a.query, { ...request, limit: a.limit })
 	);
 
 	return server;

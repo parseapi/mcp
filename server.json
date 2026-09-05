@@ -7,7 +7,7 @@
 		"url": "https://github.com/parseapi/mcp",
 		"source": "github"
 	},
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"remotes": [
 		{
 			"type": "streamable-http",
@@ -15,7 +15,7 @@
 			"headers": [
 				{
 					"name": "X-API-Key",
-					"description": "Optional. Skips the browser sign-in — parseAPI key from https://parseapi.com",
+					"description": "Optional. Skips the browser sign-in \u2014 parseAPI key from https://parseapi.com",
 					"isRequired": false,
 					"isSecret": true
 				}
@@ -26,7 +26,7 @@
 		{
 			"registryType": "npm",
 			"identifier": "parseapi-mcp",
-			"version": "0.2.1",
+			"version": "0.3.0",
 			"transport": {
 				"type": "stdio"
 			},

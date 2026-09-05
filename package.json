@@ -1,8 +1,8 @@
 {
 	"name": "parseapi-mcp",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"mcpName": "com.parseapi/mcp",
-	"description": "Official parseAPI MCP server. Location, validate, and decode lookups for AI agents: geo, email, phone, weather, currency.",
+	"description": "Official parseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
 	"keywords": [
 		"parseapi",
 		"mcp",
@@ -40,12 +40,14 @@
 		"build": "tsup",
 		"typecheck": "tsc --noEmit",
 		"smoke": "npm run build && node smoke/smoke.mjs",
-		"serve": "npm run build && node dist/http.js"
+		"serve": "npm run build && node dist/http.js",
+		"test": "npm run build && node --test test/*.test.mjs",
+		"prepublishOnly": "npm run typecheck && npm test"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/server": "^2.0.0",
 		"@modelcontextprotocol/node": "^2.0.0",
-		"@parseapi/sdk": "^0.2.1",
+		"@parseapi/sdk": "^0.3.0",
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {

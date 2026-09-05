@@ -86,12 +86,15 @@ async function smokeStdio() {
 	await bare.init();
 	const list = await bare.request('tools/list', {});
 	const names = list.result.tools.map((t) => t.name);
-	check('stdio tools/list has 46 tools', names.length === 46, `got ${names.length}`);
+	check('stdio tools/list has 51 tools', names.length === 51, `got ${names.length}`);
 	check('stdio has ip_self', names.includes('ip_self'));
 	check('stdio has vat', names.includes('vat'));
 	check('stdio has iban', names.includes('iban'));
 	check('stdio has npi', names.includes('npi'));
 	check('stdio has vin', names.includes('vin'));
+	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
+	check('stdio has no company_search', !names.includes('company_search'));
+	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search')).every((tool) => tool.inputSchema.required.includes('query') && !('q' in tool.inputSchema.properties)));
 	check('stdio has no sanctions', !names.includes('sanctions'));
 	check('stdio has tariff', names.includes('tariff') && names.includes('tariff_search'));
 	check(
@@ -210,11 +213,13 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 45 tools (no ip_self)', names.length === 45 && !names.includes('ip_self'), `got ${names.length}`);
+		check('http tools/list has 50 tools (no ip_self)', names.length === 50 && !names.includes('ip_self'), `got ${names.length}`);
 		check('http has vat', names.includes('vat'));
 		check('http has iban', names.includes('iban'));
 		check('http has npi', names.includes('npi'));
 		check('http has vin', names.includes('vin'));
+		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
+		check('http has no company_search', !names.includes('company_search'));
 		check('http has no sanctions', !names.includes('sanctions'));
 		check('http has tariff', names.includes('tariff') && names.includes('tariff_search'));
 
