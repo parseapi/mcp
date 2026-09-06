@@ -1,6 +1,6 @@
 # parseapi-mcp
 
-Official parseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, currency, timezones, dates and more from your AI agent.
+Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, currency, timezones, dates and more from your AI agent.
 
 ## Hosted
 

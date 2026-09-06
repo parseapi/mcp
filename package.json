@@ -2,7 +2,7 @@
 	"name": "parseapi-mcp",
 	"version": "0.3.0",
 	"mcpName": "com.parseapi/mcp",
-	"description": "Official parseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
+	"description": "Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
 	"keywords": [
 		"parseapi",
 		"mcp",
@@ -13,7 +13,7 @@
 		"weather"
 	],
 	"license": "MIT",
-	"author": "parseAPI <hello@parseapi.com> (https://parseapi.com)",
+	"author": "ParseAPI <hello@parseapi.com> (https://parseapi.com)",
 	"homepage": "https://parseapi.com",
 	"repository": {
 		"type": "git",

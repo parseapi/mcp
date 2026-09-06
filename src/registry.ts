@@ -21,7 +21,7 @@ const countryOpt = z
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
 /**
- * One server, every parseAPI lookup as a tool. `key` null serves the funnel:
+ * One server, every ParseAPI lookup as a tool. `key` null serves the funnel:
  * tools list fine, calls return invalid_api_key pointing at signup.
  */
 export function buildServer(key: string | null, transport: Transport): McpServer {
@@ -29,7 +29,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		{
 			name: 'parseapi',
 			version: VERSION,
-			title: 'parseAPI',
+			title: 'ParseAPI',
 			description:
 				'Lookups for agents: IP and place data, addresses, company numbers, email, VAT, IBAN, NPI, phone, domains, weather, currency, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
