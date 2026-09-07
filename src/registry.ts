@@ -3,7 +3,7 @@ import { parseAPI, type RequestOptions } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 
-export const VERSION = '0.3.0';
+export const VERSION = '0.3.2';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
