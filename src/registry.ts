@@ -443,9 +443,12 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'name',
-		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation. Junk input returns valid false. Gender comes from dictionary data and is null when the data does not decide.',
-		{ name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL') },
-		(c, a, request) => c.name(a.name, request)
+		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation, known and countries. Known name membership is independent of nullable gender. Countries are associations, not nationality. Pass country for a local gender context. Junk input returns valid false.',
+		{
+			name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL'),
+			country: z.string().optional().describe('ISO2 country context for gender, e.g. IT'),
+		},
+		(c, a, request) => c.name(a.name, { ...request, country: a.country })
 	);
 	tool(
 		'timezone',

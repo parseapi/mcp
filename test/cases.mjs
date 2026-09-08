@@ -46,6 +46,7 @@ export const cases = [
 	['currency_rate', { base: 'USD', quote: 'EUR', date: '2026-08-01', amount: 0 }, '/currency/USD/EUR', { date: '2026-08-01', amount: '0' }],
 	['language', { code: 'en' }, '/language/en'],
 	['name', { name: 'Smith, John' }, '/name/Smith%2C%20John'],
+	['name', { name: 'Andrea', country: 'IT' }, '/name/Andrea', { country: 'IT' }],
 	['timezone', { timezone: 'America/New_York', at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }, '/timezone/America%2FNew_York', { at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }],
 	['timezone', { lat: 0, lon: 0, at: '2026-08-01T12:00:00Z' }, '/timezone', { lat: '0', lon: '0', at: '2026-08-01T12:00:00Z' }],
 	['date', { date: '03/04/2026', format: 'dmy', to: '2026-08-01' }, '/date/03%2F04%2F2026', { format: 'dmy', to: '2026-08-01' }],

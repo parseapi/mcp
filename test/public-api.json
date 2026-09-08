@@ -736,6 +736,9 @@
     "name": "name",
     "inputSchema": {
       "properties": {
+        "country": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         }
