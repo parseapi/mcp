@@ -26,7 +26,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools;
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 53);
+	assert.equal(tools.length, 54);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -34,7 +34,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 52);
+	assert.equal(result.tools.length, 53);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -159,5 +159,15 @@ test('incompatible measurement target preserves the API error', async (t) => {
 	const result = await rpc.call('measure', { measure: '1 m', to: 'kg' });
 	assert.equal(result.result.isError, true);
 	assert.deepEqual(body(result), error);
+	assert.equal(calls.length, 1);
+});
+
+test('DNS types validate before HTTP and presentation records stay verbatim', async (t) => {
+	const expected = { domain: 'example.com', records: [{ name: 'example.com.', type: 'TXT', ttl: 0, value: '"one" "two"', future: null }] };
+	const { rpc, calls } = await setup(t, { fetch: () => response(expected) });
+	const invalid = await rpc.call('dns', { domain: 'example.com', type: 'ANY' });
+	assert.equal(invalid.result?.isError, true);
+	assert.equal(calls.length, 0);
+	assert.deepEqual(body(await rpc.call('dns', { domain: 'example.com', type: 'TXT' })), expected);
 	assert.equal(calls.length, 1);
 });

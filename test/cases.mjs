@@ -41,6 +41,8 @@ export const cases = [
 	['domain', { domain: 'example.com', deep: true }, '/domain/example.com', { deep: 'true' }],
 	['asn', { asn: 'AS13335' }, '/asn/AS13335'],
 	['mac', { mac: '00:1B:63:84:45:E6' }, '/mac/00%3A1B%3A63%3A84%3A45%3AE6'],
+	['dns', { domain: 'example.com' }, '/dns/example.com'],
+	['dns', { domain: '_dmarc.bücher.example.', type: 'TXT' }, '/dns/_dmarc.b%C3%BCcher.example.', { type: 'TXT' }],
 	['mx', { domain: 'example.com' }, '/mx/example.com'],
 	['useragent', { ua: 'Example Browser/1.0', deep: true }, '/useragent', { deep: 'true' }],
 	['vin', { vin: '1HGCM82633A004352', deep: true }, '/vin/1HGCM82633A004352', { deep: 'true' }],

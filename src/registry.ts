@@ -399,6 +399,16 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		c.mac(a.mac, request)
 	);
 
+	tool(
+		'dns',
+		'Look up published DNS records with TTLs. Pooled on every plan. Omit type to check all ten supported types. The selected question may include its CNAME chain. Values retain DNS presentation syntax, including TXT quoting.',
+		{
+			domain: z.string().describe('Domain or DNS name, including service names such as _dmarc.example.com'),
+			type: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'NS', 'TXT', 'SOA', 'CAA', 'SRV', 'PTR']).optional().describe('DNS question type. Omit to check all supported types.'),
+		},
+		(c, a, request) => c.dns(a.domain, { ...request, type: a.type })
+	);
+
 	tool('mx', 'MX records for a domain.', { domain: z.string().describe('Domain name') }, (c, a, request) =>
 		c.mx(a.domain, request)
 	);

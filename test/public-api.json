@@ -461,6 +461,38 @@
     }
   },
   {
+    "name": "dns",
+    "inputSchema": {
+      "properties": {
+        "domain": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "A",
+            "AAAA",
+            "CNAME",
+            "MX",
+            "NS",
+            "TXT",
+            "SOA",
+            "CAA",
+            "SRV",
+            "PTR"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "domain",
     "inputSchema": {
       "properties": {
