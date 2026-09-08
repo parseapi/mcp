@@ -1,6 +1,10 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	['measure', { measure: '5 ft 11 in', to: 'cm', locale: 'en-US', system: 'us' }, '/measure/5%20ft%2011%20in', { to: 'cm', locale: 'en-US', system: 'us' }],
+	['measure', { measure: '1 kg/m^3', to: 'g/L' }, '/measure/1%20kg%2Fm%5E3', { to: 'g/L' }],
+	['measure_units', { query: 'US gallon', type: 'volume', unit: 'L' }, '/measure/units', { q: 'US gallon', type: 'volume', unit: 'L' }],
+	['measure_units', {}, '/measure/units'],
 	['ip', { ip: '2001:db8::1', deep: true }, '/ip/2001%3Adb8%3A%3A1', { deep: 'true' }],
 	['ip_self', { deep: true }, '/ip', { deep: 'true' }],
 	['continent', { code: 'NA' }, '/continent/NA'],

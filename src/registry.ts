@@ -31,7 +31,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, company numbers, email, VAT, IBAN, NPI, phone, domains, weather, currency, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, VAT, IBAN, NPI, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -63,6 +63,28 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			}
 		);
 	}
+
+	tool(
+		'measure',
+		'Parse a measurement or convert it to a target unit. Supports mixed measurements such as 5 ft 11 in. Amount is a decimal string. Without to, returns the canonical unit for its type. Ambiguous input returns valid false, reason and choices. Use measure_units to discover accepted units. Pooled request, no separate check charge.',
+		{
+			measure: z.string().min(1).max(256).describe('Measurement to parse, e.g. 5 ft 11 in or 10 kg'),
+			to: z.string().min(1).max(128).optional().describe('Target unit, e.g. cm or lb'),
+			locale: z.string().min(1).max(32).optional().describe('Explicit number locale, e.g. de-DE'),
+			system: z.enum(['us', 'imperial']).optional().describe('Resolve an ambiguous customary unit using the stated system'),
+		},
+		(c, a, request) => c.measure(a.measure, { ...request, to: a.to, locale: a.locale, system: a.system })
+	);
+	tool(
+		'measure_units',
+		'Discover the reviewed measurement units, canonical codes, types and aliases. With no filters, returns the full catalog. Pass unit to find compatible conversion targets. Combine query and type to narrow results.',
+		{
+			query: z.string().max(128).optional().describe('Search text, e.g. foot'),
+			type: z.string().min(1).max(64).optional().describe('Measurement type, e.g. length'),
+			unit: z.string().min(1).max(128).optional().describe('Return units compatible with this unit, e.g. m'),
+		},
+		(c, a, request) => c.measure.units({ ...request, query: a.query, type: a.type, unit: a.unit })
+	);
 
 	// Locate
 	tool(

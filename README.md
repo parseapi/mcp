@@ -47,7 +47,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## Tools
 
-51 local tools and 50 hosted tools cover all 53 SDK operations. `ip_self` is local only. `timezone` accepts either a timezone ID or coordinates. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
+53 local tools and 52 hosted tools cover all 55 SDK operations. `ip_self` is local only. `timezone` accepts either a timezone ID or coordinates. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `npi`, `vin`, `tariff`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
@@ -69,6 +69,12 @@ Address lookup returns standardized components and registration status for the U
 Ordinary lookups retry up to twice after a transient failure. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 
 Errors come back as JSON with a machine-readable `code`. Branch on `code`, never on message text. A miss is `not_found`. No key is `invalid_api_key`.
+
+## Measurements
+
+Call `measure` with `{ "measure": "5 ft 11 in", "to": "cm" }`. The result keeps the amount as the decimal string `"180.34"`. Without `to`, the result uses the canonical unit for its type. Optional `locale` and `system` (`us` or `imperial`) resolve explicit number or customary-unit ambiguity.
+
+Call `measure_units` with `{ "unit": "m" }` to discover compatible targets, or `{}` for the reviewed catalog. Optional `query` and `type` filters narrow the list. Ambiguous input remains a successful result with `valid: false`, `reason`, and `choices`. Invalid targets return the ordinary API error. Both tools use pooled requests.
 
 ## Development
 

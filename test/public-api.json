@@ -716,6 +716,67 @@
     }
   },
   {
+    "name": "measure",
+    "inputSchema": {
+      "properties": {
+        "locale": {
+          "maxLength": 32,
+          "minLength": 1,
+          "type": "string"
+        },
+        "measure": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        },
+        "system": {
+          "enum": [
+            "us",
+            "imperial"
+          ],
+          "type": "string"
+        },
+        "to": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "measure"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "measure_units",
+    "inputSchema": {
+      "properties": {
+        "query": {
+          "maxLength": 128,
+          "type": "string"
+        },
+        "type": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 128,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "mx",
     "inputSchema": {
       "properties": {
