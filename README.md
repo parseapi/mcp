@@ -47,7 +47,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## Tools
 
-54 local tools and 53 hosted tools cover all 56 SDK operations. `ip_self` is local only. `timezone` accepts either a timezone ID or coordinates. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
+56 local tools and 55 hosted tools cover the lookup operations. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
@@ -60,8 +60,9 @@ Example tool arguments:
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |
-| `timezone` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
-| `timezone` | `{"lat":40.71,"lon":-74.01}` |
+| `time` | `{}` (UTC now) |
+| `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
+| `time` | `{"lat":40.71,"lon":-74.01}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
 
 Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. Company lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.

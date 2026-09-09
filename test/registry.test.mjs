@@ -69,11 +69,11 @@ test('search requires query and rejects the retired q input before any HTTP call
 	assert.equal(calls.length, 0);
 });
 
-test('ambiguous timezone input and ignored date options are validation errors', async (t) => {
+test('ambiguous time input and ignored date options are validation errors', async (t) => {
 	const { rpc, calls } = await setup(t);
-	for (const args of [{}, { lat: 0 }, { lon: 0 }, { timezone: '' },
-		{ timezone: 'UTC', lat: 0, lon: 0 }, { lat: 0, lon: 0, to: 'UTC' }]) {
-		const called = await rpc.call('timezone', args);
+	for (const args of [{ lat: 0 }, { lon: 0 }, { timezone: '' }, { at: '' }, { to: '' },
+		{ timezone: 'UTC', lat: 0, lon: 0 }]) {
+		const called = await rpc.call('time', args);
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}
 	for (const args of [{ date: '' }, { format: 'mdy' }]) {

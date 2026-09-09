@@ -498,37 +498,23 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a, request) => c.name(a.name, { ...request, country: a.country })
 	);
 	tool(
-		'timezone',
-		'Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Pass to with another IANA id to convert a time between zones: the response appends at (wall time in the from zone) and to.at (the converted time). Open ocean answers the nautical Etc/GMT zone.',
+		'time',
+		'Get current local time, Unix seconds, UTC offset, DST and the next clock change. Omit timezone for UTC, pass an IANA timezone, or pass both coordinates. Pass at for a specific time and to to convert to another zone at the same instant. Unresolved coordinates return null clock fields. Pooled request on every plan.',
 		{
-			timezone: z.string().min(1).optional().describe('IANA timezone id, e.g. America/New_York'),
+			timezone: z.string().min(1).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when coordinates are absent'),
 			lat: lat.optional(),
 			lon: lon.optional(),
-			at: z
-				.string()
-				.optional()
-				.describe(
-					'ISO 8601 time, default now. With to and no UTC offset, reads as wall time in the from zone'
-				),
-			to: z
-				.string()
-				.optional()
-				.describe('Convert: the other IANA zone, e.g. Asia/Tokyo. Requires timezone, not lat/lon'),
+			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
+			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
 		},
-		(c, a, request) => {
-			if (a.lat != null && a.lon != null) {
-				return c.timezone.at(a.lat, a.lon, { ...request, at: a.at });
-			}
-			if (!a.timezone) {
-				return Promise.reject(new Error('Pass timezone or lat and lon'));
-			}
-			return c.timezone(a.timezone, { ...request, at: a.at, to: a.to });
-		},
+		(c, a, request) => a.lat !== undefined && a.lon !== undefined
+			? c.time.at(a.lat, a.lon, { ...request, at: a.at, to: a.to })
+			: c.time(a.timezone, { ...request, at: a.at, to: a.to }),
 		(schema) => schema.refine(
 			(a) => a.timezone !== undefined
 				? a.lat === undefined && a.lon === undefined
-				: a.lat !== undefined && a.lon !== undefined && a.to === undefined,
-			{ message: 'Pass either timezone (with optional to), or both lat and lon.' }
+				: (a.lat === undefined) === (a.lon === undefined),
+			{ message: 'Pass a timezone, both lat and lon, or neither for UTC.' }
 		)
 	);
 	tool(

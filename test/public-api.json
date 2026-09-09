@@ -1113,10 +1113,11 @@
     }
   },
   {
-    "name": "timezone",
+    "name": "time",
     "inputSchema": {
       "properties": {
         "at": {
+          "minLength": 1,
           "type": "string"
         },
         "lat": {
@@ -1134,6 +1135,7 @@
           "type": "string"
         },
         "to": {
+          "minLength": 1,
           "type": "string"
         }
       },
