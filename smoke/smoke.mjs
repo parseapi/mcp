@@ -98,6 +98,7 @@ async function smokeStdio() {
 	check('stdio has no company_search', !names.includes('company_search'));
 	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search')).every((tool) => tool.inputSchema.required.includes('query') && !('q' in tool.inputSchema.properties)));
 	check('stdio has no sanctions', !names.includes('sanctions'));
+	check('stdio has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
 	check('stdio has tariff', names.includes('tariff') && names.includes('tariff_search'));
 	check(
 		'stdio has the phone family',
@@ -224,6 +225,7 @@ async function smokeHttp() {
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 		check('http has no company_search', !names.includes('company_search'));
 		check('http has no sanctions', !names.includes('sanctions'));
+		check('http has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
 		check('http has tariff', names.includes('tariff') && names.includes('tariff_search'));
 
 		const funnel = await postRpc(port, {
