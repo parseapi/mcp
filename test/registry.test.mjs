@@ -26,7 +26,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools;
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 57);
+	assert.equal(tools.length, 58);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -34,7 +34,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 56);
+	assert.equal(result.tools.length, 57);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -189,4 +189,14 @@ test('NAICS preserves exclusions, actual search evidence and original query text
  const called = await rpc.call('naics_search', { query: 'sofware' });
  assert.deepEqual(body(called), data);
  assert.equal(calls[0].url.searchParams.get('q'), 'sofware');
+});
+
+test('SWIFT retains unknown names and the source notice alongside copied data', async (t) => {
+	const data = { swift: 'ZZZZUS00', valid: true, country: 'US', name: null };
+	const notice = "SWIFT © and database rights August 2026. All rights reserved. This Mapping Table has been developed by SWIFT. Any use of the Mapping Table, in whole or in part, is subject to the BIC/LEI Mapping Table License Agreement as published with the Mapping Table available on GLEIF's website. The Mapping Table is updated monthly. For the latest BIC information and updates, always refer to www.swift.com/bic .";
+	const encodedNotice = "notice*=UTF-8''" + encodeURIComponent(notice).replace(/[!'()*]/g, value => '%' + value.charCodeAt(0).toString(16).toUpperCase());
+	const { rpc } = await setup(t, { fetch: () => new Response(JSON.stringify(data), { headers: { 'X-Attribution': encodedNotice } }) });
+	const called = await rpc.call('swift', { code: 'ZZZZUS00' });
+	assert.deepEqual(body(called), data);
+	assert.deepEqual(called.result.content[1], { type: 'text', text: notice });
 });

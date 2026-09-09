@@ -56,7 +56,26 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			async (args, context): Promise<ToolResult> => {
 				if (!parse) return noKeyResult(transport);
 				try {
-					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, { signal: context.mcpReq.signal }));
+					// Keep the required notice with each copied BIC result. A per-call client
+					// prevents concurrent tools from mixing attribution from different editions.
+					let attribution: string | null = null;
+					const client = name === 'swift' ? parseAPI(key!, {
+						fetch: async (input, init) => {
+							const response = await fetch(input, init);
+							if (response.ok) {
+								attribution = response.headers.get('x-attribution');
+								const prefix = "notice*=UTF-8''";
+								if (attribution?.startsWith(prefix)) {
+									try { attribution = decodeURIComponent(attribution.slice(prefix.length)); }
+									catch { /* Preserve an unexpected upstream notice verbatim. */ }
+								}
+							}
+							return response;
+						},
+					}) : parse;
+					const result = ok(await fn(client, args as z.infer<z.ZodObject<S>>, { signal: context.mcpReq.signal }));
+					if (attribution) result.content.push({ type: 'text', text: attribution });
+					return result;
 				} catch (err) {
 					return toErrorResult(err);
 				}
@@ -348,6 +367,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		},
 		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
 	);
+	tool(
+		'swift',
+		'Check an 8- or 11-character SWIFT/BIC code and look up its institution name when known. Valid means syntax only. A null name means unknown or ambiguous in the available coverage, not an invalid code. Country is read from the code. This does not confirm payment reachability or account existence. Pooled request.',
+		{ code: z.string().min(1).max(128).describe('SWIFT/BIC code, e.g. BOFAUS3N or BOFAUS3NXXX') },
+		(c, a, request) => c.swift(a.code, request)
+	);
+
 	tool(
 		'npi',
 		'Look up a US healthcare provider by NPI: name, specialty, practice address, deactivation date, and exclusion status. Deep adds Medicare enrollment on paid plans.',
