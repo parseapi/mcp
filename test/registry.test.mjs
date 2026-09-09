@@ -26,7 +26,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools;
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 56);
+	assert.equal(tools.length, 57);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -34,7 +34,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 55);
+	assert.equal(result.tools.length, 56);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -89,6 +89,15 @@ test('API errors preserve machine-readable details', async (t) => {
 	const called = await rpc.call('city', { name: 'missing' });
 	assert.equal(called.result.isError, true);
 	assert.deepEqual(body(called), error);
+	assert.equal(calls.length, 1);
+});
+
+test('BIN preserves longest-match data and rejects numeric arguments without dropping zeros', async (t) => {
+	const data = { bin: '00123456', prefix: '001234', country: null, issuer: null, brand: null, type: null, prepaid: false, deep: {} };
+	const { rpc, calls } = await setup(t, { fetch: () => response(data) });
+	assert.deepEqual(body(await rpc.call('bin', { bin: '00123456', deep: true })), data);
+	const malformed = await rpc.call('bin', { bin: 123456 });
+	assert.equal(malformed.result?.isError, true);
 	assert.equal(calls.length, 1);
 });
 

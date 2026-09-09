@@ -72,6 +72,26 @@
     }
   },
   {
+    "name": "bin",
+    "inputSchema": {
+      "properties": {
+        "bin": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "bin"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "bloc",
     "inputSchema": {
       "properties": {

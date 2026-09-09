@@ -340,6 +340,15 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a, request) => c.iban(a.iban, { ...request, country: a.country })
 	);
 	tool(
+		'bin',
+		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
+		{
+			bin: z.string().describe('Card prefix as a string, 6-11 digits. Preserve leading zeros. Spaces and hyphens are accepted.'),
+			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
+		},
+		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
+	);
+	tool(
 		'npi',
 		'Look up a US healthcare provider by NPI: name, specialty, practice address, deactivation date, and exclusion status. Deep adds Medicare enrollment on paid plans.',
 		{
