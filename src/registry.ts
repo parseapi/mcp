@@ -443,6 +443,21 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a, request) => c.tariff.search(a.query, request)
 	);
 	tool(
+		'naics',
+		'Look up a US NAICS 2022 industry code: name, definition, hierarchy level, parent and direct children. Pooled request. Unknown code returns not_found.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33') },
+		(c, a, request) => c.naics(a.code, request)
+	);
+	tool(
+		'naics_search',
+		'Search US NAICS 2022 industry names and activity terms by keyword. Returns matching industry records. Pooled request.',
+		{
+			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
+			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
+		},
+		(c, a, request) => c.naics.search(a.query, { ...request, limit: a.limit })
+	);
+	tool(
 		'currency',
 		'Look up a currency: name, symbol, decimal places, countries using it.',
 		{ code: z.string().describe('ISO 4217 code, e.g. USD') },

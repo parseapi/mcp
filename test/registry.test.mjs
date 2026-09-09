@@ -26,7 +26,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools;
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 54);
+	assert.equal(tools.length, 56);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -34,7 +34,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 53);
+	assert.equal(result.tools.length, 55);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -62,7 +62,7 @@ for (const [name, args, pathname, query = {}] of cases) {
 
 test('search requires query and rejects the retired q input before any HTTP call', async (t) => {
 	const { rpc, calls } = await setup(t);
-	for (const name of ['city_search', 'address_search', 'tariff_search', 'emoji_search']) {
+	for (const name of ['city_search', 'address_search', 'tariff_search', 'naics_search', 'emoji_search']) {
 		const called = await rpc.call(name, { q: 'coffee' });
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}

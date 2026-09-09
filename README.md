@@ -49,7 +49,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 54 local tools and 53 hosted tools cover all 56 SDK operations. `ip_self` is local only. `timezone` accepts either a timezone ID or coordinates. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `npi`, `vin`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
 Example tool arguments:
 

@@ -1,6 +1,9 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	['naics', { code: '31-33' }, '/naics/31-33'],
+	['naics_search', { query: 'coffee & tea', limit: 5 }, '/naics', { q: 'coffee & tea', limit: '5' }],
+	['naics_search', { query: 'plumbing' }, '/naics', { q: 'plumbing' }],
 	['measure', { measure: '5 ft 11 in', to: 'cm', locale: 'en-US', system: 'us' }, '/measure/5%20ft%2011%20in', { to: 'cm', locale: 'en-US', system: 'us' }],
 	['measure', { measure: '1 kg/m^3', to: 'g/L' }, '/measure/1%20kg%2Fm%5E3', { to: 'g/L' }],
 	['measure_units', { query: 'US gallon', type: 'volume', unit: 'L' }, '/measure/units', { q: 'US gallon', type: 'volume', unit: 'L' }],
