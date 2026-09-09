@@ -2,7 +2,6 @@
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
 	['bin', { bin: '00 1234-56', deep: true }, '/bin/00%201234-56', { deep: 'true' }],
-	['swift', { code: ' bofa/us3n? ' }, '/swift/%20bofa%2Fus3n%3F%20'],
 	['naics', { code: '31-33' }, '/naics/31-33'],
 	['naics_search', { query: 'coffee & tea', limit: 5 }, '/naics', { q: 'coffee & tea', limit: '5' }],
 	['naics_search', { query: 'plumbing' }, '/naics', { q: 'plumbing' }],

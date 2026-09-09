@@ -1162,25 +1162,6 @@
     }
   },
   {
-    "name": "swift",
-    "inputSchema": {
-      "properties": {
-        "code": {
-          "maxLength": 128,
-          "minLength": 1,
-          "type": "string"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "tariff",
     "inputSchema": {
       "properties": {
