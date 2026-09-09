@@ -122,7 +122,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	}
 	tool(
 		'continent',
-		'Look up a continent by code: name, area, population.',
+		'Look up a continent by code: name, area, population and population_period. The period is a reporting year or range, null when unknown or unverifiable.',
 		{ code: z.string().describe('Continent code: AF, AN, AS, EU, NA, OC, SA') },
 		(c, a, request) => c.continent(a.code, request)
 	);
@@ -154,7 +154,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'country',
-		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile, including tax and locale conventions, on paid plans.',
+		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile, including population with its reporting period, tax and locale conventions, on paid plans.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
@@ -166,7 +166,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'state',
-		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
+		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans, including population_period when verified. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
@@ -176,17 +176,17 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'state_districts',
-		'List the districts, counties or departments of a state. Deep adds population to each result on paid plans.',
+		'List the districts, counties or departments of a state. Deep adds population and its reporting period to each result on paid plans.',
 		{
 			code: z.string().describe('State code or name, e.g. NC, colorado'),
 			country: countryOpt,
-			deep: deep.describe('Include population in each district detail bag on a paid plan.'),
+			deep: deep.describe('Include population and its reporting period in each district detail bag on a paid plan.'),
 		},
 		(c, a, request) => c.state.districts(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'district',
-		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name.',
+		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name. Population includes a reporting year or period when verified. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
 		{
 			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
 			country: countryOpt,
@@ -197,7 +197,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'city',
-		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties.',
+		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties. Population includes a reporting year or period when verified.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
 			country: countryOpt,
@@ -252,7 +252,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'postal',
-		'Resolve a postal code to its place, coordinates and timezone. Deep adds area, population, tax references, neighbors and metro associations on paid plans. Tax rates are percentages and alternative geographic references, not additive.',
+		'Resolve a postal code to its place, coordinates and timezone. Deep adds area, population with its reporting period, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
 		{
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
@@ -295,14 +295,14 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'address_search',
-		'Search US or French street addresses from a partial address. Postal code, city, state and user IP can narrow or rank matches. French search requires country FR and either postal or city.',
+		'Search street addresses from a partial address. Prefer postal, or city and state, from the form. An optional end-user IP hints at locality. Empty results explain themselves with reason: more_input, missing_context or no_matches. With suggestions reason is null. Operational failures use API errors. French search requires country FR and either postal or city.',
 		{
 			query: z.string().describe('Partial street address, e.g. 1600 Pennsylvania'),
 			country: z.string().optional().describe('Country: US or FR. Defaults to US.'),
-			postal: z.string().optional().describe('Postal code filter'),
+			postal: z.string().optional().describe('Postal code from the address form, preferred for locality context'),
 			city: z.string().optional().describe('City filter'),
 			state: z.string().optional().describe('State code filter'),
-			ip: z.string().optional().describe('User IP address for ranking nearby matches'),
+			ip: z.string().optional().describe('End-user IP locality hint for server-side calls. Prefer explicit form context.'),
 		},
 		(c, a, request) => c.address.search(a.query, { ...request, country: a.country, postal: a.postal, city: a.city, state: a.state, ip: a.ip })
 	);
@@ -319,7 +319,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 
 	tool(
 		'point',
-		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds elevation and a compact nearest-city summary on every plan.',
+		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds terrain and a compact nearest-city summary on every plan. The timezone ID stays in core. Nearest city is null when none is within 200 km.',
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
@@ -328,7 +328,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'weather',
-		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Metric and imperial pairs stay together.',
+		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Metric and imperial pairs stay together. A date requires paid deep and adds the past UTC day in deep.history alongside current conditions.',
 		{
 			lat,
 			lon,
@@ -336,7 +336,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			date: z
 				.string()
 				.optional()
-				.describe('A past UTC day, YYYY-MM-DD. Requires deep. Returns that day as deep.history'),
+				.describe('A past UTC day, YYYY-MM-DD. Requires paid deep. Adds deep.history alongside current conditions.'),
 		},
 		(c, a, request) => c.weather(a.lat, a.lon, { ...request, deep: a.deep, date: a.date })
 	);
@@ -424,7 +424,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'hlr',
-		'Live phone status: live means assigned and connected means reachable. Deep adds available roaming and network diagnostics in the same metered lookup, including Free allowance units. Null is unconfirmed.',
+		'Phone status at the last check: live means assigned and connected means reachable at that check. Cached results may be returned. Deep adds available roaming and network diagnostics in the same metered lookup, including Free allowance units. Null is unconfirmed.',
 		{
 			number: z.string().describe('Phone number, e.g. +447712345678'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -475,7 +475,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'tariff',
-		'Look up a tariff code, description, lineage and general rate. Paid deep adds statistical units, special and other rates, and origin-specific measures.',
+		'Look up a tariff code, description, lineage and general rate. Paid deep adds statistical units and the special and other schedule columns. Optional origin with deep resolves country-specific measures. Without origin, schedule detail is available and origin-dependent fields are null. A null effective rate is not a zero rate.',
 		{
 			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
 			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
