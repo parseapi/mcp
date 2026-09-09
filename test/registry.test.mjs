@@ -192,3 +192,23 @@ test('NAICS preserves exclusions, actual search evidence and original query text
  assert.deepEqual(body(called), data);
  assert.equal(calls[0].url.searchParams.get('q'), 'sofware');
 });
+
+
+test('name_local and null pass through every named tool response', async (t) => {
+ let data;
+ const { rpc } = await setup(t, { fetch: () => response(data) });
+ for (const name_local of ['München', null]) {
+  const record = { name: 'Munich', name_local };
+  for (const [tool, args, value] of [
+   ['country', { code: 'DE' }, record],
+   ['state', { code: 'BY' }, record],
+   ['city', { name: 'Munich' }, record],
+   ['language', { code: 'de' }, record],
+   ['holiday', { country: 'DE' }, { holidays: [record] }],
+   ['point', { lat: 48, lon: 11, deep: true }, { deep: { city: record } }],
+  ]) {
+   data = value;
+   assert.deepEqual(body(await rpc.call(tool, args)), data);
+  }
+ }
+});
