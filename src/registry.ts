@@ -154,9 +154,9 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'country',
-		'Look up a country: names, capital, currency, languages, calling code, timezones.',
-		{ code: iso2('country code') },
-		(c, a, request) => c.country(a.code, request)
+		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile, including tax and locale conventions, on paid plans.',
+		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'country_states',
@@ -166,65 +166,70 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'state',
-		'Look up a state, province or region by code or name. Unique names resolve without a country. A colliding code 404s asking for ?country=. Country takes ISO2, ISO3, or a name.',
+		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.state(a.code, { ...request, country: a.country })
+		(c, a, request) => c.state(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'state_districts',
-		'List the districts, counties or departments of a state.',
+		'List the districts, counties or departments of a state. Deep adds population to each result on paid plans.',
 		{
 			code: z.string().describe('State code or name, e.g. NC, colorado'),
 			country: countryOpt,
+			deep: deep.describe('Include population in each district detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.state.districts(a.code, { ...request, country: a.country })
+		(c, a, request) => c.state.districts(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'district',
-		'Look up a district, county or department by code or name. Pass state when a name collides.',
+		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name.',
 		{
 			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
 			country: countryOpt,
 			state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.district(a.code, { ...request, country: a.country, state: a.state })
+		(c, a, request) => c.district(a.code, { ...request, deep: a.deep, country: a.country, state: a.state })
 	);
 	tool(
 		'city',
-		'Look up a city by name: type, capital status (capital_of), district, elevation, area in km2, coordinates, timezone. Pass country or state to disambiguate name ties.',
+		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate, e.g. NC'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.city(a.name, { ...request, country: a.country, state: a.state })
+		(c, a, request) => c.city(a.name, { ...request, deep: a.deep, country: a.country, state: a.state })
 	);
 	tool(
 		'city_id',
-		'Refetch a city by its stable parse id from an earlier response.',
-		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb') },
-		(c, a, request) => c.city.id(a.id, request)
+		'Resolve a stable city id. Deep adds the city profile on paid plans.',
+		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.city.id(a.id, { ...request, deep: a.deep })
 	);
 	tool(
 		'city_search',
-		'Search cities by name prefix. Use when the exact name is unknown.',
+		'Search city names. Deep adds the profile inside each returned city on paid plans.',
 		{
 			query: z.string().describe('Name prefix, e.g. char'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code filter'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.city.search(a.query, { ...request, country: a.country, state: a.state, limit: a.limit })
+		(c, a, request) => c.city.search(a.query, { ...request, deep: a.deep, country: a.country, state: a.state, limit: a.limit })
 	);
-	tool('city_nearest', 'Find the nearest city to coordinates.', { lat, lon }, (c, a, request) =>
-		c.city.nearest(a.lat, a.lon, request)
+	tool('city_nearest', 'Find the nearest city with distance. Deep adds the city profile on paid plans.', { lat, lon, deep }, (c, a, request) =>
+		c.city.nearest(a.lat, a.lon, { ...request, deep: a.deep })
 	);
 	tool(
 		'city_nearby',
-		'List cities around a named city, nearest first, with distance. Default radius 40 km.',
+		'Find nearby cities with distances. Deep adds the profile inside each returned city on paid plans.',
 		{
 			name: z.string().describe('Anchor city name, e.g. denver'),
 			country: countryOpt,
@@ -232,10 +237,12 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 			radius: z.number().positive().optional().describe('Search radius, default 40 km'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results, default 10'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
 		(c, a, request) =>
 			c.city.nearby(a.name, {
 				...request,
+				deep: a.deep,
 				country: a.country,
 				state: a.state,
 				radius: a.radius,
@@ -245,33 +252,36 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'postal',
-		'Look up a postal or ZIP code: place name, country name, coordinates, state, district, area, timezone, elevation. Unique codes resolve without a country. A collision 404s asking for ?country=. Never defaults to US.',
+		'Resolve a postal code to its place, coordinates and timezone. Deep adds area, population, tax references, neighbors and metro associations on paid plans. Tax rates are percentages and alternative geographic references, not additive.',
 		{
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.postal(a.code, { ...request, country: a.country })
+		(c, a, request) => c.postal(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'postal_nearby',
-		'List postal codes near a given one, sorted by distance. Unique codes resolve without a country.',
+		'Find nearby postal codes with distances. Deep adds metropolitan associations to the origin and each result on paid plans.',
 		{
 			code: z.string().describe('Postal code to search around'),
 			country: countryOpt,
 			radius: z.number().positive().optional().describe('Search radius'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.postal.nearby(a.code, { ...request, country: a.country, radius: a.radius, unit: a.unit })
+		(c, a, request) => c.postal.nearby(a.code, { ...request, deep: a.deep, country: a.country, radius: a.radius, unit: a.unit })
 	);
 	tool(
 		'postal_distance',
-		'Distance between two postal codes in the same country. Unique codes resolve without a country.',
+		'Distance between two postal codes. Deep adds metropolitan associations inside each endpoint on paid plans.',
 		{
 			from: z.string().describe('First postal code'),
 			to: z.string().describe('Second postal code'),
 			country: countryOpt,
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.postal.distance(a.from, a.to, { ...request, country: a.country })
+		(c, a, request) => c.postal.distance(a.from, a.to, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'address',
@@ -298,7 +308,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'company',
-		'Look up a company registration number: validity, registration status, name, activity and address when available. Pass country when more than one scheme can match. Deep adds country, postal and city data.',
+		'Parse a company number and its registered identity, status and address. Paid deep adds business activity and associated identifiers. Geography lookups are separate calls.',
 		{
 			number: z.string().describe('Company registration number, e.g. 552100554 with country FR'),
 			country: countryOpt,
@@ -309,7 +319,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 
 	tool(
 		'point',
-		'Reverse geocode coordinates to country, state, district and nearest city. Deep adds richer admin data.',
+		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds elevation and a compact nearest-city summary on every plan.',
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
@@ -318,7 +328,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'weather',
-		'Current weather observation at coordinates. Every measurement ships metric and imperial side by side. Deep adds minute-by-minute rain, hourly and daily rows worldwide, alerts, and air quality. With deep, date returns a past day as deep.history.',
+		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Metric and imperial pairs stay together.',
 		{
 			lat,
 			lon,
@@ -351,12 +361,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'iban',
-		'Parse an IBAN: checksum and structure. Returns the normalized number, the print form for display, country, checksum digits, bank, branch, and account identifiers, plus bank_name and bic when available. Junk answers valid false, never a 404. Pass country when the value has no prefix.',
+		'Parse an IBAN and check its format and checksum, with known bank identifiers. Deep adds check digits, branch and account decomposition on every plan. Does not verify an account exists.',
 		{
 			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
 			country: iso2('country code when the number has no prefix').optional(),
+			deep: deep.describe('Include optional detail on every plan.'),
 		},
-		(c, a, request) => c.iban(a.iban, { ...request, country: a.country })
+		(c, a, request) => c.iban(a.iban, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'bin',
@@ -373,10 +384,9 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		{ code: z.string().min(1).max(128).describe('SWIFT/BIC code, e.g. BOFAUS3N or BOFAUS3NXXX') },
 		(c, a, request) => c.swift(a.code, request)
 	);
-
 	tool(
 		'npi',
-		'Look up a US healthcare provider by NPI: name, specialty, practice address, deactivation date, and exclusion status. Deep adds Medicare enrollment on paid plans.',
+		'Validate an NPI and identify the registered provider, active/exclusion status, specialty and practice contact. Paid deep adds deactivation date and Medicare enrollment evidence.',
 		{
 			npi: z.string().describe('10-digit NPI number'),
 			deep,
@@ -385,7 +395,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'phone',
-		'Validate and parse a phone number: country, type, area-code state, timezone, formats. Pass country for national-format numbers.',
+		'Parse and validate a phone number with national and international display formats. Deep adds numbering-plan state and timezone on every plan. These do not locate a handset.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -395,12 +405,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'carrier',
-		'Look up the current carrier serving a phone number: carrier name, network type including voip, burner app flag, issuing city and state. Metered per lookup on a valid number.',
+		'Look up current carrier, real line type and burner flag. Deep adds issuing city and state in the same metered lookup, including Free allowance units. No extra check or second paid gate.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
+			deep: deep.describe('Include available detail within the same metered core unit. No extra charge or paid-plan gate.'),
 		},
-		(c, a, request) => c.carrier(a.number, { ...request, country: a.country })
+		(c, a, request) => c.carrier(a.number, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'caller',
@@ -413,17 +424,18 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'hlr',
-		'Live network status for a phone number worldwide: live means assigned, connected means the handset is reachable right now. Outside North America adds roaming and network details. Metered per lookup on a valid number.',
+		'Live phone status: live means assigned and connected means reachable. Deep adds available roaming and network diagnostics in the same metered lookup, including Free allowance units. Null is unconfirmed.',
 		{
 			number: z.string().describe('Phone number, e.g. +447712345678'),
 			country: iso2('country code for national-format numbers').optional(),
+			deep: deep.describe('Include available detail within the same metered core unit. No extra charge or paid-plan gate.'),
 		},
-		(c, a, request) => c.hlr(a.number, { ...request, country: a.country })
+		(c, a, request) => c.hlr(a.number, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'domain',
-		'Look up a domain: registration, DNS, mail setup. Deep adds richer checks.',
-		{ domain: z.string().describe('Domain name, e.g. example.com'), deep },
+		'Check whether a domain is registered. Deep adds registration dates, registrar, status and DNSSEC, included on paid plans. Use dns for DNS records and mx for mail routing.',
+		{ domain: z.string().describe('Domain name, e.g. example.com'), deep: deep.describe('Include registration details on a paid plan.') },
 		(c, a, request) => c.domain(a.domain, { ...request, deep: a.deep })
 	);
 	tool('asn', 'Network name and country for an autonomous system number.', { asn: z.string().describe('Autonomous system number, such as AS13335 or 13335') }, (c, a, request) =>
@@ -457,13 +469,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	// Decode
 	tool(
 		'vin',
-		'Decode a 17-character VIN: year, make, model, trim, body, engine, drive, transmission, manufacturer, and assembly plant. Junk or a failed check digit answers valid false, never a 404. Deep adds open recall campaigns on paid plans.',
+		'Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and recalls.',
 		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
 		(c, a, request) => c.vin(a.vin, { ...request, deep: a.deep })
 	);
 	tool(
 		'tariff',
-		'US import duty. Look up an HTS code: description, duty rates verbatim (general, special, column 2), units, parent lineage, and the official revision that answered. Deep with an origin country resolves the Chapter 99 tariff measures that apply from that origin, with a composed effective_rate when the components compose cleanly (null otherwise, null beats a guess). Unknown code is a 404. US schedule only.',
+		'Look up a tariff code, description, lineage and general rate. Paid deep adds statistical units, special and other rates, and origin-specific measures.',
 		{
 			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
 			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
@@ -479,24 +491,25 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'naics',
-		'Look up a US NAICS 2022 industry code: name, definition, hierarchy level, parent, direct children and classification exclusions. Exclusions retain their text even when no code is linked. Pooled request. Unknown code returns not_found.',
-		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33') },
-		(c, a, request) => c.naics(a.code, request)
+		'Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.naics(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'naics_search',
-		'Search US NAICS 2022 industry names and activity terms by keyword, with conservative typo fallback. Results explain the matching text and any corrected query tokens. Pooled request.',
+		'Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.naics.search(a.query, { ...request, limit: a.limit })
+		(c, a, request) => c.naics.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 	tool(
 		'currency',
-		'Look up a currency: name, symbol, decimal places, countries using it.',
-		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
-		(c, a, request) => c.currency(a.code, request)
+		'Currency name, symbols and decimal places. Deep adds numeric code, plural name and using countries on every plan.',
+		{ code: z.string().describe('ISO 4217 code, e.g. USD'), deep: deep.describe('Include optional detail on every plan.') },
+		(c, a, request) => c.currency(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'currency_rate',
@@ -519,32 +532,34 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'language',
-		'Look up a language by BCP 47 or ISO 639-3 code: names, script, direction.',
-		{ code: z.string().describe('Language code, e.g. en, ja, gsw') },
-		(c, a, request) => c.language(a.code, request)
+		'Language names, script and writing direction. Deep adds ISO3 and country associations on every plan.',
+		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('Include optional detail on every plan.') },
+		(c, a, request) => c.language(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'name',
-		'Parse a person name: prefix, first, middle, last, suffix, gender, salutation, known and countries. Known name membership is independent of nullable gender. Countries are associations, not nationality. Pass country for a local gender context. Junk input returns valid false.',
+		'Parse a name into prefix, first, middle, last and suffix. Paid deep adds dictionary membership, gender evidence, salutation and country associations. Country scopes evidence, never nationality. Junk returns valid false.',
 		{
 			name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL'),
 			country: z.string().optional().describe('ISO2 country context for gender, e.g. IT'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.name(a.name, { ...request, country: a.country })
+		(c, a, request) => c.name(a.name, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'time',
-		'Get current local time, Unix seconds, UTC offset, DST and the next clock change. Omit timezone for UTC, pass an IANA timezone, or pass both coordinates. Pass at for a specific time and to to convert to another zone at the same instant. Unresolved coordinates return null clock fields. Pooled request on every plan.',
+		'Current local time, Unix seconds, exact UTC offset and DST. Omit timezone for UTC or pass both coordinates. at selects the moment; to converts it. Deep adds friendly name, numeric offsets and the next source clock transition on every plan.',
 		{
 			timezone: z.string().min(1).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when coordinates are absent'),
 			lat: lat.optional(),
 			lon: lon.optional(),
 			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
 			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
+			deep: deep.describe('Include optional detail on every plan.'),
 		},
 		(c, a, request) => a.lat !== undefined && a.lon !== undefined
-			? c.time.at(a.lat, a.lon, { ...request, at: a.at, to: a.to })
-			: c.time(a.timezone, { ...request, at: a.at, to: a.to }),
+			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to })
+			: c.time(a.timezone, { ...request, deep: a.deep, at: a.at, to: a.to }),
 		(schema) => schema.refine(
 			(a) => a.timezone !== undefined
 				? a.lat === undefined && a.lon === undefined
@@ -554,7 +569,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'date',
-		'Parse a date in any common format (2026-03-29, March 29, 2026, 3/29/2026, 20260829) into calendar facts: ISO date, weekday, ISO week, day of year, quarter, leap year, unix time. Ambiguous numeric dates answer valid false unless format asserts a reading, never a guess. Pass to with another date for the signed days between. Omit date for today (UTC), so to alone answers days from today.',
+		'Parse a date to ISO date, validity and Unix midnight. Ambiguous numeric dates need format. to adds signed days between; omit date for UTC today. Deep adds calendar details on every plan.',
 		{
 			date: z
 				.string()
@@ -569,10 +584,11 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				.string()
 				.optional()
 				.describe('Another date. Appends to (normalized ISO) and days (signed days between)'),
+			deep: deep.describe('Include optional detail on every plan.'),
 		},
 		(c, a, request) => {
-			if (a.date == null) return c.date.today({ ...request, to: a.to });
-			return c.date(a.date, { ...request, format: a.format, to: a.to });
+			if (a.date == null) return c.date.today({ ...request, deep: a.deep, to: a.to });
+			return c.date(a.date, { ...request, deep: a.deep, format: a.format, to: a.to });
 		},
 		(schema) => schema.refine(
 			(a) => a.format === undefined || a.date !== undefined,
@@ -596,18 +612,19 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'emoji',
-		'Look up an emoji by name or character: unicode, hex, skin tones.',
-		{ emoji: z.string().describe('Emoji name or the character itself, e.g. rocket') },
-		(c, a, request) => c.emoji(a.emoji, request)
+		'Resolve an emoji character, shortcode or name. Deep adds encoding, keywords and skin variants on every plan.',
+		{ emoji: z.string().describe('Emoji name or the character itself, e.g. rocket'), deep: deep.describe('Include optional detail on every plan.') },
+		(c, a, request) => c.emoji(a.emoji, { ...request, deep: a.deep })
 	);
 	tool(
 		'emoji_search',
-		'Search emoji by keyword.',
+		'Search emoji by keyword. Deep adds encoding and skin-variant detail inside each result on every plan.',
 		{
 			query: z.string().describe('Search keyword, e.g. fire'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
+			deep: deep.describe('Include optional detail on every plan.'),
 		},
-		(c, a, request) => c.emoji.search(a.query, { ...request, limit: a.limit })
+		(c, a, request) => c.emoji.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 
 	return server;

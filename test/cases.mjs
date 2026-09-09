@@ -20,6 +20,7 @@ export const cases = [
 	['country_states', { code: 'US' }, '/country/US/states'],
 	['state', { code: 'NC', country: 'US' }, '/state/NC', { country: 'US' }],
 	['state_districts', { code: 'NC', country: 'US' }, '/state/NC/districts', { country: 'US' }],
+	['state_districts', { code: 'NC', country: 'US', deep: true }, '/state/NC/districts', { country: 'US', deep: 'true' }],
 	['district', { code: 'guilford county', country: 'US', state: 'NC' }, '/district/guilford%20county', { country: 'US', state: 'NC' }],
 	['city', { name: 'New York', country: 'US', state: 'NY' }, '/city/New%20York', { country: 'US', state: 'NY' }],
 	['city_id', { id: 'city_abc' }, '/city/id/city_abc'],
@@ -68,3 +69,6 @@ export const cases = [
 	['emoji', { emoji: '🔥' }, '/emoji/%F0%9F%94%A5'],
 	['emoji_search', { query: 'fire', limit: 3 }, '/emoji', { q: 'fire', limit: '3' }],
 ];
+
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "iban", "language", "naics", "naics_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,{...query,deep:'true'}]));

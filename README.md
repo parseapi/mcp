@@ -51,12 +51,16 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `bin`, `swift`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
-NAICS records include classification `exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
+NAICS paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
 Example tool arguments:
 
 | Tool | Arguments |
 |---|---|
+| `domain` | `{"domain":"example.com"}` (registration status) |
+| `domain` | `{"domain":"example.com","deep":true}` (registration details on paid plans) |
+| `dns` | `{"domain":"example.com","type":"TXT"}` |
+| `mx` | `{"domain":"example.com"}` |
 | `asn` | `{"asn":"AS13335"}` |
 | `mac` | `{"mac":"00:1B:63:84:45:E6"}` |
 | `bin` | `{"bin":"424242"}` |
@@ -96,3 +100,10 @@ Offline tests pin the public tool names and argument schemas in `test/public-api
 MIT licensed.
 
 SWIFT `valid` checks code syntax. Its institution-name coverage is partial; unknown or ambiguous names stay null. The tool decodes the response attribution header and includes the required data notice as a second text block. Retain that notice with copies of the lookup data.
+
+
+## Optional detail
+
+Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone, IBAN and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+
+Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Country, State and Postal tax references are in their paid deep bags.
