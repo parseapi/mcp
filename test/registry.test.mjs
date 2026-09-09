@@ -171,3 +171,13 @@ test('DNS types validate before HTTP and presentation records stay verbatim', as
 	assert.deepEqual(body(await rpc.call('dns', { domain: 'example.com', type: 'TXT' })), expected);
 	assert.equal(calls.length, 1);
 });
+
+
+test('NAICS preserves exclusions, actual search evidence and original query text', async (t) => {
+ const records = [{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US"},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":null,"match":null},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[],"match":{"field":"future-field","text":"Future matching evidence","corrections":[],"future":true}},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[{"description":"Designing integrated computer systems","codes":[{"naics":"541512","name":"Computer Systems Design Services"}]},{"description":"Activities classified elsewhere","codes":[]}],"match":{"field":"term","text":"Computer software programming services","corrections":[{"from":"sofware","to":"software"}]},"future":true}];
+ const data = { q: 'sofware', year: 2022, country: 'US', results: records };
+ const { rpc, calls } = await setup(t, { fetch: () => response(data) });
+ const called = await rpc.call('naics_search', { query: 'sofware' });
+ assert.deepEqual(body(called), data);
+ assert.equal(calls[0].url.searchParams.get('q'), 'sofware');
+});

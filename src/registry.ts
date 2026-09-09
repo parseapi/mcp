@@ -444,13 +444,13 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'naics',
-		'Look up a US NAICS 2022 industry code: name, definition, hierarchy level, parent and direct children. Pooled request. Unknown code returns not_found.',
+		'Look up a US NAICS 2022 industry code: name, definition, hierarchy level, parent, direct children and classification exclusions. Exclusions retain their text even when no code is linked. Pooled request. Unknown code returns not_found.',
 		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33') },
 		(c, a, request) => c.naics(a.code, request)
 	);
 	tool(
 		'naics_search',
-		'Search US NAICS 2022 industry names and activity terms by keyword. Returns matching industry records. Pooled request.',
+		'Search US NAICS 2022 industry names and activity terms by keyword, with conservative typo fallback. Results explain the matching text and any corrected query tokens. Pooled request.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
