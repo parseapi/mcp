@@ -58,6 +58,8 @@ export const cases = [
 	['language', { code: 'en' }, '/language/en'],
 	['name', { name: 'Smith, John' }, '/name/Smith%2C%20John'],
 	['name', { name: 'Andrea', country: 'IT' }, '/name/Andrea', { country: 'IT' }],
+	['timezone', { timezone: 'America/New_York', at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }, '/timezone/America%2FNew_York', { at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }],
+	['timezone', { lat: 0, lon: 0, at: '2026-08-01T12:00:00Z' }, '/timezone', { lat: '0', lon: '0', at: '2026-08-01T12:00:00Z' }],
 	['time', {}, '/time'],
 	['time', { timezone: 'America/New_York', at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }, '/time/America%2FNew_York', { at: '2026-08-01T12:00:00', to: 'Asia/Tokyo' }],
 	['time', { lat: 0, lon: 0, at: '2026-08-01T12:00:00Z', to: 'Asia/Tokyo' }, '/time', { lat: '0', lon: '0', at: '2026-08-01T12:00:00Z', to: 'Asia/Tokyo' }],

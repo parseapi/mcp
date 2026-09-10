@@ -1238,6 +1238,37 @@
     }
   },
   {
+    "name": "timezone",
+    "inputSchema": {
+      "properties": {
+        "at": {
+          "type": "string"
+        },
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        "timezone": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "useragent",
     "inputSchema": {
       "properties": {

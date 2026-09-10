@@ -45,9 +45,15 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 }
 ```
 
+## API versions
+
+The team's API version is selected in [Dashboard → API version](https://parseapi.com/dashboard/versions). One setting applies to every key and connected app in the team. Existing teams keep `1.0.0`; new teams start on `2.0.0`. Owners and admins can change it after reviewing and testing the target contract. Keys and app identities stay the same. Signing in or upgrading MCP does not change the team's version.
+
+Published MCP/SDK `0.3.2` matches API `1.0.0`. This source tree's tool descriptions and SDK dependency expect API `2.0.0`; use a matching MCP release before changing the team's version. Test in a separate development team first; the change applies to all of the production team's integrations. The API returns the selected contract, so an upgrade can change the fields an agent receives. There is no version argument to add to tool calls. See [API versions and migration](https://parseapi.com/docs/versioning).
+
 ## Tools
 
-57 local tools and 56 hosted tools cover the lookup operations. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Every tool returns the JSON the API serves.
+58 local tools and 57 hosted tools cover the lookup operations. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every tool returns the JSON the API serves.
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `bin`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 

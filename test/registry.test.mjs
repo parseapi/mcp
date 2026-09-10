@@ -26,7 +26,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools;
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 57);
+	assert.equal(tools.length, 58);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -34,7 +34,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 56);
+	assert.equal(result.tools.length, 57);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -81,6 +81,27 @@ test('ambiguous time input and ignored date options are validation errors', asyn
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}
 	assert.equal(calls.length, 0);
+});
+
+test('hosted timezone preserves published arguments and the legacy route', async (t) => {
+	const result = { timezone: 'UTC', offset: '+00:00', future: null };
+	const { rpc, calls } = await setup(t, { transport: 'http', fetch: () => response(result) });
+	for (const [args, path, query] of [
+		[{ timezone: 'UTC', at: '', to: '' }, '/timezone/UTC', { at: '', to: '' }],
+		[{ lat: 0, lon: 0, at: '2026-09-10T00:00:00Z' }, '/timezone', { lat: '0', lon: '0', at: '2026-09-10T00:00:00Z' }],
+	]) {
+		const called = await rpc.call('timezone', args);
+		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
+		assert.deepEqual(body(called), result);
+		assert.equal(calls.at(-1).url.pathname, path);
+		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), query);
+	}
+	assert.equal(calls.length, 2);
+	for (const args of [{}, { lat: 0 }, { timezone: '' }, { timezone: 'UTC', lat: 0, lon: 0 }, { lat: 0, lon: 0, to: 'UTC' }]) {
+		const called = await rpc.call('timezone', args);
+		assert.equal(called.result?.isError, true, JSON.stringify(called));
+	}
+	assert.equal(calls.length, 2, 'Rejected legacy inputs must not make an API request');
 });
 
 test('API errors preserve machine-readable details', async (t) => {

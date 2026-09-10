@@ -3,7 +3,7 @@ import { parseAPI, type RequestOptions } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 
-export const VERSION = '0.3.2';
+export const VERSION = '0.4.0';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
@@ -325,7 +325,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	// Validate
 	tool(
 		'email',
-		'Validate an email address: syntax, domain, MX, disposable, role, and a typo suggestion when the host looks misspelled. Deep runs a live mailbox verification.',
+		'Validate an email address: syntax, domain, MX, disposable, role, and a typo suggestion when the host looks misspelled. Deep returns mailbox deliverability and catch-all results, reusing a recent verification when available.',
 		{ email: z.string().describe('Email address to validate'), deep },
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);
@@ -390,7 +390,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'caller',
-		'Look up the caller ID name (CNAM) for a US or Canada phone number. caller is the record verbatim, null when no record or outside NANP. Metered per lookup on a NANP number.',
+		'Look up the caller ID name (CNAM) for a NANP (+1) phone number. caller is the record verbatim, null when no record or outside NANP. Metered per lookup on a NANP number.',
 		{
 			number: z.string().describe('Phone number, e.g. +18004633339'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -540,6 +540,40 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 				? a.lat === undefined && a.lon === undefined
 				: (a.lat === undefined) === (a.lon === undefined),
 			{ message: 'Pass a timezone, both lat and lon, or neither for UTC.' }
+		)
+	);
+	tool(
+		'timezone',
+		'Compatibility tool; use time for new integrations. Look up a timezone from an IANA id or from lat and lon. Offset, DST, local time. Pass at for a specific instant. Pass to with another IANA id to convert a time between zones: the response appends at (wall time in the from zone) and to.at (the converted time). Open ocean answers the nautical Etc/GMT zone.',
+		{
+			timezone: z.string().min(1).optional().describe('IANA timezone id, e.g. America/New_York'),
+			lat: lat.optional(),
+			lon: lon.optional(),
+			at: z
+				.string()
+				.optional()
+				.describe(
+					'ISO 8601 time, default now. With to and no UTC offset, reads as wall time in the from zone'
+				),
+			to: z
+				.string()
+				.optional()
+				.describe('Convert: the other IANA zone, e.g. Asia/Tokyo. Requires timezone, not lat/lon'),
+		},
+		(c, a, request) => {
+			if (a.lat != null && a.lon != null) {
+				return c.timezone.at(a.lat, a.lon, { ...request, at: a.at });
+			}
+			if (!a.timezone) {
+				return Promise.reject(new Error('Pass timezone or lat and lon'));
+			}
+			return c.timezone(a.timezone, { ...request, at: a.at, to: a.to });
+		},
+		(schema) => schema.refine(
+			(a) => a.timezone !== undefined
+				? a.lat === undefined && a.lon === undefined
+				: a.lat !== undefined && a.lon !== undefined && a.to === undefined,
+			{ message: 'Pass either timezone (with optional to), or both lat and lon.' }
 		)
 	);
 	tool(

@@ -216,7 +216,7 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 56 tools (no ip_self)', names.length === 56 && !names.includes('ip_self'), `got ${names.length}`);
+		check('http tools/list has 57 tools (no ip_self)', names.length === 57 && !names.includes('ip_self'), `got ${names.length}`);
 		check('http has vat', names.includes('vat'));
 		check('http has bin', names.includes('bin'));
 		check('http has iban', names.includes('iban'));
