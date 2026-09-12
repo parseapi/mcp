@@ -325,7 +325,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	// Validate
 	tool(
 		'email',
-		'Validate an email address: syntax, domain, MX, disposable, role, and a typo suggestion when the host looks misspelled. Deep returns mailbox deliverability and catch-all results, reusing a recent verification when available.',
+		'Validate an email address: syntax, domain, MX, consumer mailbox, disposable, role, reserved domain type, and a typo suggestion when the host looks misspelled. Deep returns mailbox deliverability and catch-all results, reusing a recent verification when available.',
 		{ email: z.string().describe('Email address to validate'), deep },
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);
