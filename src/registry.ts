@@ -513,7 +513,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'name',
-		'Parse a name into prefix, first, middle, last and suffix. Paid deep adds dictionary membership, gender evidence, salutation and country associations. Country scopes evidence, never nationality. Junk returns valid false.',
+		'Parse a name into prefix, first, middle, last and suffix. Paid deep adds dictionary membership, gender evidence and salutation. Country scopes gender evidence. Junk returns valid false.',
 		{
 			name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL'),
 			country: z.string().optional().describe('ISO2 country context for gender, e.g. IT'),
