@@ -342,7 +342,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'iban',
-		'Parse an IBAN and check its format and checksum, with known bank identifiers. Deep adds check digits, branch and account decomposition on every plan. Does not verify an account exists.',
+		'Parse an IBAN and check its format, ISO checksum, and published national BBAN checks, with known bank identifiers. Deep adds check digits, branch and account decomposition on every plan. Does not verify an account exists.',
 		{
 			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
 			country: iso2('country code when the number has no prefix').optional(),
@@ -352,7 +352,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'bin',
-		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
+		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand key, brand name, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
 		{
 			bin: z.string().describe('Card prefix as a string, 6-11 digits. Preserve leading zeros. Spaces and hyphens are accepted.'),
 			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
