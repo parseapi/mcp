@@ -103,7 +103,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	}
 	tool(
 		'continent',
-		'Look up a continent by code: name, area, population and population_period. The period is a reporting year or range, null when unknown or unverifiable.',
+		'Look up a continent by code: name, area and population.',
 		{ code: z.string().describe('Continent code: AF, AN, AS, EU, NA, OC, SA') },
 		(c, a, request) => c.continent(a.code, request)
 	);
@@ -135,7 +135,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'country',
-		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile, including population with its reporting period, tax and locale conventions, on paid plans.',
+		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile on paid plans, including population with its reporting period, land/water area in km2, coastline in km, mean and extreme elevations in metres, tax and locale conventions. Unknown geography values stay null.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
