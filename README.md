@@ -49,7 +49,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 The team's API version is selected in [Dashboard → API version](https://parseapi.com/dashboard/versions). One setting applies to every key and connected app in the team. Existing teams keep `1.0.0`; new teams start on `2.0.0`. Owners and admins can change it after reviewing and testing the target contract. Keys and app identities stay the same. Signing in or upgrading MCP does not change the team's version.
 
-Published MCP/SDK `0.3.2` matches API `1.0.0`. This source tree's tool descriptions and SDK dependency expect API `2.0.0`; use a matching MCP release before changing the team's version. Test in a separate development team first; the change applies to all of the production team's integrations. The API returns the selected contract, so an upgrade can change the fields an agent receives. There is no version argument to add to tool calls. See [API versions and migration](https://parseapi.com/docs/versioning).
+MCP/SDK `0.3.2` targets API `1.0.0`. MCP/SDK `0.4.0` and this source tree's tool descriptions and SDK dependency target API `2.0.0`; use a matching MCP release before changing the team's version. Test in a separate development team first; the change applies to all of the production team's integrations. The API returns the selected contract, so an upgrade can change the fields an agent receives. There is no version argument to add to tool calls. See [API versions and migration](https://parseapi.com/docs/versioning).
 
 ## Tools
 
@@ -84,6 +84,18 @@ Address lookup returns standardized components and registration status for the U
 Ordinary lookups retry up to twice after a transient failure. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 
 Errors come back as JSON with a machine-readable `code`. Branch on `code`, never on message text. A miss is `not_found`. No key is `invalid_api_key`.
+
+## Display language
+
+This source candidate adds optional `lang` to supported tools. For example,
+`country` accepts `{"code":"DE","lang":"fr"}`. It requires a matching API
+localization release, data, and JS SDK package; installing the existing published
+package does not activate it.
+
+Display names follow available source translations. IDs, native-name fields,
+numbers and input parsing stay unchanged. Omitted language keeps the default
+behavior. Measure parsing, currency rates, Holiday and prove tools have no new
+language argument.
 
 ## Measurements
 

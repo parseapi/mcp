@@ -60,6 +60,11 @@
       "properties": {
         "asn": {
           "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -113,6 +118,11 @@
     "inputSchema": {
       "properties": {
         "code": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
           "type": "string"
         }
       },
@@ -178,6 +188,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },
@@ -203,6 +218,11 @@
         },
         "id": {
           "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -223,6 +243,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         },
         "limit": {
           "maximum": 50,
@@ -263,6 +288,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "lat": {
           "maximum": 90,
           "minimum": -90,
@@ -293,6 +323,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         },
         "limit": {
           "maximum": 50,
@@ -325,6 +360,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "number": {
           "type": "string"
         }
@@ -344,6 +384,11 @@
       "properties": {
         "code": {
           "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -360,6 +405,11 @@
     "inputSchema": {
       "properties": {
         "code": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
           "type": "string"
         }
       },
@@ -381,6 +431,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -397,6 +452,11 @@
     "inputSchema": {
       "properties": {
         "code": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
           "type": "string"
         }
       },
@@ -418,6 +478,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -474,6 +539,11 @@
           ],
           "type": "string"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "to": {
           "type": "string"
         }
@@ -496,6 +566,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         },
         "state": {
           "type": "string"
@@ -616,6 +691,11 @@
         },
         "emoji": {
           "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -633,6 +713,11 @@
       "properties": {
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         },
         "limit": {
           "maximum": 50,
@@ -750,6 +835,11 @@
         },
         "ip": {
           "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -767,6 +857,11 @@
       "properties": {
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "type": "object"
@@ -784,6 +879,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -852,6 +952,11 @@
     "name": "measure_units",
     "inputSchema": {
       "properties": {
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "query": {
           "maxLength": 128,
           "type": "string"
@@ -972,6 +1077,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "npi": {
           "type": "string"
         }
@@ -1015,6 +1125,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "lat": {
           "maximum": 90,
           "minimum": -90,
@@ -1048,6 +1163,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -1070,6 +1190,11 @@
           "type": "boolean"
         },
         "from": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
           "type": "string"
         },
         "to": {
@@ -1098,6 +1223,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         },
         "radius": {
           "exclusiveMinimum": 0,
@@ -1132,6 +1262,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -1155,6 +1290,11 @@
         },
         "deep": {
           "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [
@@ -1217,6 +1357,11 @@
         "deep": {
           "type": "boolean"
         },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
         "lat": {
           "maximum": 90,
           "minimum": -90,
@@ -1247,6 +1392,11 @@
     "inputSchema": {
       "properties": {
         "at": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
           "type": "string"
         },
         "lat": {

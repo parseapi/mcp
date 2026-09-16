@@ -3,7 +3,7 @@ import { parseAPI, type RequestOptions } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 
-export const VERSION = '0.4.0';
+export const VERSION = '0.5.0';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
@@ -19,6 +19,13 @@ const countryOpt = z
 	.string()
 	.optional()
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
+
+const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
+	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
+	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
+	'measure_units', 'emoji', 'emoji_search', 'point']);
+const displayLanguage = z.string().min(2).max(64).optional()
+	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
 /**
  * One server, every ParseAPI lookup as a tool. `key` null serves the funnel:
@@ -46,17 +53,22 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		fn: (client: Client, args: z.infer<z.ZodObject<S>>, options: RequestOptions) => Promise<unknown>,
 		refine?: (schema: z.ZodObject<S>) => z.ZodObject<S>
 	): void {
+		const localized = languageTools.has(name);
+		const input = z.object(localized ? { ...shape, lang: displayLanguage } : shape);
 		server.registerTool(
 			name,
 			{
 				description,
-				inputSchema: refine ? refine(z.object(shape)) : z.object(shape),
+				inputSchema: refine ? refine(input as z.ZodObject<S>) : input,
 				annotations: { readOnlyHint: true },
 			},
 			async (args, context): Promise<ToolResult> => {
 				if (!parse) return noKeyResult(transport);
 				try {
-					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, { signal: context.mcpReq.signal }));
+					const requested = (args as Record<string, unknown>).lang;
+					const request: RequestOptions & { lang?: string } = { signal: context.mcpReq.signal,
+						...(localized && typeof requested === 'string' ? { lang: requested } : {}) };
+					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, request));
 				} catch (err) {
 					return toErrorResult(err);
 				}

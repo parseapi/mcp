@@ -77,6 +77,28 @@ for (const [name, args, pathname, query = {}] of cases) {
 	});
 }
 
+test('display language reaches each supported tool request and stays request-local', async (t) => {
+	const { rpc, calls } = await setup(t);
+	const { result } = await rpc.request('tools/list', {});
+	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
+	assert.equal(localized.length, 30);
+	for (const name of localized) {
+		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
+		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
+		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
+		assert.equal(calls.at(-1).url.pathname, pathname);
+		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), { ...query, lang: 'zh-Hant-HK' });
+	}
+	for (const name of ['email', 'phone', 'measure', 'currency_rate', 'holiday']) {
+		assert.equal(result.tools.find(tool => tool.name === name).inputSchema.properties.lang, undefined);
+	}
+	await rpc.call('country', { code: 'DE' });
+	assert.equal(calls.at(-1).url.searchParams.has('lang'), false);
+	await rpc.call('date', { date: '03/04/2026', format: 'dmy', lang: 'fr', deep: true });
+	assert.equal(calls.at(-1).url.searchParams.get('format'), 'dmy');
+	assert.equal(calls.at(-1).url.searchParams.get('lang'), 'fr');
+});
+
 test('search requires query and rejects the retired q input before any HTTP call', async (t) => {
 	const { rpc, calls } = await setup(t);
 	for (const name of ['city_search', 'address_search', 'tariff_search', 'naics_search', 'emoji_search']) {
