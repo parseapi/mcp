@@ -47,9 +47,11 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## API versions
 
-The team's API version is selected in [Dashboard → API version](https://parseapi.com/dashboard/versions). One setting applies to every key and connected app in the team. Existing teams keep `1.0.0`; new teams start on `2.0.0`. Owners and admins can change it after reviewing and testing the target contract. Keys and app identities stay the same. Signing in or upgrading MCP does not change the team's version.
+This local candidate is for the next major MCP release. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
 
-MCP/SDK `0.3.2` targets API `1.0.0`. MCP/SDK `0.4.0` and this source tree's tool descriptions and SDK dependency target API `2.0.0`; use a matching MCP release before changing the team's version. Test in a separate development team first; the change applies to all of the production team's integrations. The API returns the selected contract, so an upgrade can change the fields an agent receives. There is no version argument to add to tool calls. See [API versions and migration](https://parseapi.com/docs/versioning).
+For local stdio, pin the MCP package version in your application configuration and test the new release before deploying it. A future major MCP upgrade can select a newer API contract. There is no version argument to add to individual tool calls. The hosted service uses the API contract supported by its deployed MCP release.
+
+Previously published MCP packages keep their existing behavior and use the team's default. Keep that default unchanged while older applications depend on it. Rolling back to a package without a version header restores the team default, so rollback only restores the old contract when that default has stayed unchanged. See [API versions and migration](https://parseapi.com/docs/versioning).
 
 ## Tools
 

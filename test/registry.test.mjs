@@ -73,7 +73,25 @@ for (const [name, args, pathname, query = {}] of cases) {
 		assert.ok(init.signal instanceof AbortSignal);
 		const headers = new Headers(init.headers);
 		assert.equal(headers.get('x-api-key'), 'test_key');
+		assert.equal(headers.get('parse-version'), '2.0.0');
 		if (name === 'useragent') assert.equal(headers.get('user-agent'), args.ua);
+	});
+}
+
+for (const transport of ['stdio', 'http']) {
+	test(`${transport} pins the tool contract through retries without changing credentials`, async (t) => {
+		let attempts = 0;
+		const { rpc, calls } = await setup(t, { transport, fetch: () => ++attempts === 1
+			? response({ code: 'unavailable' }, 503) : response({ country: 'US' }) });
+		assert.deepEqual(body(await rpc.call('country', { code: 'US' })), { country: 'US' });
+		assert.equal(calls.length, 2);
+		for (const { url, init } of calls) {
+			assert.equal(url.pathname, '/country/US');
+			assert.equal(url.search, '');
+			assert.equal(new Headers(init.headers).get('parse-version'), '2.0.0');
+			assert.equal(new Headers(init.headers).get('x-api-key'), 'test_key');
+			assert.equal(init.redirect, 'manual');
+		}
 	});
 }
 

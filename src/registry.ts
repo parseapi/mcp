@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 
 export const VERSION = '0.5.0';
+const API_VERSION = '2.0.0';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
@@ -44,7 +45,14 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		{ capabilities: { tools: {} } }
 	);
 
-	const parse = key ? parseAPI(key) : null;
+	const parse = key ? parseAPI(key, {
+		// Tool descriptions and responses share this contract on both transports.
+		fetch: (input, init) => {
+			const headers = new Headers(init?.headers);
+			headers.set('Parse-Version', API_VERSION);
+			return fetch(input, { ...init, headers });
+		},
+	}) : null;
 
 	function tool<S extends z.ZodRawShape>(
 		name: string,
