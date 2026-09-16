@@ -47,7 +47,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## API versions
 
-This local candidate is for the next major MCP release. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
+Version 1.0.0 explicitly selects the API contract supported by this MCP package. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
 
 For local stdio, pin the MCP package version in your application configuration and test the new release before deploying it. A future major MCP upgrade can select a newer API contract. There is no version argument to add to individual tool calls. The hosted service uses the API contract supported by its deployed MCP release.
 
