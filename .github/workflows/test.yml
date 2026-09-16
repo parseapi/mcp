@@ -5,14 +5,55 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mcp
     strategy:
+      fail-fast: false
       matrix:
         node: ['20', '24']
     steps:
       - uses: actions/checkout@v5
+        with:
+          path: mcp
+      # Test the coordinated source candidate before its major SDK release.
+      # Publication still installs the registry dependency in publish.yml.
+      - name: Check out matching SDK source
+        uses: actions/checkout@v5
+        with:
+          repository: parseapi/node
+          ref: e186487413998777c53149e0c6e8bc5b6220613a
+          path: sdk
       - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node }}
           cache: npm
+          cache-dependency-path: |
+            mcp/package-lock.json
+            sdk/package-lock.json
+      - name: Pack matching SDK candidate
+        working-directory: sdk
+        run: |
+          npm ci
+          npm run build
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"
+      - name: Bind test install to the packed SDK
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          import { resolve } from 'node:path';
+          const sdk = JSON.parse(readFileSync('../sdk/package.json', 'utf8'));
+          const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
+          const entry = lock.packages['node_modules/@parseapi/sdk'];
+          if (sdk.name !== '@parseapi/sdk' || entry.version !== sdk.version) {
+            throw new Error('Pinned SDK source must match the MCP dependency version');
+          }
+          const filename = `${sdk.name.replace('@', '').replace('/', '-')}-${sdk.version}.tgz`;
+          const tarball = resolve(process.env.RUNNER_TEMP, filename);
+          entry.resolved = `file:${tarball}`;
+          entry.integrity = `sha512-${createHash('sha512').update(readFileSync(tarball)).digest('base64')}`;
+          writeFileSync('package-lock.json', `${JSON.stringify(lock, null, '\t')}\n`);
+          NODE
       - run: npm ci
       - run: npm run prepublishOnly
