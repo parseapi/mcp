@@ -949,6 +949,11 @@
         },
         "name": {
           "type": "string"
+        },
+        "name_locale": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
         }
       },
       "required": [

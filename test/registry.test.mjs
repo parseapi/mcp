@@ -8,6 +8,23 @@ const response = (data, status = 200) => new Response(JSON.stringify(data), {
 	status, headers: { 'content-type': 'application/json', 'retry-after': '0' },
 });
 
+test('Name formatting remains flat and nullable with an optional name locale', async (t) => {
+	let detail = {};
+	const { rpc, calls } = await setup(t, { fetch: () => response({ name: 'Robert James Smith', deep: detail }) });
+	for (const next of [
+		{ short: 'R.J. Smith', directory: 'Smith, Robert James', initials: 'RJS' },
+		{ short: null, directory: null, initials: null },
+		{ gender: null, salutation: null },
+		{},
+	]) {
+		detail = next;
+		assert.deepEqual(body(await rpc.call('name', { name: 'Robert James Smith', deep: true, name_locale: 'en-GB' })).deep, detail);
+		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), { deep: 'true', name_locale: 'en-GB' });
+	}
+	await rpc.call('name', { name: 'Andrea', deep: true });
+	assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), { deep: 'true' });
+});
+
 async function setup(t, { key = 'test_key', transport = 'stdio', fetch } = {}) {
 	const calls = [];
 	t.mock.method(globalThis, 'fetch', async (input, init) => {

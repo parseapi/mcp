@@ -513,13 +513,14 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	);
 	tool(
 		'name',
-		'Parse a name into prefix, first, middle, last and suffix. Paid deep adds dictionary membership, gender evidence and salutation. Country scopes gender evidence. Junk returns valid false.',
+		'Parse a name into prefix, first, middle, last and suffix. Paid deep adds gender evidence, salutation, short and directory formats, and initials. Country scopes gender evidence. name_locale selects formatting rules. Junk returns valid false.',
 		{
 			name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL'),
 			country: z.string().optional().describe('ISO2 country context for gender, e.g. IT'),
+			name_locale: z.string().min(2).max(64).optional().describe('Name-formatting locale, e.g. en or ja. Defaults to en. Changes formatting only, not parsing or gender evidence.'),
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.name(a.name, { ...request, deep: a.deep, country: a.country })
+		(c, a, request) => c.name(a.name, { ...request, deep: a.deep, country: a.country, name_locale: a.name_locale })
 	);
 	tool(
 		'time',
