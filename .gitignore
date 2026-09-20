@@ -2,5 +2,6 @@ node_modules/
 dist/
 .env
 .DS_Store
+.cursor/settings.json
 fly.toml
 Dockerfile
