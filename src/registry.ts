@@ -5,7 +5,7 @@ import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
 import { registerPreflight } from './preflight.js';
 
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 const API_VERSION = '2.0.0';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -354,7 +354,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	// Validate
 	tool(
 		'email',
-		'Validate an email address: syntax, domain, MX, consumer mailbox, disposable, role, reserved domain type, and a typo suggestion when the host looks misspelled. Deep returns mailbox deliverability and catch-all results, reusing a recent verification when available.',
+		'Validate an email address: syntax, domain, mail routing, consumer mailbox, disposable, role, reserved domain type and typo suggestion. Deep adds mailbox deliverability, catch-all, status and the reason for the result, such as mailbox_full or mailbox_not_found. It also includes a suggested first name, no-reply flag, plus-address tag and mail service, such as Google or Microsoft. The suggested name is not a verified identity. Unavailable details are null.',
 		{ email: z.string().describe('Email address to validate'), deep },
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);

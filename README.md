@@ -112,12 +112,12 @@ Call `preflight` with a secret key and operation counts before spending:
 
 Preflight supports Email, Domain, DNS, MX and Country, with up to 20 rows and 100,000 total lookups. It needs no lookup inputs or personal data. Check `permitted`, `cost.status`, `capacity` and `budget.within_maximum` together. Monetary values are decimal strings. The maximum assumes included Email checks are exhausted. The projection uses currently unallocated included checks. Unknowns stay null. Both use the credential's accepted rates.
 
-The estimate allows up to three attempts per ordinary lookup and one per Email Deep lookup. Extra calls or retries require a new estimate. Capacity can change with concurrent work. Preflight reserves no units or money, performs no paid checks, and does not enforce the supplied budget. It uses the normal request rate limit. Subscription fees, tax and model costs are excluded. Preflight uses API contract 2.0.0 and the matching JavaScript SDK 1.1.0 or later.
+The estimate allows up to three attempts per ordinary lookup and one per Email Deep lookup. Extra calls or retries require a new estimate. Capacity can change with concurrent work. Preflight reserves no units or money, performs no paid checks, and does not enforce the supplied budget. It uses the normal request rate limit. Subscription fees, tax and model costs are excluded. Preflight uses API contract 2.0.0 and the matching JavaScript SDK 1.2.0 or later.
 
 For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
 
 ```bash
-PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.1.0
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.2.0
 ```
 
 Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:

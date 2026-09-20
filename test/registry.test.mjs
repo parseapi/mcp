@@ -8,6 +8,19 @@ const response = (data, status = 200) => new Response(JSON.stringify(data), {
 	status, headers: { 'content-type': 'application/json', 'retry-after': '0' },
 });
 
+test('Email enrichment preserves the deep triad, nulls and open codes', async (t) => {
+	let extra = {};
+	const { rpc } = await setup(t, { fetch: () => response({ email: 'jane.doe+news@example.com', ...extra }) });
+	for (const next of [
+		{}, { deep: {} },
+		{ deep: { first_name: null, no_reply: null, tag: null, mail_provider: null, status: null, reason: null } },
+		{ deep: { first_name: 'Jane', no_reply: false, tag: 'news', mail_provider: 'future-provider', deliverable: true, catchall: false, status: 'future-status', reason: 'future_reason' }, future: true },
+	]) {
+		extra = next;
+		assert.deepEqual(body(await rpc.call('email', { email: 'jane.doe+news@example.com', deep: true })), { email: 'jane.doe+news@example.com', ...extra });
+	}
+});
+
 test('Name formatting remains flat and nullable with an optional name locale', async (t) => {
 	let detail = {};
 	const { rpc, calls } = await setup(t, { fetch: () => response({ name: 'Robert James Smith', deep: detail }) });

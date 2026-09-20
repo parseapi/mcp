@@ -15,6 +15,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      # Publish and verify @parseapi/sdk 1.1.0 before this dependent release.
+      # Publish and verify @parseapi/sdk 1.2.0 before this dependent release.
       - run: npm ci
       - run: npm run prepublishOnly
