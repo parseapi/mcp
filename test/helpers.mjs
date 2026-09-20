@@ -3,8 +3,8 @@ import { InMemoryTransport } from '@modelcontextprotocol/server';
 import { buildServer } from '../dist/registry.js';
 
 /** Exercise the MCP wire protocol without a socket or a second client dependency. */
-export async function connect(key = 'test_key', transport = 'stdio') {
-	const server = buildServer(key, transport);
+export async function connect(key = 'test_key', transport = 'stdio', options = {}) {
+	const server = buildServer(key, transport, options);
 	const [client, peer] = InMemoryTransport.createLinkedPair();
 	const pending = new Map();
 	let nextId = 1;

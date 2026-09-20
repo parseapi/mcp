@@ -2,6 +2,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { createMcpHandler } from '@modelcontextprotocol/server';
 import { toNodeHandler } from '@modelcontextprotocol/node';
 import { buildServer } from './registry.js';
+import { catalogMode } from './discovery.js';
 import {
 	PROTECTED_RESOURCE_METADATA,
 	WWW_AUTHENTICATE,
@@ -19,7 +20,8 @@ function keyFrom(request: Request | undefined): string | null {
 	return null;
 }
 
-const handler = createMcpHandler((ctx) => buildServer(keyFrom(ctx.requestInfo), 'http'), {
+const mode = catalogMode(process.env.PARSEAPI_MCP_MODE);
+const handler = createMcpHandler((ctx) => buildServer(keyFrom(ctx.requestInfo), 'http', { mode }), {
 	onerror: (err) => console.error('parseapi-mcp:', err.message),
 });
 

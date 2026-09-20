@@ -1,6 +1,6 @@
 {
 	"name": "parseapi-mcp",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"mcpName": "com.parseapi/mcp",
 	"description": "Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
 	"keywords": [
@@ -37,6 +37,9 @@
 		"node": ">=20"
 	},
 	"scripts": {
+		"catalog:sync": "node scripts/sync-agent-catalog.mjs",
+		"catalog:check": "node scripts/sync-agent-catalog.mjs --check",
+		"eval:agents": "npm run build && node eval/run.mjs --self-test",
 		"build": "tsup",
 		"typecheck": "tsc --noEmit",
 		"smoke": "npm run build && node smoke/smoke.mjs",
@@ -47,7 +50,7 @@
 	"dependencies": {
 		"@modelcontextprotocol/server": "^2.0.0",
 		"@modelcontextprotocol/node": "^2.0.0",
-		"@parseapi/sdk": "^1.0.0",
+		"@parseapi/sdk": "^1.1.0",
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {

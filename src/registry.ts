@@ -2,8 +2,10 @@ import { McpServer } from '@modelcontextprotocol/server';
 import { parseAPI, type RequestOptions } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
+import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
+import { registerPreflight } from './preflight.js';
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 const API_VERSION = '2.0.0';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -32,7 +34,10 @@ const displayLanguage = z.string().min(2).max(64).optional()
  * One server, every ParseAPI lookup as a tool. `key` null serves the funnel:
  * tools list fine, calls return invalid_api_key pointing at signup.
  */
-export function buildServer(key: string | null, transport: Transport): McpServer {
+export function buildServer(key: string | null, transport: Transport, options: { mode?: CatalogMode } = {}): McpServer {
+	const mode = options.mode ?? 'full';
+	if (mode !== 'full' && mode !== 'compact') throw new Error('Unknown MCP catalog mode');
+	const operations = new Map<string, CatalogOperation>();
 	const server = new McpServer(
 		{
 			name: 'parseapi',
@@ -63,24 +68,28 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 	): void {
 		const localized = languageTools.has(name);
 		const input = z.object(localized ? { ...shape, lang: displayLanguage } : shape);
+		const schema = refine ? refine(input as z.ZodObject<S>) : input;
+		const invoke = async (args: unknown, signal: AbortSignal): Promise<ToolResult> => {
+			if (!parse) return noKeyResult(transport);
+			try {
+				const requested = (args as Record<string, unknown>).lang;
+				const request: RequestOptions & { lang?: string } = { signal,
+					...(localized && typeof requested === 'string' ? { lang: requested } : {}) };
+				return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, request));
+			} catch (err) {
+				return toErrorResult(err);
+			}
+		};
+		operations.set(name, { name, description, schema, invoke });
+		if (mode === 'compact') return;
 		server.registerTool(
 			name,
 			{
 				description,
-				inputSchema: refine ? refine(input as z.ZodObject<S>) : input,
+				inputSchema: schema,
 				annotations: { readOnlyHint: true },
 			},
-			async (args, context): Promise<ToolResult> => {
-				if (!parse) return noKeyResult(transport);
-				try {
-					const requested = (args as Record<string, unknown>).lang;
-					const request: RequestOptions & { lang?: string } = { signal: context.mcpReq.signal,
-						...(localized && typeof requested === 'string' ? { lang: requested } : {}) };
-					return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, request));
-				} catch (err) {
-					return toErrorResult(err);
-				}
-			}
+			(args, context) => invoke(args, context.mcpReq.signal)
 		);
 	}
 
@@ -657,5 +666,7 @@ export function buildServer(key: string | null, transport: Transport): McpServer
 		(c, a, request) => c.emoji.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 
+	registerDiscovery(server, operations, mode, API_VERSION);
+	registerPreflight(server, parse, transport);
 	return server;
 }

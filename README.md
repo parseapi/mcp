@@ -47,15 +47,15 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## API versions
 
-Version 1.0.0 explicitly selects the API contract supported by this MCP package. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
+Since version 1.0.0, the package explicitly selects the API contract supported by this MCP package. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
 
 For local stdio, pin the MCP package version in your application configuration and test the new release before deploying it. A future major MCP upgrade can select a newer API contract. There is no version argument to add to individual tool calls. The hosted service uses the API contract supported by its deployed MCP release.
 
-Previously published MCP packages keep their existing behavior and use the team's default. Keep that default unchanged while older applications depend on it. Rolling back to a package without a version header restores the team default, so rollback only restores the old contract when that default has stayed unchanged. See [API versions and migration](https://parseapi.com/docs/versioning).
+MCP packages older than 1.0.0 keep their existing behavior and use the team's default. Keep that default unchanged while older applications depend on it. Rolling back to a package without a version header restores the team default, so rollback only restores the old contract when that default has stayed unchanged. See [API versions and migration](https://parseapi.com/docs/versioning).
 
 ## Tools
 
-58 local tools and 57 hosted tools cover the lookup operations. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every tool returns the JSON the API serves.
+Full mode provides 58 local lookup tools and 57 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `bin`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
@@ -87,6 +87,49 @@ Ordinary lookups retry up to twice after a transient failure. Metered lookups an
 
 Errors come back as JSON with a machine-readable `code`. Branch on `code`, never on message text. A miss is `not_found`. No key is `invalid_api_key`.
 
+## Agent discovery
+
+Ask `discover` what an operation can determine before making a lookup:
+
+```json
+{ "operation": "email" }
+```
+
+The result includes the actual input schema and reviewed policies for capabilities, freshness, uncertainty, billing units, credential types and retries. Both JSON text and MCP `structuredContent` carry the same result. Email, Domain, DNS, MX and Country have reviewed policies. Other operations return their input schema with `policy: null`. Field meanings are specific to each operation. An unknown result is not automatically a reason to retry.
+
+Use `{ "query": "mailbox" }` to find operations. Search returns up to five summaries by default. `detail: "full"` includes schemas and policies. Use `limit` and the returned `next_offset` to page through results. Metadata calls make no API requests and consume no lookup units. Hosted HTTP still requires its existing authentication before discovery.
+
+Policies describe the API contract. `effective_access: "not_evaluated"` and `pricing: "not_quoted"` mean discovery has not inspected the credential's permissions, remaining allowances or accepted rates. Use `preflight` for those account-specific estimates. A read-only lookup can still consume a paid unit.
+
+Call `preflight` with a secret key and operation counts before spending:
+
+```json
+{
+  "operations": [{ "operation": "email", "count": 100, "deep": true }],
+  "budget_usd": "2.50"
+}
+```
+
+Preflight supports Email, Domain, DNS, MX and Country, with up to 20 rows and 100,000 total lookups. It needs no lookup inputs or personal data. Check `permitted`, `cost.status`, `capacity` and `budget.within_maximum` together. Monetary values are decimal strings. The maximum assumes included Email checks are exhausted. The projection uses currently unallocated included checks. Unknowns stay null. Both use the credential's accepted rates.
+
+The estimate allows up to three attempts per ordinary lookup and one per Email Deep lookup. Extra calls or retries require a new estimate. Capacity can change with concurrent work. Preflight reserves no units or money, performs no paid checks, and does not enforce the supplied budget. It uses the normal request rate limit. Subscription fees, tax and model costs are excluded. Preflight uses API contract 2.0.0 and the matching JavaScript SDK 1.1.0 or later.
+
+For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
+
+```bash
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.1.0
+```
+
+Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:
+
+```json
+{ "operation": "country", "arguments": { "code": "US" } }
+```
+
+`lookup` uses the same input validation, cancellation, version pin, SDK and billing behavior as the named tools. It executes one operation and cannot run arbitrary code or request arbitrary URLs. Full mode is the default and preserves existing named lookup calls. The same process setting supports self-hosted HTTP.
+
+The policy source is the API's `src/route/help/agent-catalog.json`. Current API help exposes the same metadata as `agent`. Frozen API 1.0.0 help stays unchanged. In a ParseAPI workspace, run `npm run catalog:sync` to copy a reviewed policy change, then `npm run catalog:check`. An independent checkout can pass `-- --source /path/to/api`. Package builds use the checked-in copy and do not need the API checkout or a network request.
+
 ## Display language
 
 This source candidate adds optional `lang` to supported tools. For example,
@@ -111,11 +154,14 @@ Call `measure_units` with `{ "unit": "m" }` to discover compatible targets, or `
 npm install
 npm run typecheck
 npm test          # builds and tests with mocked fetch and in-memory MCP
+npm run eval:agents # offline benchmark self-test, no model or live API calls
 npm run smoke     # stdio + http, includes live API authentication checks
 npm run serve     # http on :8080
 ```
 
 Offline tests pin the public tool names and argument schemas in `test/public-api.json`, exercise every operation and query option, and verify errors, retries and cancellation. Review baseline changes as public API changes. Publishing runs typecheck and offline tests first.
+
+The [agent benchmark](eval/README.md) compares full and compact discovery on fixed tasks with synthetic API responses. Its scripted reference run verifies the harness and grading, not agent completion quality. Model tokens and cost remain null until an adapter supplies measured usage. Fixture billing is simulated and always labeled separately from live charges.
 
 MIT licensed.
 

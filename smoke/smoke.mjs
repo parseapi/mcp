@@ -25,7 +25,7 @@ function toolText(result) {
 class StdioClient {
 	constructor(env) {
 		this.child = spawn(process.execPath, ['dist/stdio.js'], {
-			env: { ...process.env, ...env },
+			env: { ...process.env, PARSEAPI_MCP_MODE: 'full', ...env },
 			stdio: ['pipe', 'pipe', 'inherit'],
 		});
 		this.nextId = 1;
@@ -86,7 +86,7 @@ async function smokeStdio() {
 	await bare.init();
 	const list = await bare.request('tools/list', {});
 	const names = list.result.tools.map((t) => t.name);
-	check('stdio tools/list has 57 tools', names.length === 57, `got ${names.length}`);
+	check('stdio tools/list has 58 lookups, discovery and preflight', names.length === 60 && names.includes('discover') && names.includes('preflight'), `got ${names.length}`);
 	check('stdio has dns', names.includes('dns'));
 	check('stdio has ip_self', names.includes('ip_self'));
 	check('stdio has vat', names.includes('vat'));
@@ -170,7 +170,7 @@ async function smokeHttp() {
 	console.log('\n-- http --');
 	const port = 8917;
 	const child = spawn(process.execPath, ['dist/http.js'], {
-		env: { ...process.env, PORT: String(port), PARSEAPI_KEY: '' },
+		env: { ...process.env, PORT: String(port), PARSEAPI_KEY: '', PARSEAPI_MCP_MODE: 'full' },
 		stdio: ['ignore', 'inherit', 'inherit'],
 	});
 	await sleep(600);
@@ -216,7 +216,7 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 57 tools (no ip_self)', names.length === 57 && !names.includes('ip_self'), `got ${names.length}`);
+		check('http tools/list has 57 lookups, discovery and preflight (no ip_self)', names.length === 59 && names.includes('discover') && names.includes('preflight') && !names.includes('ip_self'), `got ${names.length}`);
 		check('http has vat', names.includes('vat'));
 		check('http has bin', names.includes('bin'));
 		check('http has iban', names.includes('iban'));

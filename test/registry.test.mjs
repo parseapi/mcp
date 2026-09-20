@@ -40,7 +40,7 @@ async function setup(t, { key = 'test_key', transport = 'stdio', fetch } = {}) {
 test('tool names and argument schemas match the reviewed public baseline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null });
 	const result = await rpc.request('tools/list', {});
-	const tools = result.result.tools;
+	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight'].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
 	assert.equal(tools.length, 58);
@@ -51,7 +51,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 57);
+	assert.equal(result.tools.length, 59);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);

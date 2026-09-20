@@ -1,0 +1,125 @@
+[
+  {
+    "name": "discover",
+    "inputSchema": {
+      "properties": {
+        "detail": {
+          "enum": [
+            "summary",
+            "full"
+          ],
+          "type": "string"
+        },
+        "limit": {
+          "default": 5,
+          "maximum": 20,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "offset": {
+          "default": 0,
+          "maximum": 1000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "operation": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "query": {
+          "maxLength": 256,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "lookup",
+    "inputSchema": {
+      "properties": {
+        "arguments": {
+          "additionalProperties": {},
+          "propertyNames": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "operation": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation",
+        "arguments"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "idempotentHint": false
+    }
+  },
+  {
+    "name": "preflight",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "budget_usd": {
+          "pattern": "^(?:0|[1-9]\\d{0,11})(?:\\.\\d{1,2})?$",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "maximum": 100000,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "deep": {
+                "type": "boolean"
+              },
+              "operation": {
+                "enum": [
+                  "email",
+                  "domain",
+                  "dns",
+                  "mx",
+                  "country"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "operation",
+              "count"
+            ],
+            "type": "object"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "operations"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true,
+      "idempotentHint": true
+    }
+  }
+]

@@ -1,5 +1,6 @@
 import { serveStdio } from '@modelcontextprotocol/server/stdio';
 import { buildServer } from './registry.js';
+import { catalogMode } from './discovery.js';
 
 const key = process.env.PARSEAPI_KEY ?? null;
 if (!key) {
@@ -8,4 +9,5 @@ if (!key) {
 	);
 }
 
-serveStdio(() => buildServer(key, 'stdio'));
+const mode = catalogMode(process.env.PARSEAPI_MCP_MODE);
+serveStdio(() => buildServer(key, 'stdio', { mode }));
