@@ -27,7 +27,7 @@ test('compact catalog advertises three tools and full preserves every lookup sch
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
-	assert.equal(listed.length, 59);
+	assert.equal(listed.length, 60);
 	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));
@@ -69,8 +69,8 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 57);
-	assert.equal(names.length, 57);
+	assert.equal(new Set(names).size, 58);
+	assert.equal(names.length, 58);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'time' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);

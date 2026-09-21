@@ -43,6 +43,7 @@ export const cases = [
 	['carrier', { number: '+14155552671', country: 'US' }, '/carrier/%2B14155552671', { country: 'US' }],
 	['caller', { number: '+18004633339', country: 'US' }, '/caller/%2B18004633339', { country: 'US' }],
 	['hlr', { number: '+447712345678', country: 'GB' }, '/hlr/%2B447712345678', { country: 'GB' }],
+	['stack', { domain: 'bücher.example', pretty: true }, '/stack/b%C3%BCcher.example', { pretty: 'true' }],
 	['domain', { domain: 'example.com', deep: true }, '/domain/example.com', { deep: 'true' }],
 	['asn', { asn: 'AS13335' }, '/asn/AS13335'],
 	['mac', { mac: '00:1B:63:84:45:E6' }, '/mac/00%3A1B%3A63%3A84%3A45%3AE6'],

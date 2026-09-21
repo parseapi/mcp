@@ -437,6 +437,13 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.hlr(a.number, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
+		'stack',
+		'Identify website technologies and available versions by category. Requires a hostname only. CMS, servers, frameworks, ecommerce, analytics, chat, payments and hosting are arrays of technology, name and nullable version. checked_at gives the check time. Scope is homepage or site; pages counts successfully checked HTML pages. Partial is true for homepage-only or incomplete bounded checks, false only when known in-scope candidates finished, never a guarantee every page was visited. When no page could be checked, checked_at and all categories are null, pages is 0 and partial is null. Empty arrays mean no matches. Missing detections do not prove absence. Uses one request from the plan allowance. Successful checks may be reused for up to 24 hours.',
+		{ domain: z.string().min(1).max(253).describe('Public website hostname only, e.g. example.com. No scheme, path, port or IP address.'), pretty: z.boolean().optional().describe('Format the JSON response.') },
+		(c, a, request) => c.stack(a.domain, { ...request, pretty: a.pretty })
+	);
+
+	tool(
 		'domain',
 		'Check whether a domain is registered. Deep adds registration dates, registrar, status and DNSSEC, included on paid plans. Use dns for DNS records and mx for mail routing.',
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep: deep.describe('Include registration details on a paid plan.') },

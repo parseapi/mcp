@@ -1251,6 +1251,28 @@
     }
   },
   {
+    "name": "stack",
+    "inputSchema": {
+      "properties": {
+        "domain": {
+          "maxLength": 253,
+          "minLength": 1,
+          "type": "string"
+        },
+        "pretty": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "state",
     "inputSchema": {
       "properties": {
