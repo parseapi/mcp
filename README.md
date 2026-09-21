@@ -118,7 +118,7 @@ The estimate allows up to three attempts per ordinary lookup and one per Email D
 For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
 
 ```bash
-PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.2.0
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.3.0
 ```
 
 Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:

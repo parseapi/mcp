@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.0 - Unreleased
+
+Adds the Stack site inventory tool with eight technology category arrays and explicit page coverage. Uses JavaScript SDK 1.3.0 or later. Existing tools and API contract `2.0.0` remain unchanged.
+
 ## 1.2.0 - 2026-09-20
 
 Email deep results now include nullable suggested first name, no-reply flag, plus-address tag, mail provider, verification status and reason. Existing lookup calls, retry defaults and API contract `2.0.0` remain unchanged. Missing details remain unknown, and suggested names do not verify identity.
