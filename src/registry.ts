@@ -7,6 +7,7 @@ import { registerPreflight } from './preflight.js';
 
 export const VERSION = '1.3.0';
 const API_VERSION = '2.0.0';
+const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
 type Client = ReturnType<typeof parseAPI>;
 export type Transport = 'stdio' | 'http';
@@ -75,7 +76,12 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				const requested = (args as Record<string, unknown>).lang;
 				const request: RequestOptions & { lang?: string } = { signal,
 					...(localized && typeof requested === 'string' ? { lang: requested } : {}) };
-				return ok(await fn(parse, args as z.infer<z.ZodObject<S>>, request));
+				const data = await fn(parse, args as z.infer<z.ZodObject<S>>, request);
+				const result = ok(data);
+				if (['postal', 'postal_nearby', 'postal_distance'].includes(name) && data && typeof data === 'object' && 'country' in data && data.country === 'AU') {
+					result.content.push({ type: 'text', text: AU_POSTAL_NOTICE });
+				}
+				return result;
 			} catch (err) {
 				return toErrorResult(err);
 			}
@@ -262,7 +268,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'postal',
-		'Resolve a postal code to its place, coordinates and timezone. Deep adds area, population with its reporting period, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
+		'Resolve a postal code to its place, coordinates and timezone. Australian core localities lists suburb choices with city, state and state_name. Null or missing means unknown, and [] means no eligible choices in the reviewed reference. A single choice can coexist with city null, so do not infer a city or a user selection. These are geographic choices, not mailing-address verification. Deep adds area, population with its reporting period, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
 		{
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
