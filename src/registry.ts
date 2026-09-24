@@ -5,7 +5,7 @@ import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
 import { registerPreflight } from './preflight.js';
 
-export const VERSION = '1.4.0';
+export const VERSION = '1.5.0';
 const API_VERSION = '2.0.0';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
@@ -339,8 +339,31 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
-	tool('elevation', 'Elevation in meters at coordinates.', { lat, lon }, (c, a, request) =>
-		c.elevation(a.lat, a.lon, request)
+	tool(
+		'elevation',
+		'Elevation in meters and feet with grid resolution in meters. Choose lat and lon for one sample, points for supplied coordinates in order, or path with samples for evenly spaced great-circle samples including both endpoints. Lists and paths use one pooled request. Unknown elevations stay null.',
+		{
+			lat: lat.optional(),
+			lon: lon.optional(),
+			points: z.string().min(1).max(12000).optional().describe('lat,lon pairs separated by |, or enc: followed by a Google polyline. At most 512 points and 12000 characters. Omit lat and lon.'),
+			path: z.string().min(1).max(12000).optional().describe('Path with 2-512 vertices as lat,lon pairs separated by |, or enc: followed by a Google polyline. At most 12000 characters. Segments follow the shortest great-circle arc. Segments with antipodal endpoints are invalid. Requires samples. Omit lat, lon and points.'),
+			samples: z.number().int().min(2).max(512).optional().describe('Number of evenly spaced samples along the path, including both endpoints. Required with path and invalid without it.'),
+		},
+		(c, a, request) => {
+			if (a.path !== undefined) {
+				return c.elevation.path(a.path, a.samples!, request);
+			}
+			if (a.points !== undefined) {
+				return c.elevation.points(a.points, request);
+			}
+			return c.elevation(a.lat!, a.lon!, request);
+		},
+		(schema) => schema.refine(args => args.path !== undefined
+			? args.samples !== undefined && args.lat === undefined && args.lon === undefined && args.points === undefined
+			: args.samples === undefined && (args.points !== undefined
+				? args.lat === undefined && args.lon === undefined
+				: args.lat !== undefined && args.lon !== undefined),
+		{ message: 'Pass lat and lon, points, or path with samples.' })
 	);
 	tool(
 		'weather',

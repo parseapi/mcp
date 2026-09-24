@@ -1,6 +1,6 @@
 {
 	"name": "parseapi-mcp",
-	"version": "1.4.0",
+	"version": "1.5.0",
 	"mcpName": "com.parseapi/mcp",
 	"description": "Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
 	"keywords": [
@@ -50,7 +50,7 @@
 	"dependencies": {
 		"@modelcontextprotocol/server": "^2.0.0",
 		"@modelcontextprotocol/node": "^2.0.0",
-		"@parseapi/sdk": "^1.4.0",
+		"@parseapi/sdk": "^1.5.0",
 		"zod": "^4.0.0"
 	},
 	"devDependencies": {

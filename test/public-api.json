@@ -650,12 +650,23 @@
           "maximum": 180,
           "minimum": -180,
           "type": "number"
+        },
+        "path": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "points": {
+          "maxLength": 12000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "samples": {
+          "maximum": 512,
+          "minimum": 2,
+          "type": "integer"
         }
       },
-      "required": [
-        "lat",
-        "lon"
-      ],
       "type": "object"
     },
     "annotations": {

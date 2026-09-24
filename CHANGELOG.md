@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 - 2026-09-24
+
+Adds Elevation point lists and evenly spaced paths with strict exclusive selectors across full and compact catalogs. Uses JavaScript SDK 1.5.0 or later; API contract remains 2.0.0.
+
 ## 1.4.0 - 2026-09-24
 
 Adds Australian Postal suburb choices while preserving null, empty, and ambiguous results. Existing calls, compact nearby/distance responses, and API contract `2.0.0` remain unchanged.

@@ -80,6 +80,13 @@ Example tool arguments:
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
+| `elevation` | `{"lat":35.2271,"lon":-80.8431}` |
+| `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
+| `elevation` | `{"path":"35.2271,-80.8431|35.5951,-82.5515","samples":100}` |
+
+Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
+
+A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. A path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
@@ -120,7 +127,7 @@ The estimate allows up to three attempts per ordinary lookup and one per Email D
 For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
 
 ```bash
-PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.4.0
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.5.0
 ```
 
 Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:
