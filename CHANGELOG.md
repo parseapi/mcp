@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0 - 2026-09-24
+
+Adds Australian Postal suburb choices while preserving null, empty, and ambiguous results. Existing calls, compact nearby/distance responses, and API contract `2.0.0` remain unchanged.
+
+Includes the G-NAF source notice for Australian Postal results and uses JavaScript SDK 1.4.0 or later.
+
 ## 1.3.0 - Unreleased
 
 Adds the Stack site inventory tool with eight technology category arrays and explicit page coverage. Uses JavaScript SDK 1.3.0 or later. Existing tools and API contract `2.0.0` remain unchanged.

@@ -8,6 +8,44 @@ const response = (data, status = 200) => new Response(JSON.stringify(data), {
 	status, headers: { 'content-type': 'application/json', 'retry-after': '0' },
 });
 
+test('Australian Postal choices preserve core ambiguity and source notice on both transports', async (t) => {
+	let record;
+	const { rpc } = await setup(t, { fetch: () => response(record) });
+	const choice = { city: 'SYDNEY', state: 'NSW', state_name: 'New South Wales', future: true };
+	for (const localities of [undefined, null, [], [choice], [choice, { city: 'HAYMARKET', state: 'NSW', state_name: 'New South Wales' }]]) {
+		record = { postal: '2000', country: 'AU', city: null, ...(localities === undefined ? {} : { localities }) };
+		const result = await rpc.call('postal', { code: '2000', country: 'AU' });
+		assert.deepEqual(body(result), record);
+		assert.equal(result.result.content.length, 2);
+		assert.match(result.result.content[1].text, /G-NAF.*Geoscape Australia/);
+		assert.match(result.result.content[1].text, /https:\/\/parseapi\.com\/legal\/attribution#postal-au/);
+	}
+	const hosted = await connect('test_key', 'http');
+	t.after(() => hosted.close());
+	for (const target of [rpc, hosted]) {
+		for (const [name, args, payload] of [
+			['postal', { code: '3000', country: 'AU' }, { country: 'AU', city: 'MELBOURNE' }],
+			['postal_nearby', { code: '3000', country: 'AU' }, { country: 'AU', nearby: [{ city: 'MELBOURNE' }] }],
+			['postal_distance', { from: '3000', to: '3004', country: 'AU' }, { country: 'AU', from: { city: 'MELBOURNE' }, to: { city: 'MELBOURNE' } }],
+		]) {
+			record = payload;
+			const result = await target.call(name, args);
+			assert.deepEqual(body(result), payload);
+			assert.match(result.result.content[1].text, /G-NAF/);
+			record = { ...payload, country: 'US' };
+			assert.equal((await target.call(name, args)).result.content.length, 1);
+		}
+	}
+	for (const transport of ['stdio', 'http']) {
+		const compact = await connect('test_key', transport, { mode: 'compact' });
+		t.after(() => compact.close());
+		record = { postal: '2000', country: 'AU', city: null, localities: [choice] };
+		const result = await compact.call('lookup', { operation: 'postal', arguments: { code: '2000', country: 'AU' } });
+		assert.deepEqual(body(result), record);
+		assert.match(result.result.content[1].text, /G-NAF/);
+	}
+});
+
 test('Email enrichment preserves the deep triad, nulls and open codes', async (t) => {
 	let extra = {};
 	const { rpc } = await setup(t, { fetch: () => response({ email: 'jane.doe+news@example.com', ...extra }) });
