@@ -91,7 +91,7 @@ async function smokeStdio() {
 	check('stdio has ip_self', names.includes('ip_self'));
 	check('stdio has vat', names.includes('vat'));
 	check('stdio has card', names.includes('card'));
-	check('stdio has iban', names.includes('iban'));
+	check('stdio has bank', names.includes('bank'));
 	check('stdio has npi', names.includes('npi'));
 	check('stdio has vin', names.includes('vin'));
 	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
@@ -219,7 +219,7 @@ async function smokeHttp() {
 		check('http tools/list has 57 lookups, discovery and preflight (no ip_self)', names.length === 59 && names.includes('discover') && names.includes('preflight') && !names.includes('ip_self'), `got ${names.length}`);
 		check('http has vat', names.includes('vat'));
 		check('http has card', names.includes('card'));
-		check('http has iban', names.includes('iban'));
+		check('http has bank', names.includes('bank'));
 		check('http has npi', names.includes('npi'));
 		check('http has vin', names.includes('vin'));
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));

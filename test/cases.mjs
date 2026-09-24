@@ -37,7 +37,9 @@ export const cases = [
 	['weather', { lat: 0, lon: 0, deep: true, date: '2026-08-01' }, '/weather', { lat: '0', lon: '0', deep: 'true', date: '2026-08-01' }],
 	['email', { email: 'a+b@example.com', deep: true }, '/email/a%2Bb%40example.com', { deep: 'true' }],
 	['vat', { number: '136695976', country: 'DE', from: 'DE123', deep: true }, '/vat/136695976', { country: 'DE', from: 'DE123', deep: 'true' }],
-	['iban', { iban: 'DE89 3704', country: 'DE' }, '/iban/DE89%203704', { country: 'DE' }],
+	['bank', { iban: 'DE89 3704', country: 'DE' }, '/bank'],
+	['bank_us_ach', { routing: '011-000-015', account: ' 00aB-%20' }, '/bank'],
+	['bank_requirements', { country: 'US', format: 'us_ach' }, '/bank/requirements', { country: 'US', format: 'us_ach' }],
 	['npi', { npi: '1881018208', deep: true }, '/npi/1881018208', { deep: 'true' }],
 	['phone', { number: '+14155552671', country: 'US', deep: true }, '/phone/%2B14155552671', { country: 'US', deep: 'true' }],
 	['carrier', { number: '+14155552671', country: 'US' }, '/carrier/%2B14155552671', { country: 'US' }],
@@ -73,5 +75,5 @@ export const cases = [
 	['emoji_search', { query: 'fire', limit: 3 }, '/emoji', { q: 'fire', limit: '3' }],
 ];
 
-const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "iban", "language", "naics", "naics_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
-cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,{...query,deep:'true'}]));
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,name === 'bank' ? {} : {...query,deep:'true'}]));

@@ -77,6 +77,70 @@
     }
   },
   {
+    "name": "bank",
+    "inputSchema": {
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "iban": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "iban"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "bank_requirements",
+    "inputSchema": {
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "country"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "bank_us_ach",
+    "inputSchema": {
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "routing": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "routing",
+        "account"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "bloc",
     "inputSchema": {
       "properties": {
@@ -795,29 +859,6 @@
       "required": [
         "country",
         "date"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "iban",
-    "inputSchema": {
-      "properties": {
-        "country": {
-          "type": "string"
-        },
-        "deep": {
-          "type": "boolean"
-        },
-        "iban": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "iban"
       ],
       "type": "object"
     },

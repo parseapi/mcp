@@ -1,0 +1,92 @@
+{
+  "records": [
+    {
+      "iban": "DE89370400440532013000",
+      "valid": true,
+      "country": "DE",
+      "formatted": "DE89 3704 0044 0532 0130 00",
+      "bank": "37040044",
+      "bank_name": null,
+      "bic": null
+    },
+    {
+      "iban": "DE89370400440532013000",
+      "valid": true,
+      "country": "DE",
+      "formatted": "DE89 3704 0044 0532 0130 00",
+      "bank": "37040044",
+      "bank_name": null,
+      "bic": null,
+      "checks": {
+        "input": "passed",
+        "country": "passed",
+        "length": "passed",
+        "structure": "passed",
+        "checksum": "passed",
+        "national": "not_supported"
+      },
+      "issues": [],
+      "deep": {
+        "checksum": "89",
+        "branch": null,
+        "account": "0532013000"
+      }
+    },
+    {
+      "iban": "DE89!370400440532013000",
+      "valid": false,
+      "country": "DE",
+      "formatted": null,
+      "bank": null,
+      "bank_name": null,
+      "bic": null,
+      "checks": {
+        "input": "failed",
+        "country": "not_checked",
+        "length": "not_checked",
+        "structure": "not_checked",
+        "checksum": "not_checked",
+        "national": "not_checked"
+      },
+      "issues": [
+        {
+          "field": "iban",
+          "code": "invalid_characters",
+          "message": "Use letters A-Z, digits 0-9, spaces or hyphens."
+        }
+      ],
+      "deep": {}
+    },
+    {
+      "iban": "DE89370400440532013000",
+      "valid": true,
+      "country": "DE",
+      "formatted": "DE89 3704 0044 0532 0130 00",
+      "bank": "37040044",
+      "bank_name": null,
+      "bic": null,
+      "checks": {
+        "input": "passed",
+        "country": "passed",
+        "length": "passed",
+        "structure": "passed",
+        "checksum": "passed",
+        "national": "future-state"
+      },
+      "issues": [
+        {
+          "field": "future-field",
+          "code": "future-code",
+          "message": "Future issue"
+        }
+      ],
+      "future": true
+    }
+  ],
+  "inputs": [
+    " de89./?0532# ",
+    "\ufeffDE89\u200b370400440532013000",
+    "D\u00c989\ud83d\udcb3370400440532013000",
+    "DE89%20370400440532013000"
+  ]
+}

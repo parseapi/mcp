@@ -55,9 +55,9 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 59 local lookup tools and 58 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 61 local lookup tools and 60 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `iban`, `card`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
 NAICS paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
@@ -179,9 +179,11 @@ The [agent benchmark](eval/README.md) compares full and compact discovery on fix
 MIT licensed.
 
 
+Bank returns core `checks` for input, country, length, structure, checksum and national rules, plus an `issues` list. States are `passed`, `failed`, `not_checked` or `not_supported`. Unsupported national checking is not a failure. `valid` covers the implemented format and checksum rules, not account existence, ownership or payment reachability. Directory names and BICs may be null independently. Older responses may omit `checks` and `issues`, and future states and issue codes remain strings. Pass the original input unchanged so the API can report invalid characters. Deep `account` remains the BBAN remainder.
+
 ## Optional detail
 
-Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone, IBAN and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone, Bank and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
 Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
 
@@ -200,3 +202,8 @@ Pass a public hostname without a scheme, path, port or IP address. Stack returns
 Successful checks may be reused for up to 24 hours. `pretty` optionally formats the wire JSON. Stack uses your plan's request allowance and API version 2.0.0 selected by this client.
 
 The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellation still aborts the request.
+
+
+Bank tools send original IBAN, routing and account strings in POST JSON bodies, keeping account input out of URLs. `bank` retains optional country and deep controls. Deep directory evidence identifies the immutable source edition and actual match grain when a directory lookup ran; it does not prove country completeness or reachability. `bank_us_ach` takes routing/account strings and checks the ABA routing checksum plus account-field syntax. It has no deep option and cannot verify an account checksum, existence, ownership or ACH eligibility. Preserve all account characters and leading zeros. `bank_requirements` takes a country and optional format (`iban` by default, or `us_ach`) and returns accepted fields, check scope and limitations. Requirements are metadata, not bank coverage. Avoid logging tool arguments or request bodies containing banking input.
+
+When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
