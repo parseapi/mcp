@@ -87,6 +87,10 @@ Example tool arguments:
 | `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
 | `elevation` | `{"path":"35.2271,-80.8431|35.5951,-82.5515","samples":100}` |
 
+Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
+
+Canonical Time source deep includes `timezone_database_version` and nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
+
 Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
 
 A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. A path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
@@ -108,7 +112,7 @@ Ask `discover` what an operation can determine before making a lookup:
 { "operation": "email" }
 ```
 
-The result includes the actual input schema and reviewed policies for capabilities, freshness, uncertainty, billing units, credential types and retries. Both JSON text and MCP `structuredContent` carry the same result. Email, Domain, DNS, MX and Country have reviewed policies. Other operations return their input schema with `policy: null`. Field meanings are specific to each operation. An unknown result is not automatically a reason to retry.
+The result includes the actual input schema and reviewed policies for capabilities, freshness, uncertainty, billing units, credential types and retries. Both JSON text and MCP `structuredContent` carry the same result. Email, Domain, DNS, MX, Country, Time and timezone discovery have reviewed policies. Other operations return their input schema with `policy: null`. Field meanings are specific to each operation. An unknown result is not automatically a reason to retry.
 
 Use `{ "query": "mailbox" }` to find operations. Search returns up to five summaries by default. `detail: "full"` includes schemas and policies. Use `limit` and the returned `next_offset` to page through results. Metadata calls make no API requests and consume no lookup units. Hosted HTTP still requires its existing authentication before discovery.
 
