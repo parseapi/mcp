@@ -5,13 +5,34 @@
     "email": {
       "operation": "email",
       "endpoint": "GET /email/{email}",
-      "determines": ["Email syntax and domain mail routing", "Consumer, disposable and role-address classifications", "With deep=true, a mailbox deliverability observation"],
-      "does_not_determine": ["Recipient identity, consent or ownership", "Guaranteed delivery to an inbox", "A new mailbox probe on every request"],
-      "required_context": ["email: a complete email address", "deep=true only when a mailbox check is needed"],
+      "determines": [
+        "Email syntax and domain mail routing",
+        "Consumer, disposable and role-address classifications",
+        "With deep=true, a mailbox deliverability observation"
+      ],
+      "does_not_determine": [
+        "Recipient identity, consent or ownership",
+        "Guaranteed delivery to an inbox",
+        "A new mailbox probe on every request"
+      ],
+      "required_context": [
+        "email: a complete email address",
+        "deep=true only when a mailbox check is needed"
+      ],
       "freshness": {
         "mode": "observation_reuse",
-        "mail_routing": { "mode": "dns_ttl", "positive_cache_max_seconds": 3600, "negative_cache_max_seconds": 300, "shorter_dns_ttl_wins": true, "stale_if_error": false },
-        "mailbox_corpus_reuse_max_seconds": { "deliverable": 604800, "catchall": 2592000, "undeliverable": 7776000 },
+        "mail_routing": {
+          "mode": "dns_ttl",
+          "positive_cache_max_seconds": 3600,
+          "negative_cache_max_seconds": 300,
+          "shorter_dns_ttl_wins": true,
+          "stale_if_error": false
+        },
+        "mailbox_corpus_reuse_max_seconds": {
+          "deliverable": 604800,
+          "catchall": 2592000,
+          "undeliverable": 7776000
+        },
         "mailbox_response_cache_ttl_seconds": 86400,
         "mailbox_local_cache_ttl_seconds": 3600,
         "effective_max_age_seconds": null,
@@ -20,24 +41,63 @@
         "actual_age_status": "not_exposed"
       },
       "uncertainty": {
-        "valid": { "true": "Syntax is valid; this does not establish mailbox existence", "false": "Syntax is invalid" },
-        "domain_valid": { "true": "MX or permitted A/AAAA fallback supplies a mail route", "false": "When valid=true, no usable mail route, including an explicit null MX. When valid=false, routing was not checked" },
-        "domain_type": { "null": "No supported reserved namespace classification" },
-        "deep.deliverable": { "true": "Mailbox likely exists", "false": "Negative verification, eligible local disposable/no-route rejection, or invalid syntax that skipped verification; check valid first", "null": "Mailbox check did not complete; no verification unit is charged" },
-        "deep.catchall": { "true": "Domain accepts all addresses; an individual mailbox is not established", "false": "Not classified as catchall, including invalid input and local rejection where no mailbox probe ran", "null": "Mailbox check did not complete" },
-        "deep": { "omitted": "Not requested", "empty_object": "Requested with an app key; mailbox verification is locked" }
+        "valid": {
+          "true": "Syntax is valid; this does not establish mailbox existence",
+          "false": "Syntax is invalid"
+        },
+        "domain_valid": {
+          "true": "MX or permitted A/AAAA fallback supplies a mail route",
+          "false": "When valid=true, no usable mail route, including an explicit null MX. When valid=false, routing was not checked"
+        },
+        "domain_type": {
+          "null": "No supported reserved namespace classification"
+        },
+        "deep.deliverable": {
+          "true": "Mailbox likely exists",
+          "false": "Negative verification, eligible local disposable/no-route rejection, or invalid syntax that skipped verification; check valid first",
+          "null": "Mailbox check did not complete; no verification unit is charged"
+        },
+        "deep.catchall": {
+          "true": "Domain accepts all addresses; an individual mailbox is not established",
+          "false": "Not classified as catchall, including invalid input and local rejection where no mailbox probe ran",
+          "null": "Mailbox check did not complete"
+        },
+        "deep": {
+          "omitted": "Not requested",
+          "empty_object": "Requested with an app key; mailbox verification is locked"
+        }
       },
       "billing": {
         "pooled_requests_per_success": 1,
-        "metered": { "name": "email", "when": "deep=true and a valid-syntax eligible check completes", "units_per_completed_check": 1, "cache_hits_bill_units": true, "incomplete_check_units": 0, "eligible_local_negative_check_units": 1, "invalid_syntax_check_units": 0, "locked_deep_check_units": 0 },
+        "metered": {
+          "name": "email",
+          "when": "deep=true and a valid-syntax eligible check completes",
+          "units_per_completed_check": 1,
+          "cache_hits_bill_units": true,
+          "incomplete_check_units": 0,
+          "eligible_local_negative_check_units": 1,
+          "invalid_syntax_check_units": 0,
+          "locked_deep_check_units": 0
+        },
         "monetary_quote": null,
         "account_state": "unknown; included balance, on-demand access, accepted rates and spend cap require account state"
       },
       "access": {
         "api_key_required": true,
-        "key_types": ["secret", "public", "app"],
-        "key_fences": { "public": "Allowed browser origin required", "app": "Allowed X-App-Id required" },
-        "deep": { "secret_or_public": "Uses available included verifications or enabled on-demand allowance, including on Free", "app": "Locked; returns deep: {} without a verification", "restricted_demo_key": "Metered deep is denied" },
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "secret_or_public": "Uses available included verifications or enabled on-demand allowance, including on Free",
+          "app": "Locked; returns deep: {} without a verification",
+          "restricted_demo_key": "Metered deep is denied"
+        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access, quotas and spending controls still apply"
       },
@@ -45,56 +105,121 @@
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
         "deep_default_retries": 0,
-        "retry_http_statuses": [429, 500, 502, 503, 504],
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
         "guidance": "Do not infer a retry from null. Repeated completed deep checks consume additional verification units; a transport failure does not prove the previous attempt was unbilled. DNS failures can return 503 before mailbox verification."
       },
-      "docs": { "help": "https://api.parseapi.com/version/2.0.0/email/help", "guide": "https://parseapi.com/docs/email" }
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/email/help",
+        "guide": "https://parseapi.com/docs/email"
+      }
     },
     "domain": {
       "operation": "domain",
       "endpoint": "GET /domain/{domain}",
-      "determines": ["Registry registration status", "With entitled deep=true, available registration details"],
-      "does_not_determine": ["Whether a registrar will sell an unregistered domain", "DNS routing or mailbox deliverability", "A live registry query on every request"],
-      "required_context": ["domain: a hostname rather than a URL or email address"],
+      "determines": [
+        "Registry registration status",
+        "With entitled deep=true, available registration details"
+      ],
+      "does_not_determine": [
+        "Whether a registrar will sell an unregistered domain",
+        "DNS routing or mailbox deliverability",
+        "A live registry query on every request"
+      ],
+      "required_context": [
+        "domain: a hostname rather than a URL or email address"
+      ],
       "freshness": {
         "mode": "observation_reuse",
-        "reuse_max_seconds": { "registered": 3600, "unregistered": 300 },
+        "reuse_max_seconds": {
+          "registered": 3600,
+          "unregistered": 300
+        },
         "stale_if_error": false,
         "actual_age_seconds": null,
         "actual_age_status": "not_exposed"
       },
       "uncertainty": {
-        "available": { "true": "Registry reported unregistered", "false": "Registry reported registered", "null": "No usable current registry observation; availability is unknown" },
-        "deep": { "omitted": "Not requested", "empty_object": "Plan does not unlock registration details, or registration is unavailable" },
-        "deep.registration": { "omitted": "No entitled, usable registration observation" }
+        "available": {
+          "true": "Registry reported unregistered",
+          "false": "Registry reported registered",
+          "null": "No usable current registry observation; availability is unknown"
+        },
+        "deep": {
+          "omitted": "Not requested",
+          "empty_object": "Plan does not unlock registration details, or registration is unavailable"
+        },
+        "deep.registration": {
+          "omitted": "No entitled, usable registration observation"
+        }
       },
-      "billing": { "pooled_requests_per_success": 1, "metered": null, "deep_extra_units": 0, "monetary_quote": null, "account_state": "unknown; pooled allowance and accepted account terms are not checked" },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "deep_extra_units": 0,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
       "access": {
         "api_key_required": true,
-        "key_types": ["secret", "public", "app"],
-        "key_fences": { "public": "Allowed browser origin required", "app": "Allowed X-App-Id required" },
-        "deep": { "entitlement": "Paid plan; app keys retain plan-deep access", "locked": "Returns deep: {}" },
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "entitlement": "Paid plan; app keys retain plan-deep access",
+          "locked": "Returns deep: {}"
+        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
       },
       "retry": {
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
-        "retry_http_statuses": [429, 500, 502, 503, 504],
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
         "guidance": "available=null is a completed HTTP response with an unknown fact, not evidence the domain is free. Do not retry automatically from null; respect rate and quota errors."
       },
-      "docs": { "help": "https://api.parseapi.com/version/2.0.0/domain/help", "guide": "https://parseapi.com/docs/domain" }
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/domain/help",
+        "guide": "https://parseapi.com/docs/domain"
+      }
     },
     "dns": {
       "operation": "dns",
       "endpoint": "GET /dns/{domain}",
-      "determines": ["Published answer records from a recursive DNS view", "Each returned record's remaining TTL"],
-      "does_not_determine": ["Global propagation or a zone transfer", "Domain registration availability", "Whether a CNAME destination works"],
-      "required_context": ["domain: a DNS name, including supported underscore or reverse names", "type: one supported record type, or omit for all ten supported types"],
+      "determines": [
+        "Published answer records from a recursive DNS view",
+        "Each returned record's remaining TTL"
+      ],
+      "does_not_determine": [
+        "Global propagation or a zone transfer",
+        "Domain registration availability",
+        "Whether a CNAME destination works"
+      ],
+      "required_context": [
+        "domain: a DNS name, including supported underscore or reverse names",
+        "type: one supported record type, or omit for all ten supported types"
+      ],
       "freshness": {
         "mode": "dns_ttl",
         "positive_cache_max_seconds": 3600,
@@ -107,36 +232,83 @@
         "actual_age_status": "not_exposed; remaining TTL is exposed"
       },
       "uncertainty": {
-        "records": { "empty_array": "Successful lookup with no answer records of the requested types", "failure": "A failed type returns an error, never an empty or silently partial result" },
-        "records[].value": { "MX 0 .": "Explicit null MX; this domain declines mail", "CNAME": "Published alias; its target may not exist" },
-        "http_status": { "404": "DNS name does not exist", "503": "Temporary DNS failure; no negative verdict" },
-        "deep": { "omitted": "Not requested", "empty_object": "Requested; this product has no additional deep fields" }
+        "records": {
+          "empty_array": "Successful lookup with no answer records of the requested types",
+          "failure": "A failed type returns an error, never an empty or silently partial result"
+        },
+        "records[].value": {
+          "MX 0 .": "Explicit null MX; this domain declines mail",
+          "CNAME": "Published alias; its target may not exist"
+        },
+        "http_status": {
+          "404": "DNS name does not exist",
+          "503": "Temporary DNS failure; no negative verdict"
+        },
+        "deep": {
+          "omitted": "Not requested",
+          "empty_object": "Requested; this product has no additional deep fields"
+        }
       },
-      "billing": { "pooled_requests_per_success": 1, "metered": null, "deep_extra_units": 0, "all_record_types_extra_units": 0, "monetary_quote": null, "account_state": "unknown; pooled allowance and accepted account terms are not checked" },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "deep_extra_units": 0,
+        "all_record_types_extra_units": 0,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
       "access": {
         "api_key_required": true,
-        "key_types": ["secret", "public", "app"],
-        "key_fences": { "public": "Allowed browser origin required", "app": "Allowed X-App-Id required" },
-        "deep": { "entitlement": "All records are core on every plan", "requested": "Returns deep: {}" },
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "entitlement": "All records are core on every plan",
+          "requested": "Returns deep: {}"
+        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
       },
       "retry": {
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
-        "retry_http_statuses": [429, 500, 502, 503, 504],
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
         "guidance": "An empty records array and a DNS-name 404 are negative answers, not transient failures. Reuse records only within their remaining TTL; respect rate and quota errors."
       },
-      "docs": { "help": "https://api.parseapi.com/version/2.0.0/dns/help", "guide": "https://parseapi.com/docs/dns" }
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/dns/help",
+        "guide": "https://parseapi.com/docs/dns"
+      }
     },
     "mx": {
       "operation": "mx",
       "endpoint": "GET /mx/{domain}",
-      "determines": ["Published MX hosts sorted by priority and host", "An explicit null MX that declines mail"],
-      "does_not_determine": ["Mailbox deliverability", "No mail route from an empty MX list alone", "Domain registration availability"],
-      "required_context": ["domain: a hostname rather than a URL or email address"],
+      "determines": [
+        "Published MX hosts sorted by priority and host",
+        "An explicit null MX that declines mail"
+      ],
+      "does_not_determine": [
+        "Mailbox deliverability",
+        "No mail route from an empty MX list alone",
+        "Domain registration availability"
+      ],
+      "required_context": [
+        "domain: a hostname rather than a URL or email address"
+      ],
       "freshness": {
         "mode": "dns_ttl",
         "positive_cache_max_seconds": 3600,
@@ -147,35 +319,75 @@
         "actual_age_status": "not_exposed; use dns with type=MX for remaining record TTLs"
       },
       "uncertainty": {
-        "mx": { "empty_array": "No MX records; A/AAAA mail fallback may still apply", "null_mx": "[{priority: 0, host: \".\"}] explicitly declines mail" },
-        "http_status": { "503": "Temporary DNS failure; no negative verdict" },
-        "deep": { "omitted": "This product has no deep response fields" }
+        "mx": {
+          "empty_array": "No MX records; A/AAAA mail fallback may still apply",
+          "null_mx": "[{priority: 0, host: \".\"}] explicitly declines mail"
+        },
+        "http_status": {
+          "503": "Temporary DNS failure; no negative verdict"
+        },
+        "deep": {
+          "omitted": "This product has no deep response fields"
+        }
       },
-      "billing": { "pooled_requests_per_success": 1, "metered": null, "monetary_quote": null, "account_state": "unknown; pooled allowance and accepted account terms are not checked" },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
       "access": {
         "api_key_required": true,
-        "key_types": ["secret", "public", "app"],
-        "key_fences": { "public": "Allowed browser origin required", "app": "Allowed X-App-Id required" },
-        "deep": { "entitlement": "All MX records are core on every plan" },
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "entitlement": "All MX records are core on every plan"
+        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
       },
       "retry": {
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
-        "retry_http_statuses": [429, 500, 502, 503, 504],
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
         "guidance": "Do not retry solely because mx is empty. Use email for mail-route validation or dns for explicit A/AAAA records; respect rate and quota errors."
       },
-      "docs": { "help": "https://api.parseapi.com/version/2.0.0/mx/help", "guide": "https://parseapi.com/docs/mx" }
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/mx/help",
+        "guide": "https://parseapi.com/docs/mx"
+      }
     },
     "country": {
       "operation": "country",
       "endpoint": "GET /country/{code}",
-      "determines": ["Country reference information by ISO2, ISO3 or name", "With entitled deep=true, geography, population and national reference attributes"],
-      "does_not_determine": ["A live census or uniform observation date for every field", "Tax due on a particular transaction", "Missing facts by inference"],
-      "required_context": ["code: ISO2, ISO3 or a country name", "deep=true for profile fields such as population and area"],
+      "determines": [
+        "Country reference information by ISO2, ISO3 or name",
+        "With entitled deep=true, geography, population and national reference attributes"
+      ],
+      "does_not_determine": [
+        "A live census or uniform observation date for every field",
+        "Tax due on a particular transaction",
+        "Missing facts by inference"
+      ],
+      "required_context": [
+        "code: ISO2, ISO3 or a country name",
+        "deep=true for profile fields such as population and area"
+      ],
       "freshness": {
         "mode": "maintained_reference",
         "population_period_field": "deep.population_period",
@@ -184,32 +396,286 @@
         "actual_age_status": "not_exposed; population period describes that statistic only"
       },
       "uncertainty": {
-        "name_local": { "null": "Native name unavailable or identical to the original name before display translation" },
-        "deep.population_period": { "null": "Observation period is unknown; never infer it from an import date" },
-        "deep.water_area": { "null": "Unknown or inconsistent with the archived total", "zero": "Reported zero water area" },
-        "deep.coastline": { "null": "Unknown", "zero": "Reported landlocked coastline" },
-        "deep.tax": { "null": "No national consumption levy is named; local levies may still apply" },
-        "deep.tax_rate": { "null": "Unavailable or no national levy applies", "zero": "Known zero national reference rate" },
-        "deep": { "omitted": "Not requested", "empty_object": "Requested but the plan does not unlock the profile" }
+        "name_local": {
+          "null": "Native name unavailable or identical to the original name before display translation"
+        },
+        "deep.population_period": {
+          "null": "Observation period is unknown; never infer it from an import date"
+        },
+        "deep.water_area": {
+          "null": "Unknown or inconsistent with the archived total",
+          "zero": "Reported zero water area"
+        },
+        "deep.coastline": {
+          "null": "Unknown",
+          "zero": "Reported landlocked coastline"
+        },
+        "deep.tax": {
+          "null": "No national consumption levy is named; local levies may still apply"
+        },
+        "deep.tax_rate": {
+          "null": "Unavailable or no national levy applies",
+          "zero": "Known zero national reference rate"
+        },
+        "deep": {
+          "omitted": "Not requested",
+          "empty_object": "Requested but the plan does not unlock the profile"
+        }
       },
-      "billing": { "pooled_requests_per_success": 1, "metered": null, "deep_extra_units": 0, "monetary_quote": null, "account_state": "unknown; pooled allowance and accepted account terms are not checked" },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "deep_extra_units": 0,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
       "access": {
         "api_key_required": true,
-        "key_types": ["secret", "public", "app"],
-        "key_fences": { "public": "Allowed browser origin required", "app": "Allowed X-App-Id required" },
-        "deep": { "entitlement": "Paid plan; app keys retain plan-deep access", "locked": "Returns deep: {}" },
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "entitlement": "Paid plan; app keys retain plan-deep access",
+          "locked": "Returns deep: {}"
+        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
       },
       "retry": {
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
-        "retry_http_statuses": [429, 500, 502, 503, 504],
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
         "guidance": "Do not retry to fill null reference fields or a locked deep object. Preserve unknowns and distinguish reported zero from null; respect rate and quota errors."
       },
-      "docs": { "help": "https://api.parseapi.com/version/2.0.0/country/help", "guide": "https://parseapi.com/docs/country" }
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/country/help",
+        "guide": "https://parseapi.com/docs/country"
+      }
+    },
+    "time": {
+      "operation": "time",
+      "endpoint": "GET /time or /time/{timezone}",
+      "determines": [
+        "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
+        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
+        "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, actual rule edition and source wall-time resolution",
+        "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
+      ],
+      "does_not_determine": [
+        "Future government rule changes or complete early historical records",
+        "Clock synchronization accuracy or a latency-free current time",
+        "A unique timezone from an abbreviation such as CST",
+        "A precise or verified person/device location from IP evidence",
+        "Postal-delivery validity, ownership, global address coverage or complete UN/LOCODE coverage"
+      ],
+      "required_context": [
+        "Choose one source: omitted timezone for UTC, IANA timezone, paired lat/lon, explicit IP, exact city/country/state, country alone, IATA/ICAO airport, covered UN/LOCODE port, or address with country=US",
+        "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
+        "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
+        "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
+        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
+      ],
+      "freshness": {
+        "mode": "computed_from_pinned_rules",
+        "timezone_database": "IANA",
+        "timezone_database_version": "2026c",
+        "cache_control": "no-store",
+        "next_transition_horizon_days": 400,
+        "uniform_refresh_interval_seconds": null,
+        "actual_age_seconds": null,
+        "actual_age_status": "not_exposed; rule edition is pinned, current time is evaluated for each request",
+        "answer_evidence": "deep.timezone_database_version binds a requested detailed answer to the bundled rule edition, independently of coordinate boundary and display-name data"
+      },
+      "uncertainty": {
+        "timezone": {
+          "null": "Coordinates or explicit location input did not identify one usable timezone; clock facts and requested to/targets stay null"
+        },
+        "dst": {
+          "true": "The active timezone rule carries its DST indicator, including negative seasonal adjustments; not proof the offset is positive",
+          "false": "The active timezone rule does not carry its DST indicator",
+          "null": "Source timezone is unresolved"
+        },
+        "deep.name": {
+          "null": "Friendly display name unavailable or inconsistent with the pinned rule"
+        },
+        "deep.next_dst": {
+          "null": "No UTC offset change found within 400 days, or source timezone unresolved; not a promise of no future changes"
+        },
+        "deep": {
+          "omitted": "Not requested",
+          "object": "Requested; optional detail is included on every plan"
+        },
+        "http_status": {
+          "400": "Invalid input, or a repeated/nonexistent source wall time with disambiguation=reject. Supply an explicit UTC offset or choose earlier/later",
+          "404": "Unknown IANA timezone",
+          "503": "Location store or required coordinate index unavailable; no negative location verdict"
+        },
+        "targets": {
+          "omitted": "Not requested",
+          "null": "Source is unresolved or ambiguous; no target instant was guessed",
+          "array": "Ordered requested target objects, including duplicates; all share the same captured instant"
+        },
+        "deep.resolution": {
+          "null": "Now, explicit-offset input, no conversion, or unresolved source; no wall-time ambiguity was evaluated",
+          "object": "Actual unique/overlap/gap classification, applied policy, signed wall adjustment in seconds, and two chronological alternatives for overlap/gap (empty for unique)"
+        },
+        "error_code": {
+          "ambiguous_time": "HTTP 400: reject policy encountered repeated source wall time; choose earlier/later or an explicit offset",
+          "nonexistent_time": "HTTP 400: reject policy encountered skipped source wall time; choose earlier/later or an explicit offset",
+          "invalid_request": "HTTP 400: other invalid input; correct it before retrying"
+        },
+        "location": {
+          "omitted": "No explicit location selector was used",
+          "resolved": "One usable location candidate selected",
+          "ambiguous": "Multiple or truncated candidates; choose/refine explicitly",
+          "not_found": "No usable match in the available data; not proof the place does not exist"
+        },
+        "deep.season": {
+          "null": "No current interval or next DST-flag interval starting within 400 days, or source unresolved",
+          "object": "Current continuous DST-flag interval, otherwise the next beginning within 400 days; nullable start/end boundaries preserve limits",
+          "endpoint_null": "Boundary absent from pinned rules or outside supported UTC years 0001 through 9999"
+        }
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "deep_extra_units": 0,
+        "conversion_extra_units": 0,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked",
+        "targets_extra_units": 0,
+        "maximum_targets": 10
+      },
+      "access": {
+        "api_key_required": true,
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "deep": {
+          "entitlement": "Optional time detail on every plan"
+        },
+        "effective_access": null,
+        "effective_access_status": "not_checked; key fences, account access and quotas still apply"
+      },
+      "retry": {
+        "client": "javascript_sdk_and_mcp",
+        "default_retries": 2,
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
+        "retry_network_errors": true,
+        "successful_unknown_retried": false,
+        "guidance": "Do not retry unresolved/ambiguous locations or rejected wall times automatically. Correct the input or choose a resolution. Retried calls with omitted at evaluate a later now; pin an explicit instant when repeatability matters. Honor Retry-After; waits over five seconds return the API error without an automatic retry."
+      },
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/time/help",
+        "guide": "https://parseapi.com/docs/time"
+      }
+    },
+    "time_zones": {
+      "operation": "time_zones",
+      "endpoint": "GET /time/zones",
+      "determines": [
+        "Serving timezone identifiers and aliases supported by the bundled Time rules",
+        "With q, identifiers containing every case-insensitive search token; underscores and spaces match equivalently",
+        "At one selected instant, optional rich rows with country associations, IANA area, abbreviation, exact offset, current DST and DST observance in that UTC calendar year"
+      ],
+      "does_not_determine": [
+        "An arbitrary place-name search or a unique winner for an ambiguous abbreviation",
+        "Future government rule changes or a live source refresh",
+        "Physical-continent or mainland/island classification"
+      ],
+      "required_context": [
+        "q is optional, at most 64 characters after trimming. Omit or leave blank to list all identifiers; an empty search result is []",
+        "Optional country, area, signed offset, abbreviation, dst or observes_dst filters; at is one ISO instant, omitted for now",
+        "details=true adds aligned zones rows while timezones stays a string array; sort=offset orders numerically, otherwise identifiers sort lexically",
+        "abbreviation returns every matching candidate at the selected instant; add country/context or choose an identifier explicitly"
+      ],
+      "freshness": {
+        "mode": "pinned_reference",
+        "timezone_database": "IANA",
+        "timezone_database_version": "2026c",
+        "version_field": "timezone_database_version",
+        "uniform_refresh_interval_seconds": null,
+        "actual_age_seconds": null,
+        "actual_age_status": "not_exposed; the response identifies the actual bundled rule edition"
+      },
+      "uncertainty": {
+        "timezones": {
+          "empty_array": "No supported identifier matches the search; not a statement about whether a place exists",
+          "array": "Serving identifiers and aliases matching filters, sorted by identifier or requested numerical offset"
+        },
+        "timezone_database_version": {
+          "value": "Pinned IANA rule edition, not a live-update guarantee"
+        },
+        "zones": {
+          "omitted": "Rich rows not requested",
+          "array": "Aligned facts at one captured instant; empty countries means no recorded association, nullable area means no known IANA naming area"
+        }
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
+      "access": {
+        "api_key_required": true,
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "effective_access": null,
+        "effective_access_status": "not_checked; key fences, account access and quotas still apply"
+      },
+      "retry": {
+        "client": "javascript_sdk_and_mcp",
+        "default_retries": 2,
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
+        "retry_network_errors": true,
+        "successful_unknown_retried": false,
+        "guidance": "Do not retry an empty match list automatically. Correct or broaden the identifier query. Honor Retry-After; waits over five seconds return the API error without automatic retry."
+      },
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/time/help",
+        "guide": "https://parseapi.com/docs/time"
+      }
     }
   }
 }

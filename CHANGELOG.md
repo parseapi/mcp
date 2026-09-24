@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0 - 2026-09-24
+
+Adds Time location inputs and explicit ambiguity candidates, filtered timezone discovery, multiple conversion targets, wall-time disambiguation, and standard/seasonal offset detail. Existing Timezone methods and API 2.0.0 selection remain unchanged.
+
 ## 1.5.0 - 2026-09-24
 
 Adds Elevation point lists and evenly spaced paths with strict exclusive selectors across full and compact catalogs. Uses JavaScript SDK 1.5.0 or later; API contract remains 2.0.0.

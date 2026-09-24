@@ -1383,12 +1383,48 @@
     "name": "time",
     "inputSchema": {
       "properties": {
+        "address": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
         "at": {
           "minLength": 1,
           "type": "string"
         },
+        "city": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "country": {
+          "pattern": "^[A-Za-z]{2}$",
+          "type": "string"
+        },
         "deep": {
           "type": "boolean"
+        },
+        "disambiguation": {
+          "enum": [
+            "compatible",
+            "earlier",
+            "later",
+            "reject"
+          ],
+          "type": "string"
+        },
+        "iata": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "icao": {
+          "pattern": "^[A-Za-z]{4}$",
+          "type": "string"
+        },
+        "ip": {
+          "maxLength": 45,
+          "minLength": 1,
+          "type": "string"
         },
         "lang": {
           "maxLength": 64,
@@ -1405,12 +1441,84 @@
           "minimum": -180,
           "type": "number"
         },
+        "state": {
+          "maxLength": 6,
+          "minLength": 1,
+          "type": "string"
+        },
+        "targets": {
+          "items": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "type": "array"
+        },
         "timezone": {
           "minLength": 1,
           "type": "string"
         },
         "to": {
           "minLength": 1,
+          "type": "string"
+        },
+        "unlocode": {
+          "pattern": "^[A-Za-z]{2} ?[A-Za-z2-9]{3}$",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "time_zones",
+    "inputSchema": {
+      "properties": {
+        "abbreviation": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "area": {
+          "maxLength": 64,
+          "minLength": 1,
+          "type": "string"
+        },
+        "at": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "country": {
+          "pattern": "^[A-Za-z]{2}$",
+          "type": "string"
+        },
+        "details": {
+          "type": "boolean"
+        },
+        "dst": {
+          "type": "boolean"
+        },
+        "observes_dst": {
+          "type": "boolean"
+        },
+        "offset": {
+          "pattern": "^[+-]\\d{2}:\\d{2}(?::\\d{2})?$",
+          "type": "string"
+        },
+        "query": {
+          "maxLength": 64,
+          "type": "string"
+        },
+        "sort": {
+          "enum": [
+            "timezone",
+            "offset"
+          ],
           "type": "string"
         }
       },

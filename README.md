@@ -79,6 +79,9 @@ Example tool arguments:
 | `time` | `{}` (UTC now) |
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
+| `time` | `{"timezone":"UTC","targets":["America/New_York","Asia/Tokyo"]}` |
+| `time_zones` | `{"query":"New York"}` |
+| `time` | `{"timezone":"America/New_York","at":"2026-11-01T01:30:00","to":"UTC","disambiguation":"later"}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
 | `elevation` | `{"lat":35.2271,"lon":-80.8431}` |
 | `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
@@ -127,7 +130,7 @@ The estimate allows up to three attempts per ordinary lookup and one per Email D
 For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
 
 ```bash
-PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.5.0
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.6.0
 ```
 
 Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:
@@ -197,3 +200,10 @@ Pass a public hostname without a scheme, path, port or IP address. Stack returns
 Successful checks may be reused for up to 24 hours. `pretty` optionally formats the wire JSON. Stack uses your plan's request allowance and API version 2.0.0 selected by this client.
 
 The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellation still aborts the request.
+
+
+Time `targets` accepts 1-10 destination IDs instead of `to`. Results retain the requested order and duplicates at one instant in a single pooled request. Unknown source coordinates return `targets: null`. Unknown destination IDs return `not_found` for the whole request. Use `time_zones` to search serving IDs or omit its query for the complete sorted list and pinned rule edition. An empty search result is `timezones: []`.
+
+`time` accepts one explicit IP, city, country, IATA airport, ICAO airport, port UN/LOCODE or address input. Country/state may narrow city or address. Address point lookup currently requires US country context. Port reference coverage is a reviewed subset of UN/LOCODE. Hosted calls never infer the user's IP from the server. Ambiguous or missing inputs return null clock fields and `location` candidates. Ask for the missing context or let the user choose rather than selecting a candidate silently.
+
+`time_zones` can filter by country, IANA area, exact offset, abbreviation, DST at an instant or DST occurrence during the UTC calendar year. It preserves explicit false filters. `details` adds rich rows and the common evaluation instant, while the default identifier list remains compact. Abbreviations return candidate zones. Source deep exposes standard and signed seasonal offsets plus actual DST-season transition boundaries. Negative seasonal adjustments and null boundaries retain their meaning.

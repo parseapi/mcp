@@ -5,7 +5,7 @@ import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
 import { registerPreflight } from './preflight.js';
 
-export const VERSION = '1.5.0';
+export const VERSION = '1.6.0';
 const API_VERSION = '2.0.0';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
@@ -589,24 +589,55 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'time',
-		'Current local time, Unix seconds, exact UTC offset and DST. Omit timezone for UTC or pass both coordinates. at selects the moment; to converts it. Deep adds friendly name, numeric offsets and the next source clock transition on every plan.',
+		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds rule edition, wall-time resolution, standard/seasonal offsets and actual DST-season transitions on every plan.',
 		{
-			timezone: z.string().min(1).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when coordinates are absent'),
+			timezone: z.string().min(1).refine(zone => !['zones', 'help'].includes(zone.trim().toLowerCase()), { message: 'Time source must be an IANA timezone ID. Use time_zones to list IDs.' }).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when all source selectors are absent'),
 			lat: lat.optional(),
 			lon: lon.optional(),
-			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
+			ip: z.string().min(1).max(45).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Explicit IPv4 or IPv6 input. Never use a hosted server IP as the user location.'),
+			city: z.string().min(1).max(200).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Exact city name or stable city_ identifier. Country and state can narrow candidates.'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 country as the source, or context with city/address. Multiple country timezones remain candidates.'),
+			state: z.string().min(1).max(6).optional().describe('State context with city/address and country, as a bare code or matching country-prefixed code.'),
+			iata: z.string().regex(/^[A-Za-z]{3}$/).optional().describe('Three-letter IATA airport identifier.'),
+			icao: z.string().regex(/^[A-Za-z]{4}$/).optional().describe('Four-letter ICAO airport identifier.'),
+			unlocode: z.string().regex(/^[A-Za-z]{2} ?[A-Za-z2-9]{3}$/).optional().describe('UN/LOCODE port identifier. Results use the reviewed port reference, not every assigned UN/LOCODE.'),
+			address: z.string().min(1).max(200).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Full address with explicit country. Strict point matches are currently supported for US; ambiguity stays unresolved.'),
+			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to or targets, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
+			disambiguation: z.enum(['compatible', 'earlier', 'later', 'reject']).optional().describe('For offsetless at with to or targets at a clock change. Default compatible chooses the earlier repeated time or advances a skipped time. earlier and later choose the respective instant. For user-entered appointments prefer reject: repeated times return ambiguous_time and skipped times nonexistent_time. Ask for an explicit offset or earlier/later choice. Deep resolution explains a successful choice. Explicit offsets select the instant directly.'),
+			targets: z.array(z.string().trim().min(1).max(64).refine(zone => !zone.includes(','), { message: 'Pass one timezone ID per target.' })).min(1).max(10).optional().describe('Destination IANA IDs, preserving order and duplicates. Use instead of to. All targets share one instant. An unresolved or ambiguous source returns targets null.'),
 			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
 			deep: deep.describe('Include optional detail on every plan.'),
 		},
 		(c, a, request) => a.lat !== undefined && a.lon !== undefined
-			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to })
-			: c.time(a.timezone, { ...request, deep: a.deep, at: a.at, to: a.to }),
+			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation })
+			: c.time(a.timezone, { ...request, ip: a.ip, city: a.city, country: a.country, state: a.state, iata: a.iata, icao: a.icao, unlocode: a.unlocode, address: a.address, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation }),
 		(schema) => schema.refine(
-			(a) => a.timezone !== undefined
-				? a.lat === undefined && a.lon === undefined
-				: (a.lat === undefined) === (a.lon === undefined),
-			{ message: 'Pass a timezone, both lat and lon, or neither for UTC.' }
-		)
+			(a) => {
+				const sources = [a.timezone, a.ip, a.city, a.iata, a.icao, a.unlocode, a.address].filter(value => value !== undefined).length
+					+ (a.lat !== undefined ? 1 : 0) + (a.country !== undefined && a.city === undefined && a.address === undefined ? 1 : 0);
+				return sources <= 1 && (a.lat === undefined) === (a.lon === undefined)
+					&& (a.address === undefined || a.country !== undefined)
+					&& (a.state === undefined || (a.country !== undefined && (a.city !== undefined || a.address !== undefined)));
+			},
+			{ message: 'Pass one Time source. Country/state can narrow city or address; state and address require country.' }
+		).refine(a => a.to === undefined || a.targets === undefined, { message: 'Pass to or targets, not both.' })
+	);
+	tool(
+		'time_zones',
+		'Search serving IANA timezone identifiers and their pinned rule edition. Filter by country, IANA area, exact offset, abbreviation or DST facts at one instant. Abbreviations return candidate identifiers and never choose a timezone. Empty timezones means no match. Details adds aligned rows and the evaluation instant. One pooled request.',
+		{
+			query: z.string().trim().max(64).optional().describe('Identifier search, e.g. New York or Europe. Spaces and underscores match the same way.'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 country association, e.g. US.'),
+			area: z.string().min(1).max(64).optional().describe('IANA identifier prefix, e.g. America.'),
+			offset: z.string().regex(/^[+-]\d{2}:\d{2}(?::\d{2})?$/).optional().describe('Exact UTC offset at the selected instant, e.g. +05:45 or +00:09:21.'),
+			abbreviation: z.string().min(1).max(64).optional().describe('Timezone abbreviation to find candidates for, e.g. CST. Never infer a unique zone from an abbreviation.'),
+			dst: z.boolean().optional().describe('Whether the rule DST flag is active at the selected instant. Includes negative seasonal adjustments.'),
+			observes_dst: z.boolean().optional().describe('Whether a DST-flagged state occurs during the UTC calendar year containing at.'),
+			at: z.string().min(1).optional().describe('ISO instant for all filters and detailed rows. Default now. Offsetless input means UTC.'),
+			details: z.boolean().optional().describe('Include zones rows with country associations, area, offset, abbreviation and DST facts, plus the common evaluation instant.'),
+			sort: z.enum(['timezone', 'offset']).optional().describe('Order by identifier (default) or actual UTC offset, then identifier.'),
+		},
+		(c, a, request) => c.time.zones(a.query, { ...request, country: a.country, area: a.area, offset: a.offset, abbreviation: a.abbreviation, dst: a.dst, observes_dst: a.observes_dst, at: a.at, details: a.details, sort: a.sort })
 	);
 	tool(
 		'timezone',
