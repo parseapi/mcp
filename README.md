@@ -73,6 +73,8 @@ Example tool arguments:
 | `asn` | `{"asn":"AS13335"}` |
 | `mac` | `{"mac":"00:1B:63:84:45:E6"}` |
 | `card` | `{"bin":"424242"}` |
+| `npi` | `{"npi":"1881018208"}` (provider directory record) |
+| `npi` | `{"npi":"1881018208","deep":true}` (stored Medicare and deactivation detail on paid plans) |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |
@@ -87,6 +89,12 @@ Address lookup returns standardized components and registration status for the U
 
 
 Card takes a processor-provided BIN/IIN prefix, with 6–11 ASCII digits. Leading zeros are preserved. ASCII spaces, tabs, line breaks and hyphens are accepted within a 64-character input limit. Full numbers and malformed prefixes are rejected before an API request; input is never truncated. The complete lookup is returned without a deep option.
+
+Pass the original NPI as a string. `valid` checks its format and checksum; `registered` means a match in the stored NPPES snapshot. `active` reflects recorded NPI deactivation, not licensure. `excluded` is an NPI-only OIG LEIE match; `false` is not a complete exclusion clearance. These directory facts do not verify credentials, current practice contact or payment eligibility.
+
+Invalid input returns `valid: false` with unknown provider fields. A checksum-valid number missing from the snapshot returns `registered: false`; unavailable storage remains an API error. Preserve `null` as unknown.
+
+The default pooled lookup includes provider identity, specialty and practice contact where held. Paid `deep` adds `deactivated_at`, `medicare`, `opt_out` and `enrollments` from stored source files, with no separate check meter or live verification. `enrollments: null` means unavailable; `[]` means no enrollment rows are returned. The API omits unrequested `deep` and returns `{}` when requested on Free.
 
 Ordinary lookups retry up to twice after a transient failure. A valid `Retry-After` is honored when the wait is at most five seconds; longer waits return the API error immediately without retrying early. When the response supplies this header, the error includes `retry_after` with its original seconds or HTTP-date value. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 

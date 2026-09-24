@@ -397,10 +397,10 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'npi',
-		'Validate an NPI and identify the registered provider, active/exclusion status, specialty and practice contact. Paid deep adds deactivation date and Medicare enrollment evidence.',
+		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Paid deep adds deactivation date, Medicare enrollment, opt-out and enrollment rows from stored files. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
 		{
-			npi: z.string().describe('10-digit NPI number'),
-			deep,
+			npi: z.string().describe('Original NPI input as a string, normally 10 digits. Preserve the input; invalid values return valid=false with unknown provider fields. Do not URI-decode it.'),
+			deep: deep.describe('Include deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null enrollment rows are unavailable, [] means no rows are returned.'),
 		},
 		(c, a, request) => c.npi(a.npi, { ...request, deep: a.deep })
 	);
