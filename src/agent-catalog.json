@@ -590,7 +590,7 @@
         ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
-        "guidance": "Do not retry unresolved/ambiguous locations or rejected wall times automatically. Correct the input or choose a resolution. Retried calls with omitted at evaluate a later now; pin an explicit instant when repeatability matters. Honor Retry-After; waits over five seconds return the API error without an automatic retry."
+        "guidance": "Do not retry unresolved/ambiguous locations or rejected wall times automatically. Correct the input or choose a resolution. Retried calls with omitted at evaluate a later now; pin an explicit instant when repeatability matters."
       },
       "docs": {
         "help": "https://api.parseapi.com/version/2.0.0/time/help",
@@ -670,7 +670,7 @@
         ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
-        "guidance": "Do not retry an empty match list automatically. Correct or broaden the identifier query. Honor Retry-After; waits over five seconds return the API error without automatic retry."
+        "guidance": "Do not retry an empty match list automatically. Correct or broaden the identifier query."
       },
       "docs": {
         "help": "https://api.parseapi.com/version/2.0.0/time/help",
