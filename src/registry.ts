@@ -386,13 +386,14 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.iban(a.iban, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
-		'bin',
-		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand key, brand name, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
+		'card',
+		'Look up a processor-provided 6-11 digit BIN/IIN prefix. Compare prefix with normalized bin: equal is an exact recorded match, shorter is broader, null is no recorded match. Fields come from that one record; null fields never inherit from a shorter prefix. prepaid null is unknown, not false. Partial, mixed-age reference data does not confirm current allocation, card validity, account existence or payment acceptance. One pooled request on every plan.',
 		{
-			bin: z.string().describe('Card prefix as a string, 6-11 digits. Preserve leading zeros. Spaces and hyphens are accepted.'),
-			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
+			bin: z.string().max(64, 'Send a BIN/IIN prefix only: 6-11 digits.')
+				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){6,11}$/, 'Send a BIN/IIN prefix only: 6-11 digits.')
+				.describe('Processor-provided BIN/IIN prefix as a string, 6-11 ASCII digits. Preserve leading zeros. ASCII spaces, tabs, line breaks and hyphens are accepted; at most 64 input characters. Never send a full card number.'),
 		},
-		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
+		(c, a, request) => c.card(a.bin, request)
 	);
 	tool(
 		'npi',

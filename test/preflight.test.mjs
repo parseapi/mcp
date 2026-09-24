@@ -73,7 +73,7 @@ test('preflight preserves API errors and read-only retry behavior', async t => {
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, 503) });
 	const result = await rpc.call('preflight', task);
 	assert.equal(result.result.isError, true);
-	assert.deepEqual(body(result), error);
+	assert.deepEqual(body(result), { ...error, retry_after: '0' });
 	assert.equal(calls.length, 3);
 	assert.ok(calls.every(call => call.init.body === calls[0].init.body));
 });

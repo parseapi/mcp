@@ -11,7 +11,10 @@ export async function run({ task, mode, callTool }) {
 	const result = await callTool(mode === 'compact' ? 'lookup' : scenario.operation,
 		mode === 'compact' ? { operation: scenario.operation, arguments: scenario.arguments } : scenario.arguments);
 	const data = result.structuredContent ?? JSON.parse(result.content.find(item => item.type === 'text').text);
-	if (Boolean(result.isError) !== (scenario.fixtures[0].status >= 400) || !isDeepStrictEqual(data, scenario.fixtures[0].body)) {
+	const isError = scenario.fixtures[0].status >= 400;
+	// The fixture transport supplies Retry-After: 0; errors retain that header.
+	const expected = isError ? { ...scenario.fixtures[0].body, retry_after: '0' } : scenario.fixtures[0].body;
+	if (Boolean(result.isError) !== isError || !isDeepStrictEqual(data, expected)) {
 		throw new Error('Reference fixture result changed across the MCP boundary.');
 	}
 	return { answer: structuredClone(scenario.expected) };

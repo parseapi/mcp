@@ -210,6 +210,110 @@
         "guidance": "Do not retry to fill null reference fields or a locked deep object. Preserve unknowns and distinguish reported zero from null; respect rate and quota errors."
       },
       "docs": { "help": "https://api.parseapi.com/version/2.0.0/country/help", "guide": "https://parseapi.com/docs/country" }
+    },
+    "card": {
+      "operation": "card",
+      "endpoint": "GET /card/{bin}",
+      "determines": [
+        "The longest recorded BIN/IIN prefix matching the supplied processor prefix",
+        "Issuer, country, brand, card type and prepaid status from that one record where known"
+      ],
+      "does_not_determine": [
+        "Current allocation, card validity, account existence, ownership, funds or payment acceptance",
+        "Complete six-digit or eight-digit coverage or a uniform observation date",
+        "Missing fields by inheriting from a shorter prefix"
+      ],
+      "required_context": [
+        "bin: the processor-provided BIN/IIN prefix as a string, with 6 to 11 ASCII digits",
+        "At most 64 input characters; remove only ASCII space, tab, CR, LF and hyphen separators; preserve leading zeros",
+        "Never send a full card number or collect one to truncate for this lookup"
+      ],
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "bin"
+        ],
+        "properties": {
+          "bin": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){6,11}$"
+          }
+        }
+      },
+      "freshness": {
+        "mode": "pinned_reference",
+        "coverage": "partial; six-digit coverage is broader than eight-digit coverage",
+        "mixed_source_ages": true,
+        "uniform_refresh_interval_seconds": null,
+        "actual_age_seconds": null,
+        "actual_age_status": "not_exposed; a lookup or download time is not an allocation or verification date"
+      },
+      "uncertainty": {
+        "bin": {
+          "value": "Normalized input string; compare prefix to this value, not to the original input containing separators",
+          "invalid": "HTTP 400; malformed input is not an unknown-prefix result"
+        },
+        "prefix": {
+          "null": "HTTP 200 with null metadata: no recorded prefix matches; not a verdict about a card or account",
+          "equals_bin": "An exact recorded-prefix match for the supplied digits; individual fields can still be null",
+          "shorter_than_bin": "A broader reference match only; an eight-digit input matching six digits does not establish an exact eight-digit allocation"
+        },
+        "metadata": {
+          "null": "Unknown in the one matched record. A more specific record masks its parent, including null fields; never backfill from a shorter prefix"
+        },
+        "prepaid": {
+          "true": "Explicitly recorded as prepaid",
+          "false": "Explicitly recorded as not prepaid",
+          "null": "Unknown, not false"
+        },
+        "type": {
+          "null": "Unknown or mixed funding type"
+        },
+        "brand": {
+          "value": "Normalized network key or slash-separated co-brand key; brand_name is its display name",
+          "null": "Unknown; do not infer from a shorter record or the digits"
+        }
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+      },
+      "access": {
+        "api_key_required": true,
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "effective_access": null,
+        "effective_access_status": "not_checked; key fences, account access and quotas still apply"
+      },
+      "retry": {
+        "client": "javascript_sdk_and_mcp",
+        "default_retries": 2,
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
+        "retry_network_errors": true,
+        "successful_unknown_retried": false,
+        "guidance": "Do not retry a successful unknown prefix or null fields to manufacture a match. Honor Retry-After; waits over five seconds return the API error without automatic retry."
+      },
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/card/help",
+        "guide": "https://parseapi.com/docs/card",
+        "attribution": "https://parseapi.com/legal/attribution#bin"
+      }
     }
   }
 }

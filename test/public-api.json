@@ -77,26 +77,6 @@
     }
   },
   {
-    "name": "bin",
-    "inputSchema": {
-      "properties": {
-        "bin": {
-          "type": "string"
-        },
-        "deep": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "bin"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "bloc",
     "inputSchema": {
       "properties": {
@@ -148,6 +128,25 @@
       },
       "required": [
         "number"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "card",
+    "inputSchema": {
+      "properties": {
+        "bin": {
+          "maxLength": 64,
+          "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){6,11}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "bin"
       ],
       "type": "object"
     },

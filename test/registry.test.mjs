@@ -217,15 +217,15 @@ test('API errors preserve machine-readable details', async (t) => {
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, 404) });
 	const called = await rpc.call('city', { name: 'missing' });
 	assert.equal(called.result.isError, true);
-	assert.deepEqual(body(called), error);
+	assert.deepEqual(body(called), { ...error, retry_after: '0' });
 	assert.equal(calls.length, 1);
 });
 
-test('BIN preserves longest-match data and rejects numeric arguments without dropping zeros', async (t) => {
-	const data = { bin: '00123456', prefix: '001234', country: null, issuer: null, brand: null, type: null, prepaid: false, deep: {} };
+test('Card preserves longest-match data and rejects numeric arguments without dropping zeros', async (t) => {
+	const data = { bin: '00123456', prefix: '001234', country: null, issuer: null, brand: null, type: null, prepaid: false };
 	const { rpc, calls } = await setup(t, { fetch: () => response(data) });
-	assert.deepEqual(body(await rpc.call('bin', { bin: '00123456', deep: true })), data);
-	const malformed = await rpc.call('bin', { bin: 123456 });
+	assert.deepEqual(body(await rpc.call('card', { bin: '00123456' })), data);
+	const malformed = await rpc.call('card', { bin: 123456 });
 	assert.equal(malformed.result?.isError, true);
 	assert.equal(calls.length, 1);
 });
@@ -297,7 +297,7 @@ test('incompatible measurement target preserves the API error', async (t) => {
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, 400) });
 	const result = await rpc.call('measure', { measure: '1 m', to: 'kg' });
 	assert.equal(result.result.isError, true);
-	assert.deepEqual(body(result), error);
+	assert.deepEqual(body(result), { ...error, retry_after: '0' });
 	assert.equal(calls.length, 1);
 });
 
