@@ -27,7 +27,7 @@ test('compact catalog advertises three tools and full preserves every lookup sch
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
-	assert.equal(listed.length, 65);
+	assert.equal(listed.length, 69);
 	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));
@@ -47,7 +47,7 @@ test('discovery is local, versioned and separates static policy from account fac
 	assert.equal(data.api_version, '2.0.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
-	assert.deepEqual(data.policy_operations, ['card', 'country', 'dns', 'domain', 'email', 'mx']);
+	assert.deepEqual(data.policy_operations, ['card', 'country', 'dns', 'domain', 'email', 'mx', 'time', 'time_zones']);
 	const source = JSON.parse(await readFile(new URL('../src/agent-catalog.json', import.meta.url), 'utf8'));
 	assert.deepEqual(data.operations[0].policy, source.operations.email);
 	assert.equal(data.operations[0].policy_available, true);
@@ -69,10 +69,10 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 63);
-	assert.equal(names.length, 63);
+	assert.equal(new Set(names).size, 67);
+	assert.equal(names.length, 67);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
-	const unreviewed = body(await rpc.call('discover', { operation: 'time' })).operations[0];
+	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);
 	assert.equal(unreviewed.policy, null);
 	assert.ok(unreviewed.inputSchema);

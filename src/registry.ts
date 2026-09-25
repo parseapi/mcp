@@ -20,6 +20,8 @@ const deep = z
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
+const tariffEdition = z.string().regex(/^[a-f0-9]{64}$/).optional().describe('Exact immutable edition fingerprint. Without date, returns undated schedule context.');
+const tariffDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD with verified source coverage. Combine with edition only when it covers this date.');
 const countryOpt = z
 	.string()
 	.optional()
@@ -336,6 +338,47 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		},
 		(c, a, request) => c.company(a.number, { ...request, country: a.country, deep: a.deep })
 	);
+	tool(
+		'company_id',
+		'Look up a company directory profile by its stable co_ ID. Deep adds legal/reference details and selected description, logo, socials, founding precision, reported employees and field-level sources when available. Employee counts retain their measurement date, organization scope and approximation flag; null means unknown. Reviewed registrations retain authority-scoped numbers, legal form, administrative status, register-specific formation dates and principal-address roles; they do not establish operations or tax exemption. Registration sources use business_register, with original observation time and nullable update time. A website claim is not legal ownership proof. National registration numbers use company.',
+		{ id: z.string().min(1).describe('Stable company directory ID returned by company_search'), deep },
+		(c, a, request) => c.company.id(a.id, { ...request, deep: a.deep })
+	);
+	tool(
+		'company_search',
+		'Find company directory candidates using at most one of query, domain, ticker or identifier, or discover by country, an exact industry pair or selected registration authority. Registration form/status are exact source values; administrative status does not establish current business activity. Returns companies and an opaque next cursor without choosing a match. Deep belongs to each result. Keep the same selector, filters and limit when sending cursor. Empty listings do not establish private ownership.',
+		{
+			query: z.string().min(1).optional().describe('Company name search, sent as q'),
+			domain: z.string().min(1).optional().describe('Company website domain or URL'),
+			ticker: z.string().min(1).optional().describe('Security ticker, optionally scoped by exchange'),
+			identifier: z.string().min(1).optional().describe('Business identifier, preserving leading zeros'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 profile-country filter; does not mean headquarters or operating presence'),
+			industry: z.string().regex(/^[0-9]{4}$/).optional().describe('Exact four-digit SIC code string, preserving leading zeros; requires industry_type'),
+			industry_type: z.literal('sic').optional().describe('Industry namespace; currently sic; requires industry'),
+			registration_authority: z.string().regex(/^RA[0-9]{6}$/i).optional().describe('Selected registration authority, such as RA000599; ASCII case is normalized to uppercase; allows filter-only discovery'),
+			registration_form: z.string().min(1).max(200).refine(value => value.trim().length > 0 && !/\p{Cc}/u.test(value), 'Use a nonblank source string without control characters.').optional().describe('Exact case-sensitive source legal-form code; requires registration_authority. DPC does not establish public/private ownership; DNC does not establish tax exemption'),
+			registration_status: z.string().min(1).max(200).refine(value => value.trim().length > 0 && !/\p{Cc}/u.test(value), 'Use a nonblank source string without control characters.').optional().describe('Exact case-sensitive administrative source status, such as Good Standing; requires registration_authority; does not establish trading, solvency or present business existence'),
+			exchange: z.string().optional().describe('Exchange filter for ticker searches'),
+			authority: z.string().optional().describe('Issuing authority filter for identifier searches'),
+			limit: z.number().int().min(1).max(50).optional().describe('Maximum candidates on this page, from 1 to 50'),
+			cursor: z.string().optional().describe('Opaque next cursor returned by the same search'),
+			deep,
+		},
+		(c, a, request) => c.company.search({ ...request, query: a.query, domain: a.domain, ticker: a.ticker, identifier: a.identifier, country: a.country, industry: a.industry, industry_type: a.industry_type, registration_authority: a.registration_authority?.toUpperCase(), registration_form: a.registration_form, registration_status: a.registration_status, exchange: a.exchange, authority: a.authority, limit: a.limit, cursor: a.cursor, deep: a.deep }),
+		(schema) => schema
+			.refine(args => (args.industry === undefined) === (args.industry_type === undefined), { message: 'Supply industry and industry_type together.' })
+			.refine(args => (args.registration_form === undefined && args.registration_status === undefined) || args.registration_authority !== undefined, { message: 'Registration form and status require registration_authority.' })
+			.refine(args => {
+				const selectors = [args.query, args.domain, args.ticker, args.identifier].filter(value => value !== undefined).length;
+				return selectors <= 1 && (selectors === 1 || args.country !== undefined || args.registration_authority !== undefined || (args.industry !== undefined && args.industry_type !== undefined));
+			}, { message: 'Use at most one selector, or supply country, a complete industry pair or registration_authority.' })
+	);
+	tool(
+		'company_coverage',
+		'Describe the company directory edition, countries and record counts. Counts describe this edition and do not establish complete country or worldwide coverage. A missing profile does not establish that a company does not exist.',
+		{},
+		(c, _a, request) => c.company.coverage(request)
+	);
 
 	tool(
 		'point',
@@ -343,8 +386,31 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
-	tool('elevation', 'Elevation in meters at coordinates.', { lat, lon }, (c, a, request) =>
-		c.elevation(a.lat, a.lon, request)
+	tool(
+		'elevation',
+		'Elevation in meters and feet with grid resolution in meters. Choose lat and lon for one sample, points for supplied coordinates in order, or path with samples for evenly spaced great-circle samples including both endpoints. Lists and paths use one pooled request. Unknown elevations stay null.',
+		{
+			lat: lat.optional(),
+			lon: lon.optional(),
+			points: z.string().min(1).max(12000).optional().describe('lat,lon pairs separated by |, or enc: followed by a Google polyline. At most 512 points and 12000 characters. Omit lat and lon.'),
+			path: z.string().min(1).max(12000).optional().describe('Path with 2-512 vertices as lat,lon pairs separated by |, or enc: followed by a Google polyline. At most 12000 characters. Segments follow the shortest great-circle arc. Segments with antipodal endpoints are invalid. Requires samples. Omit lat, lon and points.'),
+			samples: z.number().int().min(2).max(512).optional().describe('Number of evenly spaced samples along the path, including both endpoints. Required with path and invalid without it.'),
+		},
+		(c, a, request) => {
+			if (a.path !== undefined) {
+				return c.elevation.path(a.path, a.samples!, request);
+			}
+			if (a.points !== undefined) {
+				return c.elevation.points(a.points, request);
+			}
+			return c.elevation(a.lat!, a.lon!, request);
+		},
+		(schema) => schema.refine(args => args.path !== undefined
+			? args.samples !== undefined && args.lat === undefined && args.lon === undefined && args.points === undefined
+			: args.samples === undefined && (args.points !== undefined
+				? args.lat === undefined && args.lon === undefined
+				: args.lat !== undefined && args.lon !== undefined),
+		{ message: 'Pass lat and lon, points, or path with samples.' })
 	);
 	tool(
 		'weather',
@@ -524,19 +590,21 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'tariff',
-		'Look up a tariff code, description, lineage and general rate. Paid deep adds statistical units and the special and other schedule columns. Optional origin with deep resolves country-specific measures. Without origin, schedule detail is available and origin-dependent fields are null. A null effective rate is not a zero rate.',
+		'Look up a US tariff code, description, lineage, published base general rate, exact edition and answering date. Paid deep adds schedule columns, units and matched Chapter 99 measures. Origin is the country where goods originate, not the shipping country. Optional edition pins immutable source bytes. Optional date requires verified source coverage; edition without date returns date null and no effective rate. Default requests use today. deep.reason explains a null effective_rate, including incomplete_coverage; null never means zero. Matched measures are inspectable candidates, not complete duty or landed cost.',
 		{
-			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
-			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
+			code: z.string().describe('US HTS code: 4, 6, 8 or 10 ASCII digits, dots and whitespace optional, e.g. 8471.30.01.00'),
+			origin: iso2('country where the goods originate, not the shipping country; only read with deep').optional(),
+			edition: tariffEdition,
+			date: tariffDate,
 			deep,
 		},
-		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin })
+		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin, edition: a.edition, date: a.date })
 	);
 	tool(
 		'tariff_search',
-		'Search US tariff schedule descriptions by product. Returns up to 20 lines, best match first, each with hts, description, and the general duty rate.',
-		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
-		(c, a, request) => c.tariff.search(a.query, request)
+		'Search US tariff schedule descriptions by product words. Returns up to 20 candidate lines with hts, description, general rate and parent lineage, plus the exact edition and answering date. Optional edition pins immutable source bytes. Optional date requires verified source coverage; combine only when that edition covers the date. Edition without date returns date null. Description search is not product classification.',
+		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee'), edition: tariffEdition, date: tariffDate },
+		(c, a, request) => c.tariff.search(a.query, { ...request, edition: a.edition, date: a.date })
 	);
 	tool(
 		'industry',
@@ -614,24 +682,55 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'time',
-		'Current local time, Unix seconds, exact UTC offset and DST. Omit timezone for UTC or pass both coordinates. at selects the moment; to converts it. Deep adds friendly name, numeric offsets and the next source clock transition on every plan.',
+		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds rule edition, wall-time resolution, standard/seasonal offsets and actual DST-season transitions on every plan.',
 		{
-			timezone: z.string().min(1).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when coordinates are absent'),
+			timezone: z.string().min(1).refine(zone => !['zones', 'help'].includes(zone.trim().toLowerCase()), { message: 'Time source must be an IANA timezone ID. Use time_zones to list IDs.' }).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when all source selectors are absent'),
 			lat: lat.optional(),
 			lon: lon.optional(),
-			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
+			ip: z.string().min(1).max(45).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Explicit IPv4 or IPv6 input. Never use a hosted server IP as the user location.'),
+			city: z.string().min(1).max(200).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Exact city name or stable city_ identifier. Country and state can narrow candidates.'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 country as the source, or context with city/address. Multiple country timezones remain candidates.'),
+			state: z.string().min(1).max(6).optional().describe('State context with city/address and country, as a bare code or matching country-prefixed code.'),
+			iata: z.string().regex(/^[A-Za-z]{3}$/).optional().describe('Three-letter IATA airport identifier.'),
+			icao: z.string().regex(/^[A-Za-z]{4}$/).optional().describe('Four-letter ICAO airport identifier.'),
+			unlocode: z.string().regex(/^[A-Za-z]{2} ?[A-Za-z2-9]{3}$/).optional().describe('UN/LOCODE port identifier. Results use the reviewed port reference, not every assigned UN/LOCODE.'),
+			address: z.string().min(1).max(200).refine(value => Boolean(value.trim()), { message: "Time source must not be empty." }).optional().describe('Full address with explicit country. Strict point matches are currently supported for US; ambiguity stays unresolved.'),
+			at: z.string().min(1).optional().describe('ISO 8601 time, default now. With to or targets, a time without a UTC offset is source wall time. Otherwise it is UTC. Include an offset to disambiguate a repeated local time'),
+			disambiguation: z.enum(['compatible', 'earlier', 'later', 'reject']).optional().describe('For offsetless at with to or targets at a clock change. Default compatible chooses the earlier repeated time or advances a skipped time. earlier and later choose the respective instant. For user-entered appointments prefer reject: repeated times return ambiguous_time and skipped times nonexistent_time. Ask for an explicit offset or earlier/later choice. Deep resolution explains a successful choice. Explicit offsets select the instant directly.'),
+			targets: z.array(z.string().trim().min(1).max(64).refine(zone => !zone.includes(','), { message: 'Pass one timezone ID per target.' })).min(1).max(10).optional().describe('Destination IANA IDs, preserving order and duplicates. Use instead of to. All targets share one instant. An unresolved or ambiguous source returns targets null.'),
 			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
 			deep: deep.describe('Include optional detail on every plan.'),
 		},
 		(c, a, request) => a.lat !== undefined && a.lon !== undefined
-			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to })
-			: c.time(a.timezone, { ...request, deep: a.deep, at: a.at, to: a.to }),
+			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation })
+			: c.time(a.timezone, { ...request, ip: a.ip, city: a.city, country: a.country, state: a.state, iata: a.iata, icao: a.icao, unlocode: a.unlocode, address: a.address, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation }),
 		(schema) => schema.refine(
-			(a) => a.timezone !== undefined
-				? a.lat === undefined && a.lon === undefined
-				: (a.lat === undefined) === (a.lon === undefined),
-			{ message: 'Pass a timezone, both lat and lon, or neither for UTC.' }
-		)
+			(a) => {
+				const sources = [a.timezone, a.ip, a.city, a.iata, a.icao, a.unlocode, a.address].filter(value => value !== undefined).length
+					+ (a.lat !== undefined ? 1 : 0) + (a.country !== undefined && a.city === undefined && a.address === undefined ? 1 : 0);
+				return sources <= 1 && (a.lat === undefined) === (a.lon === undefined)
+					&& (a.address === undefined || a.country !== undefined)
+					&& (a.state === undefined || (a.country !== undefined && (a.city !== undefined || a.address !== undefined)));
+			},
+			{ message: 'Pass one Time source. Country/state can narrow city or address; state and address require country.' }
+		).refine(a => a.to === undefined || a.targets === undefined, { message: 'Pass to or targets, not both.' })
+	);
+	tool(
+		'time_zones',
+		'Search serving IANA timezone identifiers and their pinned rule edition. Filter by country, IANA area, exact offset, abbreviation or DST facts at one instant. Abbreviations return candidate identifiers and never choose a timezone. Empty timezones means no match. Details adds aligned rows and the evaluation instant. One pooled request.',
+		{
+			query: z.string().trim().max(64).optional().describe('Identifier search, e.g. New York or Europe. Spaces and underscores match the same way.'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 country association, e.g. US.'),
+			area: z.string().min(1).max(64).optional().describe('IANA identifier prefix, e.g. America.'),
+			offset: z.string().regex(/^[+-]\d{2}:\d{2}(?::\d{2})?$/).optional().describe('Exact UTC offset at the selected instant, e.g. +05:45 or +00:09:21.'),
+			abbreviation: z.string().min(1).max(64).optional().describe('Timezone abbreviation to find candidates for, e.g. CST. Never infer a unique zone from an abbreviation.'),
+			dst: z.boolean().optional().describe('Whether the rule DST flag is active at the selected instant. Includes negative seasonal adjustments.'),
+			observes_dst: z.boolean().optional().describe('Whether a DST-flagged state occurs during the UTC calendar year containing at.'),
+			at: z.string().min(1).optional().describe('ISO instant for all filters and detailed rows. Default now. Offsetless input means UTC.'),
+			details: z.boolean().optional().describe('Include zones rows with country associations, area, offset, abbreviation and DST facts, plus the common evaluation instant.'),
+			sort: z.enum(['timezone', 'offset']).optional().describe('Order by identifier (default) or actual UTC offset, then identifier.'),
+		},
+		(c, a, request) => c.time.zones(a.query, { ...request, country: a.country, area: a.area, offset: a.offset, abbreviation: a.abbreviation, dst: a.dst, observes_dst: a.observes_dst, at: a.at, details: a.details, sort: a.sort })
 	);
 	tool(
 		'timezone',

@@ -1,0 +1,94 @@
+[
+  {
+    "name": "company_coverage",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    }
+  },
+  {
+    "name": "company_id",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    }
+  },
+  {
+    "name": "company_search",
+    "inputSchema": {
+      "properties": {
+        "authority": {
+          "type": "string"
+        },
+        "country": {
+          "pattern": "^[A-Za-z]{2}$",
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "domain": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "exchange": {
+          "type": "string"
+        },
+        "identifier": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "industry": {
+          "pattern": "^[0-9]{4}$",
+          "type": "string"
+        },
+        "industry_type": {
+          "const": "sic",
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "registration_authority": {
+          "pattern": "^RA[0-9]{6}$",
+          "type": "string"
+        },
+        "registration_form": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "registration_status": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "ticker": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  }
+]

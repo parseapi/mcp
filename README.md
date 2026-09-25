@@ -55,9 +55,9 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 64 local lookup tools and 63 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -80,23 +80,56 @@ Example tool arguments:
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |
+| `company_search` | `{"query":"Cloudflare","country":"US"}` |
+| `company_id` | `{"id":"co_xw3f22es6cjq","deep":true}` |
+| `company_coverage` | `{}` |
 | `time` | `{}` (UTC now) |
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
+| `time` | `{"timezone":"UTC","targets":["America/New_York","Asia/Tokyo"]}` |
+| `time_zones` | `{"query":"New York"}` |
+| `time` | `{"timezone":"America/New_York","at":"2026-11-01T01:30:00","to":"UTC","disambiguation":"later"}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
+| `elevation` | `{"lat":35.2271,"lon":-80.8431}` |
+| `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
+| `elevation` | `{"path":"35.2271,-80.8431|35.5951,-82.5515","samples":100}` |
+
+Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
+
+Canonical Time source deep includes `timezone_database_version` and nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
+
+Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
+
+A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. A path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
-Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. Company lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
+Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. National-number `company` lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
+
+For the company directory, call `company_search` with at most one of `query`,
+`domain`, `ticker` or `identifier`. Use `exchange` with a ticker and `authority`
+with an identifier. Review the candidates, then pass the chosen `id` to
+`company_id`. Send the returned `next` as `cursor` with the same selector,
+filters and `limit` for another page. Directory deep adds detail in the same
+pooled request on every plan and belongs to each company result.
+Selected website descriptions, logos, socials and founding claims include
+field-level sources. Logo URLs are returned without fetching images. Directory
+tools do not accept `lang`. `company_coverage` describes the edition's records,
+and empty listings do not establish private ownership. The existing `company`
+tool continues to parse national registration numbers.
+
+For discovery without an identity selector, supply `country` or both `industry` and `industry_type`. For example: `{ "country": "US", "industry": "0700", "industry_type": "sic" }`. SIC is the supported namespace; its exact four-digit code stays a string. Empty requests, incomplete industry pairs and multiple selectors are rejected. Country means the profile country. Filters intersect, unknown values do not match, and the same filters and limit must accompany a returned cursor. Filter-only candidates carry `match: { "field": "filters", "value": null }`.
 
 
-Card takes a processor-provided BIN/IIN prefix, with 6–11 ASCII digits. Leading zeros are preserved. ASCII spaces, tabs, line breaks and hyphens are accepted within a 64-character input limit. Full numbers and malformed prefixes are rejected before an API request; input is never truncated. The complete lookup is returned without a deep option.
+Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Core `sources` is available on every plan: NPPES, LEIE, PECOS and opt-out each have nullable edition metadata (`edition`, `published_at`, `through`, `imported_at`). Provider record dates are separate from source publication and completed import dates. Older responses may omit these additions. Edition details remain null until a verified source is served.
 
 Pass the original NPI as a string. `valid` checks its format and checksum; `registered` means a match in the stored NPPES snapshot. `active` reflects recorded NPI deactivation, not licensure. `excluded` is an NPI-only OIG LEIE match; `false` is not a complete exclusion clearance. These directory facts do not verify credentials, current practice contact or payment eligibility.
 
 Invalid input returns `valid: false` with unknown provider fields. A checksum-valid number missing from the snapshot returns `registered: false`; unavailable storage remains an API error. Preserve `null` as unknown.
 
 The default pooled lookup includes provider identity, specialty and practice contact where held. Paid `deep` adds `deactivated_at`, `medicare`, `opt_out` and `enrollments` from stored source files, with no separate check meter or live verification. `enrollments: null` means unavailable; `[]` means no enrollment rows are returned. The API omits unrequested `deep` and returns `{}` when requested on Free.
+
+Card takes a processor-provided BIN/IIN prefix, with 2–11 ASCII digits. Leading zeros are preserved. ASCII spaces, tabs, line breaks and hyphens are accepted within a 64-character input limit. Full numbers and malformed prefixes are rejected before an API request; input is never truncated. Core returns bin, brand, brand_name and a CDN SVG logo. Unknown or ambiguous brands stay null with a generic logo. Set deep: true for recorded prefix, issuer, country, type and nullable prepaid status, included on every plan. Six or more digits enable directory matching; shorter inputs return all-null Deep fields.
 
 Ordinary lookups retry up to twice after a transient failure. A valid `Retry-After` is honored when the wait is at most five seconds; longer waits return the API error immediately without retrying early. When the response supplies this header, the error includes `retry_after` with its original seconds or HTTP-date value. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 
@@ -187,7 +220,7 @@ Bank returns core `checks` for input, country, length, structure, checksum and n
 
 Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone, Bank and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
-Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
+Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep` or each `targets` item; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
 
 ## Stack API
 
@@ -209,5 +242,16 @@ The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellati
 Bank tools send original IBAN, routing and account strings in POST JSON bodies, keeping account input out of URLs. `bank` retains optional country and deep controls. Deep directory evidence identifies the immutable source edition and actual match grain when a directory lookup ran; it does not prove country completeness or reachability. `bank_us_ach` takes routing/account strings and checks the ABA routing checksum plus account-field syntax. It has no deep option and cannot verify an account checksum, existence, ownership or ACH eligibility. Preserve all account characters and leading zeros. `bank_requirements` takes a country and optional format (`iban` by default, or `us_ach`) and returns accepted fields, check scope and limitations. Requirements are metadata, not bank coverage. Avoid logging tool arguments or request bodies containing banking input.
 
 When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
+
+Time `targets` accepts 1-10 destination IDs instead of `to`. Results retain the requested order and duplicates at one instant in a single pooled request. Unknown source coordinates return `targets: null`. Unknown destination IDs return `not_found` for the whole request. Use `time_zones` to search serving IDs or omit its query for the complete sorted list and pinned rule edition. An empty search result is `timezones: []`.
+
+Tariff lookup and search accept an optional `edition` fingerprint and `date` (`YYYY-MM-DD`). The edition pins exact immutable source bytes. A date is accepted only when verified source coverage exists. An edition without a date returns undated schedule context (`date: null`). Default requests use today. Paid detail exposes an open-string `reason` when `effective_rate` is null, including `incomplete_coverage`. A null rate never means zero. Explicit selections fail with `tariff_selection_mismatch` if an older server ignores the requested scope.
+
+
+### Explicit Time locations and filtered timezone discovery
+
+`time` accepts one explicit IP, city, country, IATA airport, ICAO airport, port UN/LOCODE or address input. Country/state may narrow city or address. Address point lookup currently requires US country context. Port reference coverage is a reviewed subset of UN/LOCODE. Hosted calls never infer the user's IP from the server. Ambiguous or missing inputs return null clock fields and `location` candidates. Ask for the missing context or let the user choose rather than selecting a candidate silently.
+
+`time_zones` can filter by country, IANA area, exact offset, abbreviation, DST at an instant or DST occurrence during the UTC calendar year. It preserves explicit false filters. `details` adds rich rows and the common evaluation instant, while the default identifier list remains compact. Abbreviations return candidate zones. Source deep exposes standard and signed seasonal offsets plus actual DST-season transition boundaries. Negative seasonal adjustments and null boundaries retain their meaning.
 
 Vehicle lookups use `vin` as the input and response field. The `vin` tool remains available for compatibility.
