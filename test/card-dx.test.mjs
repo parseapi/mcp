@@ -3,13 +3,12 @@ import { test } from 'node:test';
 import { body, connect } from './helpers.mjs';
 import catalog from '../src/agent-catalog.json' with { type: 'json' };
 
-const record = { bin: '00123456', prefix: '001234', country: null, issuer: null,
-	brand: null, brand_name: null, type: null, prepaid: false };
-const invalid = ['4242424242424242', '123456789012', '12345', '', '------',
+const record = { bin:'51', brand:'mastercard', brand_name:'Mastercard', logo:'https://cdn.parseapi.com/card/mastercard.svg' };
+const invalid = ['4242424242424242', '123456789012', '1', '', '------',
 	'424242x', '４２４２４２', '٤٢٤٢٤٢', '\u00a0424242', '424242\u2003',
 	'424\v242', '424\f242', '424\u0000242', '424–242', '424%20242',
 	' '.repeat(59) + '424242', 424242, null, ['424242']];
-const valid = ['001234', '00123456', '00123456789', ' 00\t12\r34\n-56 ',
+const valid = ['51', '411', '4111', '41111', '001234', '00123456', '00123456789', ' 00\t12\r34\n-56 ',
 	' '.repeat(58) + '424242'];
 
 test('API errors without Retry-After keep their original shape', async t => {
@@ -48,7 +47,7 @@ for (const transport of ['stdio', 'http']) {
 				assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'), '2.0.0');
 			}
 			const detail = body(await rpc.call('discover', { operation: 'card' })).operations[0];
-			assert.deepEqual(Object.keys(detail.inputSchema.properties), ['bin']);
+			assert.deepEqual(Object.keys(detail.inputSchema.properties), ['bin', 'deep']);
 			assert.equal(detail.inputSchema.properties.bin.maxLength, 64);
 			assert.equal(typeof detail.inputSchema.properties.bin.pattern, 'string');
 			assert.equal(detail.policy_available, true);
@@ -58,12 +57,12 @@ for (const transport of ['stdio', 'http']) {
 			for (const field of ['type', 'maxLength', 'pattern']) {
 				assert.equal(detail.policy.input_schema.properties.bin[field], detail.inputSchema.properties.bin[field]);
 			}
-			assert.match(detail.policy.uncertainty.bin.value, /compare prefix to this value/);
-			assert.match(detail.policy.uncertainty.prefix.null, /HTTP 200 with null metadata/);
-			assert.match(detail.policy.uncertainty.prefix.equals_bin, /fields can still be null/);
-			assert.match(detail.policy.uncertainty.prefix.shorter_than_bin, /broader reference match/i);
-			assert.match(detail.policy.uncertainty.metadata.null, /never backfill/);
-			assert.equal(detail.policy.uncertainty.prepaid.null, 'Unknown, not false');
+			assert.match(detail.policy.uncertainty.bin.value, /compare deep.prefix to this value/);
+			assert.match(detail.policy.uncertainty['deep.prefix'].null, /HTTP 200/);
+			assert.match(detail.policy.uncertainty['deep.prefix'].equals_bin, /fields can still be null/);
+			assert.match(detail.policy.uncertainty['deep.prefix'].shorter_than_bin, /broader reference match/i);
+			assert.match(detail.policy.uncertainty['deep.metadata'].null, /never backfill/);
+			assert.equal(detail.policy.uncertainty['deep.prepaid'].null, 'Unknown, not false');
 			assert.equal(detail.policy.freshness.mixed_source_ages, true);
 			assert.equal(detail.policy.freshness.actual_age_seconds, null);
 			assert.equal(detail.policy.access.effective_access, null);
@@ -71,6 +70,8 @@ for (const transport of ['stdio', 'http']) {
 			assert.equal(detail.policy.retry.successful_unknown_retried, false);
 			assert.equal(detail.policy.docs.help, 'https://api.parseapi.com/version/2.0.0/card/help');
 			assert.equal(calls.length, valid.length, 'Discovery must not make another API request');
+			await card({ bin:'51', deep:true });
+			assert.equal(calls.at(-1).url.search, '?deep=true');
 		});
 	}
 }

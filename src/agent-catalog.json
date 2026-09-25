@@ -215,8 +215,8 @@
       "operation": "card",
       "endpoint": "GET /card/{bin}",
       "determines": [
-        "The longest recorded BIN/IIN prefix matching the supplied processor prefix",
-        "Issuer, country, brand, card type and prepaid status from that one record where known"
+        "Network identity from reviewed prefix rules and a CDN SVG logo with a generic fallback",
+        "Optional Deep: longest recorded prefix, issuer, country, funding type and prepaid status where known"
       ],
       "does_not_determine": [
         "Current allocation, card validity, account existence, ownership, funds or payment acceptance",
@@ -224,7 +224,7 @@
         "Missing fields by inheriting from a shorter prefix"
       ],
       "required_context": [
-        "bin: the processor-provided BIN/IIN prefix as a string, with 6 to 11 ASCII digits",
+        "bin: processor-provided leading digits as a string, with 2 to 11 ASCII digits",
         "At most 64 input characters; remove only ASCII space, tab, CR, LF and hyphen separators; preserve leading zeros",
         "Never send a full card number or collect one to truncate for this lookup"
       ],
@@ -237,13 +237,18 @@
           "bin": {
             "type": "string",
             "maxLength": 64,
-            "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){6,11}$"
+            "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){2,11}$"
+          },
+          "deep": {
+            "type": "boolean",
+            "default": false,
+            "description": "Optional recorded issuer details; included on every plan. Six or more digits enable matching."
           }
         }
       },
       "freshness": {
         "mode": "pinned_reference",
-        "coverage": "partial; six-digit coverage is broader than eight-digit coverage",
+        "coverage": "15 network rule families; not complete global coverage. Issuer directory coverage is partial.",
         "mixed_source_ages": true,
         "uniform_refresh_interval_seconds": null,
         "actual_age_seconds": null,
@@ -251,35 +256,39 @@
       },
       "uncertainty": {
         "bin": {
-          "value": "Normalized input string; compare prefix to this value, not to the original input containing separators",
+          "value": "Normalized input string; compare deep.prefix to this value when Deep is requested",
           "invalid": "HTTP 400; malformed input is not an unknown-prefix result"
         },
-        "prefix": {
-          "null": "HTTP 200 with null metadata: no recorded prefix matches; not a verdict about a card or account",
+        "brand": {
+          "value": "Network key determined independently of issuer records; brand_name is its display name",
+          "null": "Unknown or ambiguous among reviewed network rules; send more prefix digits when available, up to 11"
+        },
+        "deep.prefix": {
+          "null": "HTTP 200: fewer than six digits or no recorded directory match; not a verdict about a card or account",
           "equals_bin": "An exact recorded-prefix match for the supplied digits; individual fields can still be null",
           "shorter_than_bin": "A broader reference match only; an eight-digit input matching six digits does not establish an exact eight-digit allocation"
         },
-        "metadata": {
+        "deep.metadata": {
           "null": "Unknown in the one matched record. A more specific record masks its parent, including null fields; never backfill from a shorter prefix"
         },
-        "prepaid": {
+        "deep.prepaid": {
           "true": "Explicitly recorded as prepaid",
           "false": "Explicitly recorded as not prepaid",
           "null": "Unknown, not false"
         },
-        "type": {
+        "deep.type": {
           "null": "Unknown or mixed funding type"
         },
-        "brand": {
-          "value": "Normalized network key or slash-separated co-brand key; brand_name is its display name",
-          "null": "Unknown; do not infer from a shorter record or the digits"
+        "logo": {
+          "value": "CDN SVG URL; generic for unknown or ambiguous networks or unavailable reviewed artwork"
         }
       },
       "billing": {
         "pooled_requests_per_success": 1,
         "metered": null,
         "monetary_quote": null,
-        "account_state": "unknown; pooled allowance and accepted account terms are not checked"
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked",
+        "deep": "Included in the same pooled request on every plan"
       },
       "access": {
         "api_key_required": true,

@@ -205,8 +205,11 @@
       "properties": {
         "bin": {
           "maxLength": 64,
-          "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){6,11}$",
+          "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){2,11}$",
           "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
         }
       },
       "required": [

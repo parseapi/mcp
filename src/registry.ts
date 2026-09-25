@@ -410,13 +410,14 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'card',
-		'Look up a processor-provided 6-11 digit BIN/IIN prefix. Compare prefix with normalized bin: equal is an exact recorded match, shorter is broader, null is no recorded match. Fields come from that one record; null fields never inherit from a shorter prefix. prepaid null is unknown, not false. Partial, mixed-age reference data does not confirm current allocation, card validity, account existence or payment acceptance. One pooled request on every plan.',
+		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional deep adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status. Core identity is independent of issuer coverage. A shorter deep.prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. One pooled request on every plan, including deep.',
 		{
-			bin: z.string().max(64, 'Send a BIN/IIN prefix only: 6-11 digits.')
-				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){6,11}$/, 'Send a BIN/IIN prefix only: 6-11 digits.')
-				.describe('Processor-provided BIN/IIN prefix as a string, 6-11 ASCII digits. Preserve leading zeros. ASCII spaces, tabs, line breaks and hyphens are accepted; at most 64 input characters. Never send a full card number.'),
+			bin: z.string().max(64, 'Send a prefix only: 2-11 digits.')
+				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){2,11}$/, 'Send a prefix only: 2-11 digits.')
+				.describe('Processor-provided leading digits as a string, 2-11 ASCII digits. Preserve zeros. Only ASCII space, tab, CR, LF and hyphen separators; at most 64 raw characters. Never send a full card number. Six or more digits enable issuer lookup.'),
+			deep: deep.describe('Include recorded issuer details, pooled on every plan. Omitted by default; fewer than six digits returns all-null Deep fields.'),
 		},
-		(c, a, request) => c.card(a.bin, request)
+		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
 	);
 	tool(
 		'npi',
