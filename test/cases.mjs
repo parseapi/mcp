@@ -40,7 +40,7 @@ export const cases = [
 	['bank', { iban: 'DE89 3704', country: 'DE' }, '/bank'],
 	['bank_us_ach', { routing: '011-000-015', account: ' 00aB-%20' }, '/bank'],
 	['bank_requirements', { country: 'US', format: 'us_ach' }, '/bank/requirements', { country: 'US', format: 'us_ach' }],
-	['npi', { npi: '1881018208', deep: true }, '/npi/1881018208', { deep: 'true' }],
+	['provider', { npi: '1881018208', deep: true }, '/provider/1881018208', { deep: 'true' }],
 	['phone', { number: '+14155552671', country: 'US', deep: true }, '/phone/%2B14155552671', { country: 'US', deep: 'true' }],
 	['carrier', { number: '+14155552671', country: 'US' }, '/carrier/%2B14155552671', { country: 'US' }],
 	['caller', { number: '+18004633339', country: 'US' }, '/caller/%2B18004633339', { country: 'US' }],

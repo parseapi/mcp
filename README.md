@@ -57,7 +57,7 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 Full mode provides 61 local lookup tools and 60 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `npi`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
 NAICS paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
@@ -73,8 +73,8 @@ Example tool arguments:
 | `asn` | `{"asn":"AS13335"}` |
 | `mac` | `{"mac":"00:1B:63:84:45:E6"}` |
 | `card` | `{"bin":"424242"}` |
-| `npi` | `{"npi":"1881018208"}` (provider directory record) |
-| `npi` | `{"npi":"1881018208","deep":true}` (stored Medicare and deactivation detail on paid plans) |
+| `provider` | `{"npi":"1881018208"}` (provider directory record) |
+| `provider` | `{"npi":"1881018208","deep":true}` (stored Medicare and deactivation detail on paid plans) |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |

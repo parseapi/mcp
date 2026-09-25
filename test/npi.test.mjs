@@ -13,12 +13,12 @@ for (const transport of ['stdio', 'http']) {
 			});
 			const rpc = await connect('test_key', transport, { mode });
 			t.after(() => rpc.close());
-			const lookup = args => mode === 'full' ? rpc.call('npi', args)
-				: rpc.call('lookup', { operation: 'npi', arguments: args });
+			const lookup = args => mode === 'full' ? rpc.call('provider', args)
+				: rpc.call('lookup', { operation: 'provider', arguments: args });
 			for (const npi of ['188101%208208', '188101%25208208', 'hello', '(188) 101-8208']) {
 				record = { npi, valid: false, registered: null, active: null, excluded: null };
 				assert.deepEqual(body(await lookup({ npi })), record);
-				assert.equal(decodeURIComponent(calls.at(-1).url.pathname.slice('/npi/'.length)), npi);
+				assert.equal(decodeURIComponent(calls.at(-1).url.pathname.slice('/provider/'.length)), npi);
 				assert.equal(calls.at(-1).url.search, '');
 				assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'), '2.0.0');
 			}
@@ -34,7 +34,7 @@ for (const transport of ['stdio', 'http']) {
 				assert.deepEqual(body(await lookup({ npi: core.npi, deep: true })), record);
 				assert.equal(calls.at(-1).url.search, '?deep=true');
 			}
-			const detail = body(await rpc.call('discover', { operation: 'npi' })).operations[0];
+			const detail = body(await rpc.call('discover', { operation: 'provider' })).operations[0];
 			assert.match(detail.description, /format\/checksum only/);
 			assert.match(detail.description, /stored/);
 			assert.match(detail.description, /not complete exclusion clearance/);

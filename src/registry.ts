@@ -25,7 +25,7 @@ const countryOpt = z
 	.optional()
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
-const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
+const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
 	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
 	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
 	'measure_units', 'emoji', 'emoji_search', 'point']);
@@ -420,13 +420,13 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
 	);
 	tool(
-		'npi',
-		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Paid deep adds deactivation date, Medicare enrollment, opt-out and enrollment rows from stored files. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
+		'provider',
+		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Core sources provides nullable edition metadata on every plan. Paid deep adds all published taxonomies and reported license details, provider enumeration/update/reactivation dates, deactivation date, Medicare enrollment, opt-out and enrollment rows. Reported licenses are not verified licenses; provider update dates are not source freshness. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
 		{
 			npi: z.string().describe('Original NPI input as a string, normally 10 digits. Preserve the input; invalid values return valid=false with unknown provider fields. Do not URI-decode it.'),
-			deep: deep.describe('Include deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null enrollment rows are unavailable, [] means no rows are returned.'),
+			deep: deep.describe('Include taxonomies, enumerated_at, updated_at, reactivated_at, deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null lists are unavailable; [] means the source recorded no rows.'),
 		},
-		(c, a, request) => c.npi(a.npi, { ...request, deep: a.deep })
+		(c, a, request) => c.provider(a.npi, { ...request, deep: a.deep })
 	);
 	tool(
 		'phone',

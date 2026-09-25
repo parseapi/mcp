@@ -92,7 +92,7 @@ async function smokeStdio() {
 	check('stdio has vat', names.includes('vat'));
 	check('stdio has card', names.includes('card'));
 	check('stdio has bank', names.includes('bank'));
-	check('stdio has npi', names.includes('npi'));
+	check('stdio has npi', names.includes('provider'));
 	check('stdio has vin', names.includes('vin'));
 	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 	check('stdio has no company_search', !names.includes('company_search'));
@@ -220,7 +220,7 @@ async function smokeHttp() {
 		check('http has vat', names.includes('vat'));
 		check('http has card', names.includes('card'));
 		check('http has bank', names.includes('bank'));
-		check('http has npi', names.includes('npi'));
+		check('http has npi', names.includes('provider'));
 		check('http has vin', names.includes('vin'));
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 		check('http has no company_search', !names.includes('company_search'));

@@ -1114,31 +1114,6 @@
     }
   },
   {
-    "name": "npi",
-    "inputSchema": {
-      "properties": {
-        "deep": {
-          "type": "boolean"
-        },
-        "lang": {
-          "maxLength": 64,
-          "minLength": 2,
-          "type": "string"
-        },
-        "npi": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "npi"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "phone",
     "inputSchema": {
       "properties": {
@@ -1286,6 +1261,31 @@
       },
       "required": [
         "code"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "provider",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "npi": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "npi"
       ],
       "type": "object"
     },
