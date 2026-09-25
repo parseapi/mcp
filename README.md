@@ -55,9 +55,9 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 63 local lookup tools and 62 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 64 local lookup tools and 63 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vin`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -209,3 +209,5 @@ The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellati
 Bank tools send original IBAN, routing and account strings in POST JSON bodies, keeping account input out of URLs. `bank` retains optional country and deep controls. Deep directory evidence identifies the immutable source edition and actual match grain when a directory lookup ran; it does not prove country completeness or reachability. `bank_us_ach` takes routing/account strings and checks the ABA routing checksum plus account-field syntax. It has no deep option and cannot verify an account checksum, existence, ownership or ACH eligibility. Preserve all account characters and leading zeros. `bank_requirements` takes a country and optional format (`iban` by default, or `us_ach`) and returns accepted fields, check scope and limitations. Requirements are metadata, not bank coverage. Avoid logging tool arguments or request bodies containing banking input.
 
 When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
+
+Vehicle lookups use `vin` as the input and response field. The `vin` tool remains available for compatibility.

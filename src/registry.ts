@@ -510,8 +510,15 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	// Decode
 	tool(
+		'vehicle',
+		'Identify a vehicle by VIN: year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns. These do not establish whether this VIN needs a repair.',
+		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
+		(c, a, request) => c.vehicle(a.vin, { ...request, deep: a.deep })
+	);
+
+	tool(
 		'vin',
-		'Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and recalls.',
+		'Compatibility entry for vehicle. Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns.',
 		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
 		(c, a, request) => c.vin(a.vin, { ...request, deep: a.deep })
 	);

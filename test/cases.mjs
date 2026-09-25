@@ -55,6 +55,7 @@ export const cases = [
 	['dns', { domain: '_dmarc.bücher.example.', type: 'TXT' }, '/dns/_dmarc.b%C3%BCcher.example.', { type: 'TXT' }],
 	['mx', { domain: 'example.com' }, '/mx/example.com'],
 	['useragent', { ua: 'Example Browser/1.0', deep: true }, '/useragent', { deep: 'true' }],
+	['vehicle', { vin: '1HGCM82633A004352', deep: true }, '/vehicle/1HGCM82633A004352', { deep: 'true' }],
 	['vin', { vin: '1HGCM82633A004352', deep: true }, '/vin/1HGCM82633A004352', { deep: 'true' }],
 	['tariff', { code: '8471.30.01.00', origin: 'CN', deep: true }, '/tariff/8471.30.01.00', { origin: 'CN', deep: 'true' }],
 	['tariff_search', { query: 'coffee & tea' }, '/tariff', { q: 'coffee & tea' }],
