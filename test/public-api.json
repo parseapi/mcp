@@ -77,6 +77,70 @@
     }
   },
   {
+    "name": "bank",
+    "inputSchema": {
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "iban": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "iban"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "bank_requirements",
+    "inputSchema": {
+      "properties": {
+        "country": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "country"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "bank_us_ach",
+    "inputSchema": {
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "routing": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "routing",
+        "account"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "bin",
     "inputSchema": {
       "properties": {
@@ -148,6 +212,28 @@
       },
       "required": [
         "number"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "card",
+    "inputSchema": {
+      "properties": {
+        "bin": {
+          "maxLength": 64,
+          "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){2,11}$",
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "bin"
       ],
       "type": "object"
     },
@@ -838,6 +924,53 @@
     }
   },
   {
+    "name": "industry",
+    "inputSchema": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "industry_search",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "ip",
     "inputSchema": {
       "properties": {
@@ -1262,6 +1395,31 @@
     }
   },
   {
+    "name": "provider",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "npi": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "npi"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "stack",
     "inputSchema": {
       "properties": {
@@ -1603,6 +1761,26 @@
       },
       "required": [
         "number"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "vehicle",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "vin": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "vin"
       ],
       "type": "object"
     },

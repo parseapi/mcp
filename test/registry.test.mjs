@@ -46,6 +46,63 @@ test('Australian Postal choices preserve core ambiguity and source notice on bot
 	}
 });
 
+test('Bank checks, issues and raw input survive both transports', async (t) => {
+	const fixture = JSON.parse(await readFile(new URL('./bank-fixtures.json', import.meta.url), 'utf8'));
+	let record;
+	const { rpc, calls } = await setup(t, { fetch: () => response(record) });
+	const hosted = await connect('test_key', 'http');
+	t.after(() => hosted.close());
+	for (const target of [rpc, hosted]) {
+		for (const payload of fixture.records) {
+			record = payload;
+			for (const iban of fixture.inputs) {
+				assert.deepEqual(body(await target.call('bank', { iban, deep: true })), payload);
+				assert.equal(calls.at(-1).url.pathname + calls.at(-1).url.search, '/bank');
+				assert.equal(calls.at(-1).init.method, 'POST');
+				assert.deepEqual(JSON.parse(calls.at(-1).init.body), { iban, deep: true });
+			}
+		}
+	}
+});
+
+test('Australian Postal choices preserve core ambiguity and source notice on both transports', async (t) => {
+	let record;
+	const { rpc } = await setup(t, { fetch: () => response(record) });
+	const choice = { city: 'SYDNEY', state: 'NSW', state_name: 'New South Wales', future: true };
+	for (const localities of [undefined, null, [], [choice], [choice, { city: 'HAYMARKET', state: 'NSW', state_name: 'New South Wales' }]]) {
+		record = { postal: '2000', country: 'AU', city: null, ...(localities === undefined ? {} : { localities }) };
+		const result = await rpc.call('postal', { code: '2000', country: 'AU' });
+		assert.deepEqual(body(result), record);
+		assert.equal(result.result.content.length, 2);
+		assert.match(result.result.content[1].text, /G-NAF.*Geoscape Australia/);
+		assert.match(result.result.content[1].text, /https:\/\/parseapi\.com\/legal\/attribution#postal-au/);
+	}
+	const hosted = await connect('test_key', 'http');
+	t.after(() => hosted.close());
+	for (const target of [rpc, hosted]) {
+		for (const [name, args, payload] of [
+			['postal', { code: '3000', country: 'AU' }, { country: 'AU', city: 'MELBOURNE' }],
+			['postal_nearby', { code: '3000', country: 'AU' }, { country: 'AU', nearby: [{ city: 'MELBOURNE' }] }],
+			['postal_distance', { from: '3000', to: '3004', country: 'AU' }, { country: 'AU', from: { city: 'MELBOURNE' }, to: { city: 'MELBOURNE' } }],
+		]) {
+			record = payload;
+			const result = await target.call(name, args);
+			assert.deepEqual(body(result), payload);
+			assert.match(result.result.content[1].text, /G-NAF/);
+			record = { ...payload, country: 'US' };
+			assert.equal((await target.call(name, args)).result.content.length, 1);
+		}
+	}
+	for (const transport of ['stdio', 'http']) {
+		const compact = await connect('test_key', transport, { mode: 'compact' });
+		t.after(() => compact.close());
+		record = { postal: '2000', country: 'AU', city: null, localities: [choice] };
+		const result = await compact.call('lookup', { operation: 'postal', arguments: { code: '2000', country: 'AU' } });
+		assert.deepEqual(body(result), record);
+		assert.match(result.result.content[1].text, /G-NAF/);
+	}
+});
+
 test('Email enrichment preserves the deep triad, nulls and open codes', async (t) => {
 	let extra = {};
 	const { rpc } = await setup(t, { fetch: () => response({ email: 'jane.doe+news@example.com', ...extra }) });
@@ -94,7 +151,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight'].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 60);
+	assert.equal(tools.length, 68);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -102,7 +159,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 61);
+	assert.equal(result.tools.length, 69);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -120,6 +177,10 @@ for (const [name, args, pathname, query = {}] of cases) {
 		const { url, init } = calls[0];
 		assert.equal(url.pathname, pathname);
 		assert.deepEqual(Object.fromEntries(url.searchParams), query);
+		if (name === 'bank' || name === 'bank_us_ach') {
+			assert.equal(init.method, 'POST');
+			assert.deepEqual(JSON.parse(init.body), name === 'bank' ? args : { format: 'us_ach', country: 'US', ...args });
+		}
 		assert.equal(init.redirect, 'manual');
 		assert.ok(init.signal instanceof AbortSignal);
 		const headers = new Headers(init.headers);
@@ -150,7 +211,7 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 30);
+	assert.equal(localized.length, 31);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
@@ -170,7 +231,7 @@ test('display language reaches each supported tool request and stays request-loc
 
 test('search requires query and rejects the retired q input before any HTTP call', async (t) => {
 	const { rpc, calls } = await setup(t);
-	for (const name of ['city_search', 'address_search', 'tariff_search', 'naics_search', 'emoji_search']) {
+	for (const name of ['city_search', 'address_search', 'tariff_search', 'industry_search', 'emoji_search']) {
 		const called = await rpc.call(name, { q: 'coffee' });
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}
@@ -217,15 +278,15 @@ test('API errors preserve machine-readable details', async (t) => {
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, 404) });
 	const called = await rpc.call('city', { name: 'missing' });
 	assert.equal(called.result.isError, true);
-	assert.deepEqual(body(called), error);
+	assert.deepEqual(body(called), { ...error, retry_after: '0' });
 	assert.equal(calls.length, 1);
 });
 
-test('BIN preserves longest-match data and rejects numeric arguments without dropping zeros', async (t) => {
-	const data = { bin: '00123456', prefix: '001234', country: null, issuer: null, brand: null, type: null, prepaid: false, deep: {} };
+test('Card preserves longest-match data and rejects numeric arguments without dropping zeros', async (t) => {
+	const data = { bin: '00123456', prefix: '001234', country: null, issuer: null, brand: null, type: null, prepaid: false };
 	const { rpc, calls } = await setup(t, { fetch: () => response(data) });
-	assert.deepEqual(body(await rpc.call('bin', { bin: '00123456', deep: true })), data);
-	const malformed = await rpc.call('bin', { bin: 123456 });
+	assert.deepEqual(body(await rpc.call('card', { bin: '00123456' })), data);
+	const malformed = await rpc.call('card', { bin: 123456 });
 	assert.equal(malformed.result?.isError, true);
 	assert.equal(calls.length, 1);
 });
@@ -297,7 +358,7 @@ test('incompatible measurement target preserves the API error', async (t) => {
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, 400) });
 	const result = await rpc.call('measure', { measure: '1 m', to: 'kg' });
 	assert.equal(result.result.isError, true);
-	assert.deepEqual(body(result), error);
+	assert.deepEqual(body(result), { ...error, retry_after: '0' });
 	assert.equal(calls.length, 1);
 });
 
@@ -317,7 +378,7 @@ test('NAICS preserves exclusions, actual search evidence and original query text
  const records = [{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US"},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":null,"match":null},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[],"match":{"field":"future-field","text":"Future matching evidence","corrections":[],"future":true}},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[{"description":"Designing integrated computer systems","codes":[{"naics":"541512","name":"Computer Systems Design Services"}]},{"description":"Activities classified elsewhere","codes":[]}],"match":{"field":"term","text":"Computer software programming services","corrections":[{"from":"sofware","to":"software"}]},"future":true}];
  const data = { q: 'sofware', year: 2022, country: 'US', results: records };
  const { rpc, calls } = await setup(t, { fetch: () => response(data) });
- const called = await rpc.call('naics_search', { query: 'sofware' });
+ const called = await rpc.call('industry_search', { query: 'sofware' });
  assert.deepEqual(body(called), data);
  assert.equal(calls[0].url.searchParams.get('q'), 'sofware');
 });

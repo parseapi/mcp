@@ -5,8 +5,9 @@ import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
 import { registerPreflight } from './preflight.js';
 
-export const VERSION = '1.6.0';
+export const VERSION = '1.7.0';
 const API_VERSION = '2.0.0';
+const US_ROUTING_NOTICE = 'Routing reference attribution: https://parseapi.com/legal/attribution#routing-numbers';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -24,7 +25,7 @@ const countryOpt = z
 	.optional()
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
-const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
+const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
 	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
 	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
 	'measure_units', 'emoji', 'emoji_search', 'point']);
@@ -80,6 +81,9 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				const result = ok(data);
 				if (['postal', 'postal_nearby', 'postal_distance'].includes(name) && data && typeof data === 'object' && 'country' in data && data.country === 'AU') {
 					result.content.push({ type: 'text', text: AU_POSTAL_NOTICE });
+				}
+				if (name === 'bank_us_ach' && data && typeof data === 'object' && 'bank_name' in data && typeof data.bank_name === 'string' && data.bank_name.length > 0) {
+					result.content.push({ type: 'text', text: US_ROUTING_NOTICE });
 				}
 				return result;
 			} catch (err) {
@@ -427,6 +431,55 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.npi(a.npi, { ...request, deep: a.deep })
 	);
 	tool(
+		'bank',
+		'Send an IBAN in a POST JSON body, keeping it out of the request URL. Parse with core checks and issues for input, country, length, structure, ISO checksum and supported national checks. not_supported is not a failed national check. Known bank names and BICs are independent nullable directory facts. Deep adds check digits, branch, the BBAN account remainder and source edition/match grain when a directory lookup ran, on every plan. Does not verify account existence, ownership or payment reachability.',
+		{
+			iban: z.string().describe('Original IBAN input, with or without the country prefix. Preserve characters exactly so the API can report invalid input. Do not strip punctuation or decode percent escapes.'),
+			country: iso2('country code when the number has no prefix').optional(),
+			deep: deep.describe('Include optional detail on every plan.'),
+		},
+		(c, a, request) => c.bank(a.iban, { ...request, deep: a.deep, country: a.country })
+	);
+	tool(
+		'bank_us_ach',
+		'Check US routing-number format and ABA checksum plus account-field syntax. Sends original strings in a POST JSON body. No universal account checksum is available. A nullable bank_name is routing-directory identity only; this does not establish ACH eligibility, account existence or ownership. No deep option.',
+		{
+			routing: z.string().describe('Original US routing string. Preserve leading zeros and characters; the API validates accepted separators.'),
+			account: z.string().describe('Original account string. Preserve all characters, letter case and leading zeros; do not trim, normalize or decode.'),
+		},
+		(c, a, request) => c.bankUsAch({ routing: a.routing, account: a.account }, request)
+	);
+	tool(
+		'bank_requirements',
+		'Describe supported Bank input fields, normalization rules, check scope and limitations for a country and format. Metadata only: support does not establish directory completeness or payment reachability.',
+		{
+			country: iso2('country code'),
+			format: z.string().optional().describe('Input format, currently iban (default) or us_ach. Unknown formats report supported false.'),
+		},
+		(c, a, request) => c.bankRequirements(a.country, { ...request, format: a.format })
+	);
+
+	tool(
+		'card',
+		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional deep adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status. Core identity is independent of issuer coverage. A shorter deep.prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. One pooled request on every plan, including deep.',
+		{
+			bin: z.string().max(64, 'Send a prefix only: 2-11 digits.')
+				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){2,11}$/, 'Send a prefix only: 2-11 digits.')
+				.describe('Processor-provided leading digits as a string, 2-11 ASCII digits. Preserve zeros. Only ASCII space, tab, CR, LF and hyphen separators; at most 64 raw characters. Never send a full card number. Six or more digits enable issuer lookup.'),
+			deep: deep.describe('Include recorded issuer details, pooled on every plan. Omitted by default; fewer than six digits returns all-null Deep fields.'),
+		},
+		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
+	);
+	tool(
+		'provider',
+		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Core sources provides nullable edition metadata on every plan. Paid deep adds all published taxonomies and reported license details, provider enumeration/update/reactivation dates, deactivation date, Medicare enrollment, opt-out and enrollment rows. Reported licenses are not verified licenses; provider update dates are not source freshness. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
+		{
+			npi: z.string().describe('Original NPI input as a string, normally 10 digits. Preserve the input; invalid values return valid=false with unknown provider fields. Do not URI-decode it.'),
+			deep: deep.describe('Include taxonomies, enumerated_at, updated_at, reactivated_at, deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null lists are unavailable; [] means the source recorded no rows.'),
+		},
+		(c, a, request) => c.provider(a.npi, { ...request, deep: a.deep })
+	);
+	tool(
 		'phone',
 		'Parse and validate a phone number with national and international display formats. Deep adds numbering-plan state and timezone on every plan. These do not locate a handset.',
 		{
@@ -508,8 +561,15 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	// Decode
 	tool(
+		'vehicle',
+		'Identify a vehicle by VIN: year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns. These do not establish whether this VIN needs a repair.',
+		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
+		(c, a, request) => c.vehicle(a.vin, { ...request, deep: a.deep })
+	);
+
+	tool(
 		'vin',
-		'Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and recalls.',
+		'Compatibility entry for vehicle. Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns.',
 		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
 		(c, a, request) => c.vin(a.vin, { ...request, deep: a.deep })
 	);
@@ -530,20 +590,36 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.tariff.search(a.query, request)
 	);
 	tool(
-		'naics',
+		'industry',
 		'Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
 		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
-		(c, a, request) => c.naics(a.code, { ...request, deep: a.deep })
+		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
 	);
 	tool(
-		'naics_search',
+		'industry_search',
 		'Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.naics.search(a.query, { ...request, deep: a.deep, limit: a.limit })
+		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
+	);
+	tool(
+		'naics',
+		'Compatibility name for industry. Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
+	);
+	tool(
+		'naics_search',
+		'Compatibility name for industry_search. Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
+		{
+			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
+			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+		},
+		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 	tool(
 		'currency',

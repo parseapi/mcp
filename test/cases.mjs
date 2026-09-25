@@ -2,9 +2,14 @@
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
 	['bin', { bin: '00 1234-56', deep: true }, '/bin/00%201234-56', { deep: 'true' }],
-	['naics', { code: '31-33' }, '/naics/31-33'],
-	['naics_search', { query: 'coffee & tea', limit: 5 }, '/naics', { q: 'coffee & tea', limit: '5' }],
-	['naics_search', { query: 'plumbing' }, '/naics', { q: 'plumbing' }],
+	['iban', { iban: 'DE89 3704', country: 'DE' }, '/iban/DE89%203704', { country: 'DE' }],
+	['npi', { npi: '1881018208', deep: true }, '/npi/1881018208', { deep: 'true' }],
+	['naics', { code: '31-33' }, '/industry/31-33'],
+	['naics_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
+	['card', { bin: '00 1234-56' }, '/card/00%201234-56'],
+	['industry', { code: '31-33' }, '/industry/31-33'],
+	['industry_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
+	['industry_search', { query: 'plumbing' }, '/industry', { q: 'plumbing' }],
 	['measure', { measure: '5 ft 11 in', to: 'cm', locale: 'en-US', system: 'us' }, '/measure/5%20ft%2011%20in', { to: 'cm', locale: 'en-US', system: 'us' }],
 	['measure', { measure: '1 kg/m^3', to: 'g/L' }, '/measure/1%20kg%2Fm%5E3', { to: 'g/L' }],
 	['measure_units', { query: 'US gallon', type: 'volume', unit: 'L' }, '/measure/units', { q: 'US gallon', type: 'volume', unit: 'L' }],
@@ -37,8 +42,10 @@ export const cases = [
 	['weather', { lat: 0, lon: 0, deep: true, date: '2026-08-01' }, '/weather', { lat: '0', lon: '0', deep: 'true', date: '2026-08-01' }],
 	['email', { email: 'a+b@example.com', deep: true }, '/email/a%2Bb%40example.com', { deep: 'true' }],
 	['vat', { number: '136695976', country: 'DE', from: 'DE123', deep: true }, '/vat/136695976', { country: 'DE', from: 'DE123', deep: 'true' }],
-	['iban', { iban: 'DE89 3704', country: 'DE' }, '/iban/DE89%203704', { country: 'DE' }],
-	['npi', { npi: '1881018208', deep: true }, '/npi/1881018208', { deep: 'true' }],
+	['bank', { iban: 'DE89 3704', country: 'DE' }, '/bank'],
+	['bank_us_ach', { routing: '011-000-015', account: ' 00aB-%20' }, '/bank'],
+	['bank_requirements', { country: 'US', format: 'us_ach' }, '/bank/requirements', { country: 'US', format: 'us_ach' }],
+	['provider', { npi: '1881018208', deep: true }, '/provider/1881018208', { deep: 'true' }],
 	['phone', { number: '+14155552671', country: 'US', deep: true }, '/phone/%2B14155552671', { country: 'US', deep: 'true' }],
 	['carrier', { number: '+14155552671', country: 'US' }, '/carrier/%2B14155552671', { country: 'US' }],
 	['caller', { number: '+18004633339', country: 'US' }, '/caller/%2B18004633339', { country: 'US' }],
@@ -51,6 +58,7 @@ export const cases = [
 	['dns', { domain: '_dmarc.bücher.example.', type: 'TXT' }, '/dns/_dmarc.b%C3%BCcher.example.', { type: 'TXT' }],
 	['mx', { domain: 'example.com' }, '/mx/example.com'],
 	['useragent', { ua: 'Example Browser/1.0', deep: true }, '/useragent', { deep: 'true' }],
+	['vehicle', { vin: '1HGCM82633A004352', deep: true }, '/vehicle/1HGCM82633A004352', { deep: 'true' }],
 	['vin', { vin: '1HGCM82633A004352', deep: true }, '/vin/1HGCM82633A004352', { deep: 'true' }],
 	['tariff', { code: '8471.30.01.00', origin: 'CN', deep: true }, '/tariff/8471.30.01.00', { origin: 'CN', deep: 'true' }],
 	['tariff_search', { query: 'coffee & tea' }, '/tariff', { q: 'coffee & tea' }],
@@ -77,5 +85,5 @@ export const cases = [
 	['emoji_search', { query: 'fire', limit: 3 }, '/emoji', { q: 'fire', limit: '3' }],
 ];
 
-const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "iban", "language", "naics", "naics_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
-cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,{...query,deep:'true'}]));
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,name === 'bank' ? {} : {...query,deep:'true'}]));

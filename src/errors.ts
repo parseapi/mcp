@@ -10,17 +10,18 @@ export function ok(data: unknown): ToolResult {
 	return { content: [{ type: 'text', text: JSON.stringify(data) }] };
 }
 
-function errorJson(code: string, message: string, docs: string | null, requestId: string | null): ToolResult {
+function errorJson(code: string, message: string, docs: string | null, requestId: string | null, retryAfter?: string | null): ToolResult {
 	return {
 		isError: true,
-		content: [{ type: 'text', text: JSON.stringify({ code, message, docs, request_id: requestId }) }],
+		content: [{ type: 'text', text: JSON.stringify({ code, message, docs, request_id: requestId,
+			...(retryAfter == null ? {} : { retry_after: retryAfter }) }) }],
 	};
 }
 
-/** Same shape the edge sends. Agents branch on `code`. */
+/** Preserve the edge error plus Retry-After when supplied. Agents branch on `code`. */
 export function toErrorResult(err: unknown): ToolResult {
 	if (err instanceof ParseAPIError) {
-		return errorJson(err.code, err.message, err.docs, err.requestId);
+		return errorJson(err.code, err.message, err.docs, err.requestId, err.retryAfter);
 	}
 	const message = err instanceof Error ? err.message : String(err);
 	return errorJson('network_error', message, null, null);

@@ -471,7 +471,7 @@
       "endpoint": "GET /time or /time/{timezone}",
       "determines": [
         "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
+        "The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
         "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, actual rule edition and source wall-time resolution",
         "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
       ],
@@ -487,7 +487,7 @@
         "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
         "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
         "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
         "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
       ],
       "freshness": {
@@ -595,6 +595,119 @@
       "docs": {
         "help": "https://api.parseapi.com/version/2.0.0/time/help",
         "guide": "https://parseapi.com/docs/time"
+      }
+    },
+    "card": {
+      "operation": "card",
+      "endpoint": "GET /card/{bin}",
+      "determines": [
+        "Network identity from reviewed prefix rules and a CDN SVG logo with a generic fallback",
+        "Optional Deep: longest recorded prefix, issuer, country, funding type and prepaid status where known"
+      ],
+      "does_not_determine": [
+        "Current allocation, card validity, account existence, ownership, funds or payment acceptance",
+        "Complete six-digit or eight-digit coverage or a uniform observation date",
+        "Missing fields by inheriting from a shorter prefix"
+      ],
+      "required_context": [
+        "bin: processor-provided leading digits as a string, with 2 to 11 ASCII digits",
+        "At most 64 input characters; remove only ASCII space, tab, CR, LF and hyphen separators; preserve leading zeros",
+        "Never send a full card number or collect one to truncate for this lookup"
+      ],
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "bin"
+        ],
+        "properties": {
+          "bin": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[ \\t\\r\\n-]*(?:[0-9][ \\t\\r\\n-]*){2,11}$"
+          },
+          "deep": {
+            "type": "boolean",
+            "default": false,
+            "description": "Optional recorded issuer details; included on every plan. Six or more digits enable matching."
+          }
+        }
+      },
+      "freshness": {
+        "mode": "pinned_reference",
+        "coverage": "15 network rule families; not complete global coverage. Issuer directory coverage is partial.",
+        "mixed_source_ages": true,
+        "uniform_refresh_interval_seconds": null,
+        "actual_age_seconds": null,
+        "actual_age_status": "not_exposed; a lookup or download time is not an allocation or verification date"
+      },
+      "uncertainty": {
+        "bin": {
+          "value": "Normalized input string; compare deep.prefix to this value when Deep is requested",
+          "invalid": "HTTP 400; malformed input is not an unknown-prefix result"
+        },
+        "brand": {
+          "value": "Network key determined independently of issuer records; brand_name is its display name",
+          "null": "Unknown or ambiguous among reviewed network rules; send more prefix digits when available, up to 11"
+        },
+        "deep.prefix": {
+          "null": "HTTP 200: fewer than six digits or no recorded directory match; not a verdict about a card or account",
+          "equals_bin": "An exact recorded-prefix match for the supplied digits; individual fields can still be null",
+          "shorter_than_bin": "A broader reference match only; an eight-digit input matching six digits does not establish an exact eight-digit allocation"
+        },
+        "deep.metadata": {
+          "null": "Unknown in the one matched record. A more specific record masks its parent, including null fields; never backfill from a shorter prefix"
+        },
+        "deep.prepaid": {
+          "true": "Explicitly recorded as prepaid",
+          "false": "Explicitly recorded as not prepaid",
+          "null": "Unknown, not false"
+        },
+        "deep.type": {
+          "null": "Unknown or mixed funding type"
+        },
+        "logo": {
+          "value": "CDN SVG URL; generic for unknown or ambiguous networks or unavailable reviewed artwork"
+        }
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null,
+        "monetary_quote": null,
+        "account_state": "unknown; pooled allowance and accepted account terms are not checked",
+        "deep": "Included in the same pooled request on every plan"
+      },
+      "access": {
+        "api_key_required": true,
+        "key_types": [
+          "secret",
+          "public",
+          "app"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "effective_access": null,
+        "effective_access_status": "not_checked; key fences, account access and quotas still apply"
+      },
+      "retry": {
+        "client": "javascript_sdk_and_mcp",
+        "default_retries": 2,
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
+        "retry_network_errors": true,
+        "successful_unknown_retried": false,
+        "guidance": "Do not retry a successful unknown prefix or null fields to manufacture a match. Honor Retry-After; waits over five seconds return the API error without automatic retry."
+      },
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.0.0/card/help",
+        "guide": "https://parseapi.com/docs/card",
+        "attribution": "https://parseapi.com/legal/attribution#bin"
       }
     },
     "time_zones": {

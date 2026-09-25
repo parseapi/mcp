@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.7.0 — 2026-09-25
+
+- Add Bank diagnostics, POST requests, requirements and explicit US ACH helpers; Card Core and optional Deep; Provider; Industry; and Vehicle.
+- Preserve published IBAN, BIN, NPI, NAICS and VIN methods and response types alongside the new names.
+- Respect long Retry-After responses without retrying early and expose the raw header as optional error metadata.
+- Retain released Time, Tariff, Postal and Elevation behavior. Expanded Company directory changes are deferred.
+
 ## 1.6.0 - 2026-09-24
 
 Adds Time location inputs and explicit ambiguity candidates, filtered timezone discovery, multiple conversion targets, wall-time disambiguation, and standard/seasonal offset detail. Existing Timezone methods and API 2.0.0 selection remain unchanged.
