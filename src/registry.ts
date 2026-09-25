@@ -532,20 +532,36 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.tariff.search(a.query, request)
 	);
 	tool(
-		'naics',
+		'industry',
 		'Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
 		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
-		(c, a, request) => c.naics(a.code, { ...request, deep: a.deep })
+		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
 	);
 	tool(
-		'naics_search',
+		'industry_search',
 		'Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.naics.search(a.query, { ...request, deep: a.deep, limit: a.limit })
+		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
+	);
+	tool(
+		'naics',
+		'Compatibility name for industry. Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
+	);
+	tool(
+		'naics_search',
+		'Compatibility name for industry_search. Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
+		{
+			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
+			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+		},
+		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 	tool(
 		'currency',

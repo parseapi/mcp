@@ -113,7 +113,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight'].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 61);
+	assert.equal(tools.length, 63);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -121,7 +121,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 62);
+	assert.equal(result.tools.length, 64);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self' || name === 'company_search'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -193,7 +193,7 @@ test('display language reaches each supported tool request and stays request-loc
 
 test('search requires query and rejects the retired q input before any HTTP call', async (t) => {
 	const { rpc, calls } = await setup(t);
-	for (const name of ['city_search', 'address_search', 'tariff_search', 'naics_search', 'emoji_search']) {
+	for (const name of ['city_search', 'address_search', 'tariff_search', 'industry_search', 'emoji_search']) {
 		const called = await rpc.call(name, { q: 'coffee' });
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}
@@ -340,7 +340,7 @@ test('NAICS preserves exclusions, actual search evidence and original query text
  const records = [{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US"},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":null,"match":null},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[],"match":{"field":"future-field","text":"Future matching evidence","corrections":[],"future":true}},{"naics":"541511","name":"Custom Computer Programming Services","description":null,"level":6,"parent":"54151","parent_name":"Computer Systems Design and Related Services","children":[],"year":2022,"country":"US","exclusions":[{"description":"Designing integrated computer systems","codes":[{"naics":"541512","name":"Computer Systems Design Services"}]},{"description":"Activities classified elsewhere","codes":[]}],"match":{"field":"term","text":"Computer software programming services","corrections":[{"from":"sofware","to":"software"}]},"future":true}];
  const data = { q: 'sofware', year: 2022, country: 'US', results: records };
  const { rpc, calls } = await setup(t, { fetch: () => response(data) });
- const called = await rpc.call('naics_search', { query: 'sofware' });
+ const called = await rpc.call('industry_search', { query: 'sofware' });
  assert.deepEqual(body(called), data);
  assert.equal(calls[0].url.searchParams.get('q'), 'sofware');
 });

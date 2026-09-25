@@ -1,10 +1,12 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	['naics', { code: '31-33' }, '/industry/31-33'],
+	['naics_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
 	['card', { bin: '00 1234-56' }, '/card/00%201234-56'],
-	['naics', { code: '31-33' }, '/naics/31-33'],
-	['naics_search', { query: 'coffee & tea', limit: 5 }, '/naics', { q: 'coffee & tea', limit: '5' }],
-	['naics_search', { query: 'plumbing' }, '/naics', { q: 'plumbing' }],
+	['industry', { code: '31-33' }, '/industry/31-33'],
+	['industry_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
+	['industry_search', { query: 'plumbing' }, '/industry', { q: 'plumbing' }],
 	['measure', { measure: '5 ft 11 in', to: 'cm', locale: 'en-US', system: 'us' }, '/measure/5%20ft%2011%20in', { to: 'cm', locale: 'en-US', system: 'us' }],
 	['measure', { measure: '1 kg/m^3', to: 'g/L' }, '/measure/1%20kg%2Fm%5E3', { to: 'g/L' }],
 	['measure_units', { query: 'US gallon', type: 'volume', unit: 'L' }, '/measure/units', { q: 'US gallon', type: 'volume', unit: 'L' }],
@@ -75,5 +77,5 @@ export const cases = [
 	['emoji_search', { query: 'fire', limit: 3 }, '/emoji', { q: 'fire', limit: '3' }],
 ];
 
-const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
 cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,name === 'bank' ? {} : {...query,deep:'true'}]));

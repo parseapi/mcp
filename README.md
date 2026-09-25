@@ -55,11 +55,13 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 61 local lookup tools and 60 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 63 local lookup tools and 62 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vin`, `naics`, `naics_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vin`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
 
-NAICS paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
+The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
+
+Industry paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
 Example tool arguments:
 
