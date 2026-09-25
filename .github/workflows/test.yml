@@ -15,6 +15,27 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      # Publish and verify @parseapi/sdk 1.2.0 before this dependent release.
       - run: npm ci
+      # Checkpoint source uses SDK additions that are not published yet.
+      # Keep release checks on the registry dependency and pin source checks
+      # to the reviewed companion commit instead of a moving branch.
+      - name: Check out the matching checkpoint SDK
+        if: startsWith(github.head_ref || github.ref_name, 'committed/')
+        uses: actions/checkout@v5
+        with:
+          repository: parseapi/node
+          ref: 9d6e0744f64b9b828b01fed74e9f43e2e2aa526b
+          path: .ci-sdk
+          persist-credentials: false
+      - name: Build the checkpoint SDK package
+        if: startsWith(github.head_ref || github.ref_name, 'committed/')
+        working-directory: .ci-sdk
+        run: |
+          npm ci
+          npm run build
+          mkdir -p "$RUNNER_TEMP/parseapi-ci-sdk"
+          npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/parseapi-ci-sdk"
+      - name: Install the checkpoint SDK without changing release metadata
+        if: startsWith(github.head_ref || github.ref_name, 'committed/')
+        run: npm install --ignore-scripts --no-save --package-lock=false "$RUNNER_TEMP/parseapi-ci-sdk/"*.tgz
       - run: npm run prepublishOnly

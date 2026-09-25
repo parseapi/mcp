@@ -152,6 +152,10 @@ test('full and compact registration search normalize only authority and retain o
   const invoke = args => mode === 'full' ? rpc.call('company_search', args) : rpc.call('lookup', { operation: 'company_search', arguments: args });
   const cases = [
    [{ registration_authority: 'ra000599' }, { registration_authority: 'RA000599' }],
+   ...['x'.repeat(200), '😀'.repeat(100)].map(value => [
+    { registration_authority: 'RA000599', registration_form: value, registration_status: value },
+    { registration_authority: 'RA000599', registration_form: value, registration_status: value },
+   ]),
    [{ country: 'US', industry: '0700', industry_type: 'sic', registration_authority: 'RA000599', registration_form: 'DPC', registration_status: ' Good Standing ', limit: 2, cursor: 'opaque+/=', deep: true }, { country: 'US', industry: '0700', industry_type: 'sic', registration_authority: 'RA000599', registration_form: 'DPC', registration_status: ' Good Standing ', limit: '2', cursor: 'opaque+/=', deep: 'true' }],
    [{ identifier: '00001', authority: 'SEC', registration_authority: 'RA000599', registration_form: ' FUTURE/Form ', registration_status: 'future+& status', deep: false }, { identifier: '00001', authority: 'SEC', registration_authority: 'RA000599', registration_form: ' FUTURE/Form ', registration_status: 'future+& status' }],
   ];

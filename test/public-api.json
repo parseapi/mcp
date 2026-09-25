@@ -520,6 +520,20 @@
           "minLength": 1,
           "type": "string"
         },
+        "registration_authority": {
+          "pattern": "^RA[0-9]{6}$",
+          "type": "string"
+        },
+        "registration_form": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        "registration_status": {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
         "ticker": {
           "minLength": 1,
           "type": "string"
