@@ -18,6 +18,7 @@ const task = z.strictObject({
 
 export function registerPreflight(server: McpServer, client: ReturnType<typeof parseAPI> | null, transport: Transport): void {
 	server.registerTool('preflight', {
+		title: 'Estimate ParseAPI task usage',
 		description: 'Estimate whether your secret key permits a proposed Email, Domain, DNS, MX or Country task, its advisory capacity, and additional USD charges under accepted terms. Supply operation counts and optional Deep, without lookup inputs. Uses default SDK retries: up to three attempts per ordinary lookup and one per Email Deep lookup. Authenticated metadata request, no lookup units or paid checks. Reserves no units or money and does not enforce a budget. Check permitted, cost.status, capacity and budget before lookup.',
 		inputSchema: task,
 		annotations: { readOnlyHint: true, idempotentHint: true },

@@ -47,6 +47,7 @@ export function registerDiscovery(server: McpServer, operations: Map<string, Cat
 	const all = [...operations.values()].sort((a, b) => a.name.localeCompare(b.name));
 	const reviewed = Object.keys(policies).filter(name => operations.has(name)).sort();
 	server.registerTool('discover', {
+		title: 'Discover ParseAPI operations',
 		description: 'Find ParseAPI operations by keyword, or describe one by its exact name. Returns inputs and reviewed capability, freshness, uncertainty, billing and access policies. Metadata only, no API request or usage charge. Use preflight for effective credential permissions and account-specific cost estimates. Use operation to get full detail before lookup.',
 		inputSchema: z.object({
 			query: z.string().trim().min(1).max(256).optional().describe('Keywords such as mailbox, DNS, or population'),
@@ -97,6 +98,7 @@ export function registerDiscovery(server: McpServer, operations: Map<string, Cat
 
 	if (mode !== 'compact') return;
 	server.registerTool('lookup', {
+		title: 'Run a ParseAPI lookup',
 		description: 'Run one ParseAPI operation found with discover. Pass its exact name and arguments. Uses the same validation, API 2.0.0 contract, credentials and billing as the named lookup. Reads can consume pooled or paid units. Ordinary lookups can retry twice, metered checks default to no retries.',
 		inputSchema: z.object({ operation: z.string().min(1).max(64), arguments: object }),
 		annotations: { readOnlyHint: true, idempotentHint: false },

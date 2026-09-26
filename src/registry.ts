@@ -25,6 +25,12 @@ const countryOpt = z
 	.optional()
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
+const titleWords: Record<string, string> = {
+	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX', vat: 'VAT',
+	iban: 'IBAN', npi: 'NPI', naics: 'NAICS', vin: 'VIN', bin: 'BIN',
+	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', mac: 'MAC', useragent: 'User Agent',
+};
+
 const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
 	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
 	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
@@ -95,6 +101,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		server.registerTool(
 			name,
 			{
+				title: name.split('_').map(word => titleWords[word] ?? word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
 				description,
 				inputSchema: schema,
 				annotations: { readOnlyHint: true },
