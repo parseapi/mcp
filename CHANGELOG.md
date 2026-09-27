@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.1 — 2026-09-27
+
+- Add readable tool titles in MCP clients. Tool names, arguments, results, authentication and billing behavior are unchanged.
+- Add maintainer metadata for the source repository.
+
 ## 1.7.0 — 2026-09-25
 
 - Add Bank diagnostics, POST requests, requirements and explicit US ACH helpers; Card Core and optional Deep; Provider; Industry; and Vehicle.
