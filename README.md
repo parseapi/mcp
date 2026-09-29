@@ -55,9 +55,9 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 64 local lookup tools and 63 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. All search tools take `query`.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -80,6 +80,9 @@ Example tool arguments:
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |
+| `company_search` | `{"query":"Cloudflare","country":"US"}` |
+| `company_id` | `{"id":"co_xw3f22es6cjq","deep":true}` |
+| `company_coverage` | `{}` |
 | `time` | `{}` (UTC now) |
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
@@ -101,12 +104,24 @@ A path uses the same string formats with 2-512 vertices and a required integer `
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
-Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
+Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. National-number `company` lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
 
-Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. Company lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
+For the company directory, call `company_search` with at most one of `query`,
+`domain`, `ticker` or `identifier`. Use `exchange` with a ticker and `authority`
+with an identifier. Review the candidates, then pass the chosen `id` to
+`company_id`. Send the returned `next` as `cursor` with the same selector,
+filters and `limit` for another page. Directory deep adds detail in the same
+pooled request on every plan and belongs to each company result.
+Selected website descriptions, logos, socials and founding claims include
+field-level sources. Logo URLs are returned without fetching images. Directory
+tools do not accept `lang`. `company_coverage` describes the edition's records,
+and empty listings do not establish private ownership. The existing `company`
+tool continues to parse national registration numbers.
+
+For discovery without an identity selector, supply `country` or both `industry` and `industry_type`. For example: `{ "country": "US", "industry": "0700", "industry_type": "sic" }`. SIC is the supported namespace; its exact four-digit code stays a string. Empty requests, incomplete industry pairs and multiple selectors are rejected. Country means the profile country. Filters intersect, unknown values do not match, and the same filters and limit must accompany a returned cursor. Filter-only candidates carry `match: { "field": "filters", "value": null }`.
 
 
-Card takes a processor-provided BIN/IIN prefix, with 6–11 ASCII digits. Leading zeros are preserved. ASCII spaces, tabs, line breaks and hyphens are accepted within a 64-character input limit. Full numbers and malformed prefixes are rejected before an API request; input is never truncated. The complete lookup is returned without a deep option.
+Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Core `sources` is available on every plan: NPPES, LEIE, PECOS and opt-out each have nullable edition metadata (`edition`, `published_at`, `through`, `imported_at`). Provider record dates are separate from source publication and completed import dates. Older responses may omit these additions. Edition details remain null until a verified source is served.
 
 Pass the original NPI as a string. `valid` checks its format and checksum; `registered` means a match in the stored NPPES snapshot. `active` reflects recorded NPI deactivation, not licensure. `excluded` is an NPI-only OIG LEIE match; `false` is not a complete exclusion clearance. These directory facts do not verify credentials, current practice contact or payment eligibility.
 

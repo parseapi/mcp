@@ -465,6 +465,93 @@
     }
   },
   {
+    "name": "company_coverage",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "company_id",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "company_search",
+    "inputSchema": {
+      "properties": {
+        "authority": {
+          "type": "string"
+        },
+        "country": {
+          "pattern": "^[A-Za-z]{2}$",
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "domain": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "exchange": {
+          "type": "string"
+        },
+        "identifier": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "industry": {
+          "pattern": "^[0-9]{4}$",
+          "type": "string"
+        },
+        "industry_type": {
+          "const": "sic",
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "query": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "ticker": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "continent",
     "inputSchema": {
       "properties": {
@@ -1504,8 +1591,16 @@
         "code": {
           "type": "string"
         },
+        "date": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
         "deep": {
           "type": "boolean"
+        },
+        "edition": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
         },
         "origin": {
           "type": "string"
@@ -1524,6 +1619,14 @@
     "name": "tariff_search",
     "inputSchema": {
       "properties": {
+        "date": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
+        "edition": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        },
         "query": {
           "type": "string"
         }

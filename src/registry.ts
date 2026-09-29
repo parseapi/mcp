@@ -20,6 +20,8 @@ const deep = z
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
+const tariffEdition = z.string().regex(/^[a-f0-9]{64}$/).optional().describe('Exact immutable edition fingerprint. Without date, returns undated schedule context.');
+const tariffDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD with verified source coverage. Combine with edition only when it covers this date.');
 const countryOpt = z
 	.string()
 	.optional()
@@ -343,6 +345,43 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		},
 		(c, a, request) => c.company(a.number, { ...request, country: a.country, deep: a.deep })
 	);
+	tool(
+		'company_id',
+		'Look up a company directory profile by its stable co_ ID. Deep adds legal/reference details and selected description, logo, domains, social_profiles (platform, url, handle), phone_numbers and email_addresses (with source-reported type), founding precision, reported employees and field-level sources when available. Employee counts retain their measurement date, organization scope and approximation flag; null means unknown. A website claim is not legal ownership proof. National registration numbers use company.',
+		{ id: z.string().min(1).describe('Stable company directory ID returned by company_search'), deep },
+		(c, a, request) => c.company.id(a.id, { ...request, deep: a.deep })
+	);
+	tool(
+		'company_search',
+		'Find company directory candidates using at most one of query, domain, ticker or identifier, or discover by country, an exact industry pair. Returns companies and an opaque next cursor without choosing a match. Deep belongs to each result. Keep the same selector, filters and limit when sending cursor. Empty listings do not establish private ownership.',
+		{
+			query: z.string().min(1).optional().describe('Company name search, sent as q'),
+			domain: z.string().min(1).optional().describe('Company website domain or URL'),
+			ticker: z.string().min(1).optional().describe('Security ticker, optionally scoped by exchange'),
+			identifier: z.string().min(1).optional().describe('Business identifier, preserving leading zeros'),
+			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 profile-country filter; does not mean headquarters or operating presence'),
+			industry: z.string().regex(/^[0-9]{4}$/).optional().describe('Exact four-digit SIC code string, preserving leading zeros; requires industry_type'),
+			industry_type: z.literal('sic').optional().describe('Industry namespace; currently sic; requires industry'),
+			exchange: z.string().optional().describe('Exchange filter for ticker searches'),
+			authority: z.string().optional().describe('Issuing authority filter for identifier searches'),
+			limit: z.number().int().min(1).max(50).optional().describe('Maximum candidates on this page, from 1 to 50'),
+			cursor: z.string().optional().describe('Opaque next cursor returned by the same search'),
+			deep,
+		},
+		(c, a, request) => c.company.search({ ...request, query: a.query, domain: a.domain, ticker: a.ticker, identifier: a.identifier, country: a.country, industry: a.industry, industry_type: a.industry_type, exchange: a.exchange, authority: a.authority, limit: a.limit, cursor: a.cursor, deep: a.deep }),
+		(schema) => schema
+			.refine(args => (args.industry === undefined) === (args.industry_type === undefined), { message: 'Supply industry and industry_type together.' })
+			.refine(args => {
+				const selectors = [args.query, args.domain, args.ticker, args.identifier].filter(value => value !== undefined).length;
+				return selectors <= 1 && (selectors === 1 || args.country !== undefined || (args.industry !== undefined && args.industry_type !== undefined));
+			}, { message: 'Use at most one selector, or supply country, a complete industry pair.' })
+	);
+	tool(
+		'company_coverage',
+		'Describe the company directory edition, countries and record counts. Counts describe this edition and do not establish complete country or worldwide coverage. A missing profile does not establish that a company does not exist.',
+		{},
+		(c, _a, request) => c.company.coverage(request)
+	);
 
 	tool(
 		'point',
@@ -582,19 +621,21 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'tariff',
-		'Look up a tariff code, description, lineage and general rate. Paid deep adds statistical units and the special and other schedule columns. Optional origin with deep resolves country-specific measures. Without origin, schedule detail is available and origin-dependent fields are null. A null effective rate is not a zero rate.',
+		'Look up a US tariff code, description, lineage, published base general rate, exact edition and answering date. Paid deep adds schedule columns, units and matched Chapter 99 measures. Origin is the country where goods originate, not the shipping country. Optional edition pins immutable source bytes. Optional date requires verified source coverage; edition without date returns date null and no effective rate. Default requests use today. deep.reason explains a null effective_rate, including incomplete_coverage; null never means zero. Matched measures are inspectable candidates, not complete duty or landed cost.',
 		{
-			code: z.string().describe('HTS code, 4 to 10 digits, dots optional, e.g. 8471.30.01.00'),
-			origin: iso2('country of origin for duty resolution, only read with deep').optional(),
+			code: z.string().describe('US HTS code: 4, 6, 8 or 10 ASCII digits, dots and whitespace optional, e.g. 8471.30.01.00'),
+			origin: iso2('country where the goods originate, not the shipping country; only read with deep').optional(),
+			edition: tariffEdition,
+			date: tariffDate,
 			deep,
 		},
-		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin })
+		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin, edition: a.edition, date: a.date })
 	);
 	tool(
 		'tariff_search',
-		'Search US tariff schedule descriptions by product. Returns up to 20 lines, best match first, each with hts, description, and the general duty rate.',
-		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee') },
-		(c, a, request) => c.tariff.search(a.query, request)
+		'Search US tariff schedule descriptions by product words. Returns up to 20 candidate lines with hts, description, general rate and parent lineage, plus the exact edition and answering date. Optional edition pins immutable source bytes. Optional date requires verified source coverage; combine only when that edition covers the date. Edition without date returns date null. Description search is not product classification.',
+		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee'), edition: tariffEdition, date: tariffDate },
+		(c, a, request) => c.tariff.search(a.query, { ...request, edition: a.edition, date: a.date })
 	);
 	tool(
 		'industry',

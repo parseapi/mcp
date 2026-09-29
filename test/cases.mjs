@@ -1,6 +1,12 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	["company_id",{"id":"co_id/with #?","deep":true},"/company/id/co_id%2Fwith%20%23%3F",{"deep":"true"}],
+	["company_search",{"query":"Café & Labs","country":"US","limit":3,"cursor":"page+/=?","deep":true},"/company",{"q":"Café & Labs","country":"US","limit":"3","cursor":"page+/=?","deep":"true"}],
+	["company_search",{"domain":"https://www.example.com/a?b=c&d=e","deep":false},"/company",{"domain":"https://www.example.com/a?b=c&d=e"}],
+	["company_search",{"ticker":"BRK/B","exchange":"NYSE","country":"US"},"/company",{"ticker":"BRK/B","exchange":"NYSE","country":"US"}],
+	["company_search",{"identifier":"0000081061","authority":"SEC"},"/company",{"identifier":"0000081061","authority":"SEC"}],
+	["company_coverage",{},"/company/directory/coverage"],
 	['bin', { bin: '00 1234-56', deep: true }, '/bin/00%201234-56', { deep: 'true' }],
 	['iban', { iban: 'DE89 3704', country: 'DE' }, '/iban/DE89%203704', { country: 'DE' }],
 	['npi', { npi: '1881018208', deep: true }, '/npi/1881018208', { deep: 'true' }],
