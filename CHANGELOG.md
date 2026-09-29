@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0 — 2026-09-29
+
+- Add Company stable-ID lookup, candidate search and coverage for the current public-company cohort.
+- Preserve existing Company calls and all published compatibility methods.
+- Add optional Tariff edition and date selectors.
+
 ## 1.7.1 — 2026-09-27
 
 - Add readable tool titles in MCP clients. Tool names, arguments, results, authentication and billing behavior are unchanged.
