@@ -148,7 +148,9 @@ async function setup(t, { key = 'test_key', transport = 'stdio', fetch } = {}) {
 test('tool names and argument schemas match the reviewed public baseline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null });
 	const result = await rpc.request('tools/list', {});
-	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight'].includes(name));
+	const controls = ['task_create', 'task_status', 'task_cancel', 'task_lookup'];
+	assert.deepEqual(result.result.tools.filter(({ name }) => controls.includes(name)).map(({ name }) => name).sort(), controls.sort());
+	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
 	assert.equal(tools.length, 71);
@@ -159,7 +161,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 72);
+	assert.equal(result.tools.length, 76);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);

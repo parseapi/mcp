@@ -18,16 +18,16 @@ async function setup(t, { key = 'test_key', transport = 'http', mode = 'compact'
 	return { rpc, calls };
 }
 
-test('compact catalog advertises three tools and full preserves every lookup schema', async (t) => {
+test('compact catalog advertises discovery and task controls; full preserves every lookup schema', async (t) => {
 	const { rpc, calls } = await setup(t);
 	const compact = (await rpc.request('tools/list', {})).result.tools;
-	assert.deepEqual(compact.map(t => t.name).sort(), ['discover', 'lookup', 'preflight']);
+	assert.deepEqual(compact.map(t => t.name).sort(), ['discover', 'lookup', 'preflight', 'task_cancel', 'task_create', 'task_lookup', 'task_status']);
 	const expected = JSON.parse(await readFile(new URL('./discovery-api.json', import.meta.url), 'utf8'));
-	assert.deepEqual(publicSurface(compact), expected);
+	assert.deepEqual(publicSurface(compact.filter(tool => !tool.name.startsWith('task_'))), expected);
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
-	assert.equal(listed.length, 72);
+	assert.equal(listed.length, 76);
 	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));

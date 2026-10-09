@@ -4,6 +4,7 @@ import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
 import { registerPreflight } from './preflight.js';
+import { registerTasks } from './task.js';
 
 export const VERSION = '1.8.0';
 const API_VERSION = '2.0.0';
@@ -859,5 +860,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	registerDiscovery(server, operations, mode, API_VERSION);
 	registerPreflight(server, parse, transport);
+	registerTasks(server, parse, transport);
 	return server;
 }

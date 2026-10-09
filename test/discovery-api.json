@@ -96,7 +96,14 @@
                   "domain",
                   "dns",
                   "mx",
-                  "country"
+                  "country",
+                  "vat",
+                  "carrier",
+                  "caller",
+                  "hlr",
+                  "ip",
+                  "phone",
+                  "postal"
                 ],
                 "type": "string"
               }

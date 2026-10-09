@@ -103,7 +103,8 @@ export async function runScenario(scenario, { adapter, mode = 'full', timeoutMs 
 		rpc = await connect(mode);
 		const { tools } = await rpc.request('tools/list', {});
 		const advertised = new Set(tools.map(tool => tool.name));
-		if (!advertised.has('discover') || !advertised.has('preflight') || (mode === 'compact' && (!advertised.has('lookup') || tools.length !== 3))) {
+		if (!advertised.has('discover') || !advertised.has('preflight') || (mode === 'compact' &&
+			(!advertised.has('lookup') || tools.length !== 7 || !['task_create','task_status','task_cancel','task_lookup'].every(name => advertised.has(name))))) {
 			throw new Error('Build the MCP discovery/compact implementation before running this benchmark.');
 		}
 		const callTool = (name, args = {}) => {
