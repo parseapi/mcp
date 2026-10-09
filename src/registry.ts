@@ -6,7 +6,7 @@ import { registerDiscovery, type CatalogMode, type CatalogOperation } from './di
 import { registerPreflight } from './preflight.js';
 import { registerTasks } from './task.js';
 
-export const VERSION = '1.8.0';
+export const VERSION = '1.9.0';
 const API_VERSION = '2.0.0';
 const US_ROUTING_NOTICE = 'Routing reference attribution: https://parseapi.com/legal/attribution#routing-numbers';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
