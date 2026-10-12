@@ -1,6 +1,12 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	['currency', { code: 'USD' }, '/currency/USD'],
+	['currency_list', { q: 'yen', country: 'JP', deep: true }, '/currency', { q: 'yen', country: 'JP', deep: 'true' }],
+	['currency_rate', { base: 'USD', quote: 'EUR', date: '2026-08-01', amount: 0 }, '/currency/USD/EUR', { date: '2026-08-01', amount: '0' }],
+	['currency_rates', { base: 'USD', quotes: ['EUR', 'JPY'], amount: 0 }, '/currency/USD/rates', { quotes: 'EUR,JPY', amount: '0' }],
+	['currency_history', { base: 'USD', quote: 'EUR', from: '2026-10-01', to: '2026-10-09' }, '/currency/USD/EUR/history', { from: '2026-10-01', to: '2026-10-09' }],
+	['currency_rates_history', { base: 'USD', quotes: ['EUR', 'JPY'], from: '2026-10-01', to: '2026-10-09' }, '/currency/USD/rates/history', { quotes: 'EUR,JPY', from: '2026-10-01', to: '2026-10-09' }],
 	["company_id",{"id":"co_id/with #?","deep":true},"/company/id/co_id%2Fwith%20%23%3F",{"deep":"true"}],
 	["company_search",{"query":"Café & Labs","country":"US","limit":3,"cursor":"page+/=?","deep":true},"/company",{"q":"Café & Labs","country":"US","limit":"3","cursor":"page+/=?","deep":"true"}],
 	["company_search",{"domain":"https://www.example.com/a?b=c&d=e","deep":false},"/company",{"domain":"https://www.example.com/a?b=c&d=e"}],
@@ -68,8 +74,6 @@ export const cases = [
 	['vin', { vin: '1HGCM82633A004352', deep: true }, '/vin/1HGCM82633A004352', { deep: 'true' }],
 	['tariff', { code: '8471.30.01.00', origin: 'CN', deep: true }, '/tariff/8471.30.01.00', { origin: 'CN', deep: 'true' }],
 	['tariff_search', { query: 'coffee & tea' }, '/tariff', { q: 'coffee & tea' }],
-	['currency', { code: 'USD' }, '/currency/USD'],
-	['currency_rate', { base: 'USD', quote: 'EUR', date: '2026-08-01', amount: 0 }, '/currency/USD/EUR', { date: '2026-08-01', amount: '0' }],
 	['language', { code: 'en' }, '/language/en'],
 	['name', { name: 'Smith, John' }, '/name/Smith%2C%20John'],
 	['name', { name: 'Andrea', country: 'IT' }, '/name/Andrea', { country: 'IT' }],

@@ -27,7 +27,8 @@ test('compact catalog advertises discovery and task controls; full preserves eve
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
-	assert.equal(listed.length, 76);
+	const named = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
+	assert.equal(listed.length, named.length + 5);
 	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));
@@ -47,7 +48,7 @@ test('discovery is local, versioned and separates static policy from account fac
 	assert.equal(data.api_version, '2.0.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
-	assert.deepEqual(data.policy_operations, ['card', 'country', 'dns', 'domain', 'email', 'mx', 'time', 'time_zones']);
+	assert.deepEqual(data.policy_operations, ['card', 'country', 'currency', 'currency_history', 'currency_list', 'currency_rate', 'currency_rates', 'currency_rates_history', 'currency_rates_summary', 'dns', 'domain', 'email', 'mx', 'time', 'time_zones']);
 	const source = JSON.parse(await readFile(new URL('../src/agent-catalog.json', import.meta.url), 'utf8'));
 	assert.deepEqual(data.operations[0].policy, source.operations.email);
 	assert.equal(data.operations[0].policy_available, true);
@@ -69,8 +70,9 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 70);
-	assert.equal(names.length, 70);
+	const publicNames = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8')).map(tool => tool.name).filter(name => name !== 'ip_self');
+	assert.equal(new Set(names).size, names.length);
+	assert.deepEqual([...names].sort(), publicNames.sort());
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);

@@ -645,6 +645,7 @@
   {
     "name": "currency",
     "inputSchema": {
+      "additionalProperties": false,
       "properties": {
         "code": {
           "type": "string"
@@ -668,8 +669,84 @@
     }
   },
   {
+    "name": "currency_history",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "maximum": 1000000000000000,
+          "minimum": -1000000000000000,
+          "type": "number"
+        },
+        "base": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "from": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
+        "interval": {
+          "enum": [
+            "day",
+            "week",
+            "month"
+          ],
+          "type": "string"
+        },
+        "quote": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "to": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "quote",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "currency_list",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "country": {
+          "pattern": "^[A-Za-z]{2}$",
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "q": {
+          "maxLength": 80,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "currency_rate",
     "inputSchema": {
+      "additionalProperties": false,
       "properties": {
         "amount": {
           "type": "number"
@@ -687,6 +764,142 @@
       "required": [
         "base",
         "quote"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "currency_rates",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "maximum": 1000000000000000,
+          "minimum": -1000000000000000,
+          "type": "number"
+        },
+        "base": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "date": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "pattern": "^[A-Za-z]{3}$",
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "base"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "currency_rates_history",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "maximum": 1000000000000000,
+          "minimum": -1000000000000000,
+          "type": "number"
+        },
+        "base": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "from": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
+        "interval": {
+          "enum": [
+            "day",
+            "week",
+            "month"
+          ],
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "pattern": "^[A-Za-z]{3}$",
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "type": "array"
+        },
+        "to": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "quotes",
+        "from",
+        "to"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "currency_rates_summary",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "pattern": "^[A-Za-z]{3}$",
+          "type": "string"
+        },
+        "from": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        },
+        "interval": {
+          "enum": [
+            "month",
+            "quarter",
+            "year"
+          ],
+          "type": "string"
+        },
+        "quotes": {
+          "items": {
+            "pattern": "^[A-Za-z]{3}$",
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "type": "array"
+        },
+        "to": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "quotes",
+        "from",
+        "to"
       ],
       "type": "object"
     },

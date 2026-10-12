@@ -471,7 +471,7 @@
       "endpoint": "GET /time or /time/{timezone}",
       "determines": [
         "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-        "The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
+        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
         "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, actual rule edition and source wall-time resolution",
         "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
       ],
@@ -487,7 +487,7 @@
         "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
         "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
         "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-        "targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
         "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
       ],
       "freshness": {
@@ -789,6 +789,471 @@
         "help": "https://api.parseapi.com/version/2.0.0/time/help",
         "guide": "https://parseapi.com/docs/time"
       }
+    },
+    "currency": {
+      "operation": "currency",
+      "endpoint": "GET /currency/{code}",
+      "determines": [
+        "Maintained currency name, symbols and decimal places",
+        "Optional numeric code, plural name and using countries"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "code: three-letter currency code",
+        "deep=true for detail"
+      ],
+      "freshness": {
+        "mode": "maintained_metadata",
+        "rate_coverage": "Independent from rate availability; request selected or all quotes through currency_rates"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown"
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase",
+        "deep": "Optional metadata detail on every plan"
+      }
+    },
+    "currency_list": {
+      "operation": "currency_list",
+      "endpoint": "GET /currency",
+      "determines": [
+        "Current maintained currency metadata catalog",
+        "Optional q/country filters and detail"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "Optional q: canonical code/name search, country: ISO2, lang: display language, deep: boolean"
+      ],
+      "freshness": {
+        "mode": "maintained_metadata",
+        "rate_coverage": "Independent from rate availability; request selected or all quotes through currency_rates"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown",
+        "unit": "Only for special units: troy_ounce for XAU/XAG/XPT/XPD or indexed_unit for CLF/COU/MXV/UYI/UYW; omitted for ordinary currencies"
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase",
+        "deep": "Optional metadata detail on every plan"
+      }
+    },
+    "currency_rate": {
+      "operation": "currency_rate",
+      "endpoint": "GET /currency/{base}/{quote}",
+      "determines": [
+        "Held reference cross-rate for one pair",
+        "Optional amount conversion"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "base and quote: three-letter codes",
+        "Optional date, amount, source"
+      ],
+      "freshness": {
+        "mode": "held_official_reference",
+        "age_basis": "Original known reference and dependency dates at requested day; fetch time never renews the rate",
+        "fresh_max_days": {
+          "daily": 7,
+          "nbp_weekly_or_legacy_ambiguous": 14,
+          "weekly_source": 14
+        },
+        "stale_max_days": 30,
+        "expired": "Older or unknown/invalid/future reference dates are unusable",
+        "degraded_observation": "Core stale:true and X-Currency-Stale identify retained stale or degraded observations"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown",
+        "converted": "Quote-metal destinations return converted:null. Named-source quotes with unknown minor-unit precision also return null; metal bases can convert into quote currencies with known minor-unit precision",
+        "dates": "Core base/quote date arrays qualify differing held observation and dependency dates; omitted sides use date. Original unknown dependency dates cannot be recovered.",
+        "units": "Core identifies non-money base/quote sides as troy_ounce or indexed_unit; omitted sides are ordinary currency units.",
+        "stale": "Core stale:true indicates stale returned rates or a degraded current observation; omitted when fresh."
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase"
+      },
+      "reference_sources": [
+        "default",
+        "ecb",
+        "nbp",
+        "nbu",
+        "boc",
+        "cbrt",
+        "cnb",
+        "nbg",
+        "nbkz",
+        "cbu",
+        "nbkr",
+        "norges",
+        "riksbank",
+        "danmark",
+        "moldova",
+        "romania",
+        "iceland",
+        "fed",
+        "bcb",
+        "bnm",
+        "bcrp",
+        "sfc",
+        "banxico",
+        "bcch",
+        "taiwan",
+        "mnb",
+        "nbrm",
+        "cbn",
+        "cba",
+        "nrb",
+        "cbar",
+        "nbt",
+        "bi",
+        "thailand"
+      ]
+    },
+    "currency_rates": {
+      "operation": "currency_rates",
+      "endpoint": "GET /currency/{base}/rates",
+      "determines": [
+        "All available maintained quotes when quotes omitted",
+        "1\u201350 requested quotes keyed by currency code and explicit quote gaps"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "base: currency code",
+        "Optional quotes: 1\u201350 distinct codes, date, amount, source"
+      ],
+      "freshness": {
+        "mode": "held_official_reference",
+        "age_basis": "Original known reference and dependency dates at requested day; fetch time never renews the rate",
+        "fresh_max_days": {
+          "daily": 7,
+          "nbp_weekly_or_legacy_ambiguous": 14,
+          "weekly_source": 14
+        },
+        "stale_max_days": 30,
+        "expired": "Older or unknown/invalid/future reference dates are unusable",
+        "degraded_observation": "Core stale:true and X-Currency-Stale identify retained stale or degraded observations"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown",
+        "converted": "Quote-metal destinations return converted:null. Named-source quotes with unknown minor-unit precision also return null; metal bases can convert into quote currencies with known minor-unit precision",
+        "dates": "Core base/quote date arrays qualify differing held observation and dependency dates; omitted sides use date. Original unknown dependency dates cannot be recovered.",
+        "units": "Core identifies non-money base/quote sides as troy_ounce or indexed_unit; omitted sides are ordinary currency units.",
+        "stale": "Core stale:true indicates stale returned rates or a degraded current observation; omitted when fresh."
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase"
+      },
+      "reference_sources": [
+        "default",
+        "ecb",
+        "nbp",
+        "nbu",
+        "boc",
+        "cbrt",
+        "cnb",
+        "nbg",
+        "nbkz",
+        "cbu",
+        "nbkr",
+        "norges",
+        "riksbank",
+        "danmark",
+        "moldova",
+        "romania",
+        "iceland",
+        "fed",
+        "bcb",
+        "bnm",
+        "bcrp",
+        "sfc",
+        "banxico",
+        "bcch",
+        "taiwan",
+        "mnb",
+        "nbrm",
+        "cbn",
+        "cba",
+        "nrb",
+        "cbar",
+        "nbt",
+        "bi",
+        "thailand"
+      ]
+    },
+    "currency_history": {
+      "operation": "currency_history",
+      "endpoint": "GET /currency/{base}/{quote}/history",
+      "determines": [
+        "Held rate or explicit gap for each requested calendar day",
+        "Necessary date, unit and stale qualifications"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "base, quote or 1\u201350 distinct quotes, from and to",
+        "Daily: at most 366 calendar days. week/month: at most 36600 days; at most 5000 selected quote-dates and 100000 read observations"
+      ],
+      "freshness": {
+        "mode": "held_official_reference",
+        "age_basis": "Original known reference and dependency dates at requested day; fetch time never renews the rate",
+        "fresh_max_days": {
+          "daily": 7,
+          "nbp_weekly_or_legacy_ambiguous": 14,
+          "weekly_source": 14
+        },
+        "stale_max_days": 30,
+        "expired": "Older or unknown/invalid/future reference dates are unusable",
+        "degraded_observation": "Core stale:true and X-Currency-Stale identify retained stale or degraded observations"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown",
+        "converted": "Quote-metal destinations return converted:null. Named-source quotes with unknown minor-unit precision also return null; metal bases can convert into quote currencies with known minor-unit precision",
+        "dates": "Core base/quote date arrays qualify differing held observation and dependency dates; omitted sides use date. Original unknown dependency dates cannot be recovered.",
+        "units": "Core identifies non-money base/quote sides as troy_ounce or indexed_unit; omitted sides are ordinary currency units.",
+        "stale": "Core stale:true indicates stale returned rates or a degraded current observation; omitted when fresh."
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase"
+      },
+      "reference_sources": [
+        "default",
+        "ecb",
+        "nbp",
+        "nbu",
+        "boc",
+        "cbrt",
+        "cnb",
+        "nbg",
+        "nbkz",
+        "cbu",
+        "nbkr",
+        "norges",
+        "riksbank",
+        "danmark",
+        "moldova",
+        "romania",
+        "iceland",
+        "fed",
+        "bcb",
+        "bnm",
+        "bcrp",
+        "sfc",
+        "banxico",
+        "bcch",
+        "taiwan",
+        "mnb",
+        "nbrm",
+        "cbn",
+        "cba",
+        "nrb",
+        "cbar",
+        "nbt",
+        "bi",
+        "thailand"
+      ]
+    },
+    "currency_rates_history": {
+      "operation": "currency_rates_history",
+      "endpoint": "GET /currency/{base}/rates/history",
+      "determines": [
+        "Ordered multi-quote held calendar-day history",
+        "Successful observations and explicit date/quote gaps"
+      ],
+      "does_not_determine": [
+        "Executable trading, bid/ask or intraday prices",
+        "A guaranteed quote for every maintained ISO metadata code",
+        "Complete historical coverage for every currency or a vintage archive"
+      ],
+      "required_context": [
+        "base, quote or 1\u201350 distinct quotes, from and to",
+        "Daily: at most 366 calendar days. week/month: at most 36600 days; at most 5000 selected quote-dates and 100000 read observations"
+      ],
+      "freshness": {
+        "mode": "held_official_reference",
+        "age_basis": "Original known reference and dependency dates at requested day; fetch time never renews the rate",
+        "fresh_max_days": {
+          "daily": 7,
+          "nbp_weekly_or_legacy_ambiguous": 14,
+          "weekly_source": 14
+        },
+        "stale_max_days": 30,
+        "expired": "Older or unknown/invalid/future reference dates are unusable",
+        "degraded_observation": "Core stale:true and X-Currency-Stale identify retained stale or degraded observations"
+      },
+      "uncertainty": {
+        "coverage": "Source discovery reports usable held quotes and verified source history; null bounds mean unknown",
+        "converted": "Quote-metal destinations return converted:null. Named-source quotes with unknown minor-unit precision also return null; metal bases can convert into quote currencies with known minor-unit precision",
+        "dates": "Core base/quote date arrays qualify differing held observation and dependency dates; omitted sides use date. Original unknown dependency dates cannot be recovered.",
+        "units": "Core identifies non-money base/quote sides as troy_ounce or indexed_unit; omitted sides are ordinary currency units.",
+        "stale": "Core stale:true indicates stale returned rates or a degraded current observation; omitted when fresh."
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase"
+      },
+      "reference_sources": [
+        "default",
+        "ecb",
+        "nbp",
+        "nbu",
+        "boc",
+        "cbrt",
+        "cnb",
+        "nbg",
+        "nbkz",
+        "cbu",
+        "nbkr",
+        "norges",
+        "riksbank",
+        "danmark",
+        "moldova",
+        "romania",
+        "iceland",
+        "fed",
+        "bcb",
+        "bnm",
+        "bcrp",
+        "sfc",
+        "banxico",
+        "bcch",
+        "taiwan",
+        "mnb",
+        "nbrm",
+        "cbn",
+        "cba",
+        "nrb",
+        "cbar",
+        "nbt",
+        "bi",
+        "thailand"
+      ]
+    },
+    "currency_rates_summary": {
+      "operation": "currency_rates_summary",
+      "endpoint": "GET /currency/{base}/rates/summary",
+      "determines": [
+        "Month, quarter or year averages and extrema of original daily pair observations",
+        "Observation counts, original bounds and missing calendar days"
+      ],
+      "does_not_determine": [
+        "Executable trading or payment quotes",
+        "A prescribed accounting or tax methodology",
+        "As-published revision replay or uninterrupted source coverage"
+      ],
+      "required_context": [
+        "base, 1\u201350 distinct quotes, from and to; optional month/quarter/year interval",
+        "At most 36600 calendar days, 100000 read observations and 5000 quote-periods"
+      ],
+      "freshness": {
+        "mode": "held_official_reference",
+        "age_basis": "Original known reference and dependency dates at requested day; fetch time never renews the rate",
+        "fresh_max_days": {
+          "daily": 7,
+          "nbp_weekly_or_legacy_ambiguous": 14,
+          "weekly_source": 14
+        },
+        "stale_max_days": 30,
+        "expired": "Older or unknown/invalid/future reference dates are unusable",
+        "degraded_observation": "Core stale:true and X-Currency-Stale identify retained stale or degraded observations"
+      },
+      "uncertainty": {
+        "coverage": "Only original pair observation days receive weight. Carrying an earlier date adds no observation weight. Equal values issued on distinct original effective dates remain separate observations. Missing days count calendar dates without a usable pair.",
+        "no_observations": "A period containing only carried rates is returned in missing with reason no_observations.",
+        "policy": "These statistical averages do not prescribe an accounting or tax method.",
+        "revision": "Original corrections may change later reads; no revision-vintage replay."
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": null
+      },
+      "access": {
+        "plans": "all",
+        "credentials": "existing API key or permitted app key; no source-specific purchase"
+      },
+      "reference_sources": [
+        "default",
+        "ecb",
+        "nbp",
+        "nbu",
+        "boc",
+        "cbrt",
+        "cnb",
+        "nbg",
+        "nbkz",
+        "cbu",
+        "nbkr",
+        "norges",
+        "riksbank",
+        "danmark",
+        "moldova",
+        "romania",
+        "iceland",
+        "fed",
+        "bcb",
+        "bnm",
+        "bcrp",
+        "sfc",
+        "banxico",
+        "bcch",
+        "taiwan",
+        "mnb",
+        "nbrm",
+        "cbn",
+        "cba",
+        "nrb",
+        "cbar",
+        "nbt",
+        "bi",
+        "thailand"
+      ]
     }
   }
 }

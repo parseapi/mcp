@@ -36,7 +36,7 @@ const titleWords: Record<string, string> = {
 
 const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
 	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
-	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
+	'postal', 'postal_nearby', 'postal_distance', 'currency', 'currency_list', 'language', 'date', 'time', 'timezone',
 	'measure_units', 'emoji', 'emoji_search', 'point']);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
@@ -78,7 +78,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		refine?: (schema: z.ZodObject<S>) => z.ZodObject<S>
 	): void {
 		const localized = languageTools.has(name);
-		const input = z.object(localized ? { ...shape, lang: displayLanguage } : shape);
+		const input = name.startsWith('currency') ? z.strictObject(localized ? { ...shape, lang: displayLanguage } : shape) : z.object(localized ? { ...shape, lang: displayLanguage } : shape);
 		const schema = refine ? refine(input as z.ZodObject<S>) : input;
 		const invoke = async (args: unknown, signal: AbortSignal): Promise<ToolResult> => {
 			if (!parse) return noKeyResult(transport);
@@ -678,7 +678,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'currency_rate',
-		'Reference exchange rate between two currencies. Pass date for a past business day, amount to convert.',
+		'Held reference cross rate between two currencies. Pass date for a past calendar day, amount to convert. Dated requests select maintained archives automatically. Core retains necessary stale, date and unit qualifications. Reference prices are not executable or intraday quotes.',
 		{
 			base: z.string().describe('Base currency ISO 4217 code, e.g. USD'),
 			quote: z.string().describe('Quote currency ISO 4217 code, e.g. EUR'),
@@ -686,15 +686,43 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				.string()
 				.optional()
 				.describe(
-					'YYYY-MM-DD. Official rate for that business day. A weekend or holiday resolves to the last published day on or before it'
+					'YYYY-MM-DD. Latest held source observation effective on or before this date; original source dates and unavailable gaps remain explicit'
 				),
 			amount: z
 				.number()
 				.optional()
 				.describe('Appends amount and converted, rounded to the quote currency minor-unit digits'),
 		},
-		(c, a, request) => c.currency.rate(a.base, a.quote, { ...request, date: a.date, amount: a.amount })
+		(c, a, request) => {
+			const options = { ...request, date: a.date, amount: a.amount };
+			return c.currency.rate(a.base, a.quote, options);
+		}
 	);
+	const currencyCode = z.string().regex(/^[A-Za-z]{3}$/).describe('ISO 4217 code, e.g. USD');
+	const currencyAmount = z.number().min(-1e15).max(1e15).optional().describe('Convert this amount, rounded to known quote minor units; unknown units return converted null');
+	const currencyDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Requested calendar day, YYYY-MM-DD. Resolves a held observation on or before this day.');
+	const currencyQuotes = z.array(currencyCode).min(1).max(50)
+		.refine(quotes => new Set(quotes.map(code => code.toUpperCase())).size === quotes.length, { message: 'quotes must be distinct currency codes' })
+		.describe('1–50 distinct quote currency codes');
+	const currencyHistoryInterval = z.enum(['day', 'week', 'month']).optional().describe('day is daily history up to 366 days. week/month samples start at from and include to, over at most 36,600 days. Monthly samples retain the original day, clamped in shorter months. Complete reads are bounded to 100,000 code-days and output to 5,000 requested quote-dates.');
+	const currencyHistoryControls = { interval: currencyHistoryInterval, from: currencyDay, to: currencyDay, amount: currencyAmount };
+	tool('currency_rates', 'Reference rates for all available maintained quotes, or 1–50 distinct requested quotes, in one pooled request. Returns a rates object keyed by currency code and explicit missing quotes. Unavailable quotes remain explicit.',
+		{ base: currencyCode, quotes: currencyQuotes.optional(), date: currencyDay.optional(), amount: currencyAmount },
+		(c, a, request) => c.currency.rates(a.base, a.quotes, { ...request, date: a.date, amount: a.amount }));
+	tool('currency_list', 'List maintained current currency metadata with q/country filters. This is metadata coverage, not a promise of available rates. Optional deep includes country usage on every plan.',
+		{ q: z.string().max(80).optional(), country: z.string().regex(/^[A-Za-z]{2}$/).optional(), deep },
+		(c, a, request) => c.currency.list({ ...request, q: a.q, country: a.country, deep: a.deep }));
+	tool('currency_history', 'Requested calendar-day history from held reference observations for one pair, with daily, week or month sampling. Every requested sample has a successful rate or explicit gap. No vintage-history claim. Pooled request.',
+		{ base: currencyCode, quote: currencyCode, ...currencyHistoryControls },
+		(c, a, request) => c.currency.history(a.base, a.quote, a.from, a.to, { ...request, interval: a.interval, amount: a.amount }));
+	tool('currency_rates_history', 'Reference history for 1–50 distinct quotes, with day/week/month sampling and up to 5,000 requested quote-dates including gaps. One bounded pooled request; no silent truncation.',
+		{ base: currencyCode, quotes: currencyQuotes, ...currencyHistoryControls },
+		(c, a, request) => c.currency.ratesHistory(a.base, a.quotes, a.from, a.to, { ...request, interval: a.interval, amount: a.amount }));
+	const currencySummaryControls = { from: currencyDay, to: currencyDay,
+		interval: z.enum(['month', 'quarter', 'year']).optional().describe('Calendar period, default month. Edge periods are clipped to from/to. Up to 36,600 days under the complete 100,000-code-day read bound.') };
+	tool('currency_rates_summary', 'Monthly, quarterly or yearly averages and extrema of original pair observations for 1-50 quotes. observation_count counts original effective dates, ParseAPI carry-forward rows add no weight and bank-supplied calendar dates may repeat values, and missing_day_count counts unusable calendar days. No executable, intraday or revision-vintage claim. One bounded pooled request.',
+		{ base: currencyCode, quotes: currencyQuotes, ...currencySummaryControls },
+		(c, a, request) => c.currency.ratesSummary(a.base, a.quotes, a.from, a.to, { ...request, interval: a.interval }));
 	tool(
 		'language',
 		'Language names, script and writing direction. Deep adds ISO3 and country associations on every plan.',

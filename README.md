@@ -55,11 +55,15 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 ## Tools
 
-Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode exposes the named lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. JSON lookups return the JSON the API serves; explicit Currency export tools return literal text and response headers.
 
 Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
+
+Currency metadata, conversions, batches and history use the same pooled requests. Dated requests automatically use the maintained archives. A pair uses one native reference vector at a time. Coverage varies by currency and date, and unavailable results stay explicit. These are daily or weekly reference observations, not executable or intraday prices. The API omits empty missing arrays. Lists and all-quotes batches exclude metals and test/no-currency codes.
+
+Batch rates accept 1–50 distinct `quotes`. History takes `from` and `to`, up to 366 inclusive calendar days; multi-quote history permits at most 5,000 requested pair-days including gaps. Export tools require `format: "csv"` or `"ndjson"` and return the unchanged raw body in the first text block, followed by a JSON context block containing response `headers` and a reference-rate notice. Keep the source, edition, stale, attribution, Link and filename headers with a saved export. Unknown quote minor units can make `converted` null. All these calls use the existing pooled request and retry policy.
 
 Industry paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
@@ -249,3 +253,13 @@ Bank tools send original IBAN, routing and account strings in POST JSON bodies, 
 When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
 
 Vehicle lookups use `vin` as the input and response field. The `vin` tool remains available for compatibility.
+
+### Currency history sampling and period summaries
+
+```json
+{"name":"currency_rates_summary","arguments":{"base":"USD","quotes":["EUR"],"from":"1999-01-01","to":"1999-01-31","interval":"month","source":"ecb"}}
+```
+
+History accepts `interval` (`Interval` in Go): `day` by default, or `week` and `month` for longer ranges. Samples start at `from` and include `to`. Weekly samples advance seven days. Monthly samples retain the original day of month and clamp in shorter months. Week/month history and period summaries accept at most 36,600 calendar days, under a complete read bound of 100,000 currency-day rows including a 30-day lookback. History output is bounded to 5,000 requested quote-dates, including gaps. Reduce the range or quote list when a request exceeds a bound.
+
+Period summaries use `month` by default, or `quarter` and `year`. Each row gives `average`, `min`, `max`, `observation_count`, `first_date`, `last_date` and `missing_day_count`. Averages count each original effective observation date once. ParseAPI carry-forward rows add no observations. Bank-supplied calendar dates still count when values repeat; they are not all proven fresh publications. Periods at the edges are clipped to the requested range. A period with no observations is explicit in `missing`. Summaries do not accept amounts or Deep.
