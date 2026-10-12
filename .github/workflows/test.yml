@@ -15,6 +15,21 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-      # Publish and verify @parseapi/sdk 1.9.0 before this dependent release.
       - run: npm ci
+      # Currency is a coordinated source batch; its SDK additions are not published yet.
+      # Test the exact reviewed SDK commit on this branch without changing release dependencies.
+      - uses: actions/checkout@v5
+        if: github.ref_name == 'currency/2026-10-11' || github.head_ref == 'currency/2026-10-11'
+        with:
+          repository: parseapi/node
+          ref: d15ddc0148c6170453c012726ef553d3a2c7bb25
+          path: .ci-currency-sdk
+          persist-credentials: false
+      - name: Install the matching Currency SDK source
+        if: github.ref_name == 'currency/2026-10-11' || github.head_ref == 'currency/2026-10-11'
+        run: |
+          npm ci --prefix .ci-currency-sdk
+          npm run build --prefix .ci-currency-sdk
+          npm pack ./.ci-currency-sdk --pack-destination "$RUNNER_TEMP" --ignore-scripts
+          npm install --no-save --package-lock=false "$RUNNER_TEMP/parseapi-sdk-1.10.0.tgz"
       - run: npm run prepublishOnly
