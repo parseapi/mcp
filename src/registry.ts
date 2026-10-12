@@ -361,7 +361,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'company_id',
-		'Look up a company directory profile by its stable co_ ID. Deep adds legal/reference details and selected description, logo, domains, social_profiles (platform, url, handle), phone_numbers and email_addresses (with source-reported type), founding precision, reported employees and field-level sources when available. Employee counts retain their measurement date, organization scope and approximation flag; null means unknown. A website claim is not legal ownership proof. National registration numbers use company.',
+		'Look up a company directory profile by its stable co_ ID. Deep adds available legal details, identifiers, industry, business description, logo, other domains, social profiles, public business contacts, founding precision and reported employees. Employee counts retain their measurement date, organization scope and measurement basis. Reported counts may be rounded. Unavailable details are omitted; source evidence stays internal. A website claim is not legal ownership proof. National registration numbers use company.',
 		{ id: z.string().min(1).describe('Stable company directory ID returned by company_search'), deep },
 		(c, a, request) => c.company.id(a.id, { ...request, deep: a.deep })
 	);

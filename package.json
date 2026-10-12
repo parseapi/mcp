@@ -1,6 +1,6 @@
 {
 	"name": "parseapi-mcp",
-	"version": "1.9.2",
+	"version": "1.9.3",
 	"mcpName": "com.parseapi/mcp",
 	"description": "Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, dates and more.",
 	"keywords": [
