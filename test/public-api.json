@@ -880,6 +880,15 @@
           "maxLength": 64,
           "minLength": 2,
           "type": "string"
+        },
+        "shortcode_source": {
+          "enum": [
+            "cldr",
+            "github",
+            "slack",
+            "discord"
+          ],
+          "type": "string"
         }
       },
       "required": [
@@ -892,10 +901,16 @@
     }
   },
   {
-    "name": "emoji_search",
+    "name": "emoji_browse",
     "inputSchema": {
       "properties": {
+        "category": {
+          "type": "string"
+        },
         "deep": {
+          "type": "boolean"
+        },
+        "include_skin_tones": {
           "type": "boolean"
         },
         "lang": {
@@ -908,7 +923,185 @@
           "minimum": 1,
           "type": "integer"
         },
+        "max_version": {
+          "type": "string"
+        },
+        "offset": {
+          "maximum": 100000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "subcategory": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_catalog",
+    "inputSchema": {
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "include_skin_tones": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "max_version": {
+          "type": "string"
+        },
+        "profile": {
+          "enum": [
+            "full",
+            "compact"
+          ],
+          "type": "string"
+        },
+        "subcategory": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_categories",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_convert",
+    "inputSchema": {
+      "properties": {
+        "direction": {
+          "enum": [
+            "to_shortcodes",
+            "to_emoji"
+          ],
+          "type": "string"
+        },
+        "shortcode_source": {
+          "enum": [
+            "cldr",
+            "github",
+            "slack",
+            "discord"
+          ],
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 16000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "direction",
+        "shortcode_source"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_metadata",
+    "inputSchema": {
+      "properties": {},
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_parse",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 16000,
+          "type": "string"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "emoji_search",
+    "inputSchema": {
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "include_skin_tones": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_version": {
+          "type": "string"
+        },
+        "offset": {
+          "maximum": 100000,
+          "minimum": 0,
+          "type": "integer"
+        },
         "query": {
+          "type": "string"
+        },
+        "subcategory": {
+          "type": "string"
+        },
+        "version": {
           "type": "string"
         }
       },

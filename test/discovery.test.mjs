@@ -27,7 +27,7 @@ test('compact catalog advertises discovery and task controls; full preserves eve
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
-	assert.equal(listed.length, 76);
+	assert.equal(listed.length, 82);
 	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));
@@ -47,7 +47,7 @@ test('discovery is local, versioned and separates static policy from account fac
 	assert.equal(data.api_version, '2.0.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
-	assert.deepEqual(data.policy_operations, ['card', 'country', 'dns', 'domain', 'email', 'mx', 'time', 'time_zones']);
+	assert.deepEqual(data.policy_operations, ['card', 'country', 'dns', 'domain', 'email', 'emoji', 'emoji_browse', 'emoji_catalog', 'emoji_categories', 'emoji_convert', 'emoji_metadata', 'emoji_parse', 'emoji_search', 'mx', 'time', 'time_zones']);
 	const source = JSON.parse(await readFile(new URL('../src/agent-catalog.json', import.meta.url), 'utf8'));
 	assert.deepEqual(data.operations[0].policy, source.operations.email);
 	assert.equal(data.operations[0].policy_available, true);
@@ -69,8 +69,8 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 70);
-	assert.equal(names.length, 70);
+	assert.equal(new Set(names).size, 76);
+	assert.equal(names.length, 76);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);
@@ -115,7 +115,9 @@ test('compact lookup preserves every existing route, query, payload and API pin'
 	const { rpc, calls } = await setup(t, { transport: 'stdio' });
 	for (const [name, args, pathname, query = {}] of cases) {
 		const result = await rpc.call('lookup', { operation: name, arguments: args });
-		assert.deepEqual(body(result), { future: null, zero: 0, negative: false, empty: [], deep: {} });
+		const payload = body(result);
+		assert.deepEqual(name === 'emoji_catalog' ? payload.metadata : payload, { future: null, zero: 0, negative: false, empty: [], deep: {} });
+		if (name === 'emoji_catalog') assert.equal(payload.download_url, 'https://api.parseapi.com/emoji/catalog?profile=compact');
 		const call = calls.at(-1);
 		assert.equal(call.url.pathname, pathname, name);
 		assert.deepEqual(Object.fromEntries(call.url.searchParams), query, name);

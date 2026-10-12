@@ -153,7 +153,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 71);
+	assert.equal(tools.length, 77);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -161,7 +161,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 76);
+	assert.equal(result.tools.length, 82);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -174,14 +174,16 @@ for (const [name, args, pathname, query = {}] of cases) {
 		const { rpc, calls } = await setup(t);
 		const called = await rpc.call(name, args);
 		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
-		assert.deepEqual(body(called), { future: { nullable: null }, deep: {} });
+		const payload = body(called);
+		assert.deepEqual(name === 'emoji_catalog' ? payload.metadata : payload, { future: { nullable: null }, deep: {} });
+		if (name === 'emoji_catalog') assert.equal(payload.download_url, 'https://api.parseapi.com/emoji/catalog?profile=compact');
 		assert.equal(calls.length, 1);
 		const { url, init } = calls[0];
 		assert.equal(url.pathname, pathname);
 		assert.deepEqual(Object.fromEntries(url.searchParams), query);
-		if (name === 'bank' || name === 'bank_us_ach') {
+		if (['bank', 'bank_us_ach', 'emoji_parse', 'emoji_convert'].includes(name)) {
 			assert.equal(init.method, 'POST');
-			assert.deepEqual(JSON.parse(init.body), name === 'bank' ? args : { format: 'us_ach', country: 'US', ...args });
+			assert.deepEqual(JSON.parse(init.body), name === 'bank' ? args : name.startsWith('emoji_') ? { text: args.text } : { format: 'us_ach', country: 'US', ...args });
 		}
 		assert.equal(init.redirect, 'manual');
 		assert.ok(init.signal instanceof AbortSignal);
@@ -213,13 +215,14 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 31);
+	assert.equal(localized.length, 34);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
 		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
 		assert.equal(calls.at(-1).url.pathname, pathname);
-		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), { ...query, lang: 'zh-Hant-HK' });
+		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), name === 'emoji_catalog' ? {} : { ...query, lang: 'zh-Hant-HK' });
+		if (name === 'emoji_catalog') assert.equal(new URL(body(called).download_url).searchParams.get('lang'), 'zh-Hant-HK');
 	}
 	for (const name of ['email', 'phone', 'measure', 'currency_rate', 'holiday']) {
 		assert.equal(result.tools.find(tool => tool.name === name).inputSchema.properties.lang, undefined);

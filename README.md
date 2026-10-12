@@ -249,3 +249,31 @@ Bank tools send original IBAN, routing and account strings in POST JSON bodies, 
 When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
 
 Vehicle lookups use `vin` as the input and response field. The `vin` tool remains available for compatibility.
+
+## Emoji catalog additions
+
+Resolve Unicode emoji or a named shortcode, search or browse a bounded catalog,
+parse emoji positions in text, and convert between Unicode and a selected shortcode source.
+The ordinary lookup remains four fields:
+
+```http
+GET /emoji/rocket
+```
+
+```json
+{"emoji":"🚀","name":"Rocket","shortcodes":[":rocket:","rocket"],"category":"Travel & Places"}
+```
+
+Use `deep=true` for Unicode facts, keywords, tone families and available artwork.
+Core values stay unchanged. Text parsing returns `emojis` with UTF-16 `positions`;
+conversion returns `text` and unresolved tokens with positions and reasons.
+
+The compact JSON catalog contains offline identity, qualification-form and
+shortcode indexes. Request `profile=full` when artwork is needed and `lang` when
+localized names and keywords are needed. `/emoji/metadata` carries dataset
+coverage and shared source notices once. Artwork supports Google Noto, Twemoji
+and OpenMoji, with real SVG/PNG availability and immutable first-party URLs.
+A device's emoji font remains the ordinary display.
+
+These additions are a local release candidate until the matching SDK and
+backend are published. Existing lookup and search contracts are preserved.

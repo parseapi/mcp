@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "edition": "test-edition",
+    "max_version": "18.0",
+    "source_version": "18.0",
+    "completeness": {
+      "missing_count": 1,
+      "unexpected_count": 0
+    },
+    "sources": [
+      {
+        "id": "unicode",
+        "version": "18.0",
+        "source_url": "https://unicode.org/emoji",
+        "license": "Unicode-3.0",
+        "license_url": "https://unicode.org/license"
+      }
+    ],
+    "notices": [
+      {
+        "id": "unicode",
+        "license": "Unicode-3.0",
+        "notice": "Full source notice"
+      }
+    ],
+    "artwork_sources": [],
+    "total": 1
+  },
+  "total": 1,
+  "emojis": [
+    {
+      "emoji": "❤️",
+      "name": "red heart",
+      "shortcodes": [
+        ":heart:",
+        "heart"
+      ],
+      "category": "Smileys & Emotion",
+      "deep": {
+        "version": "0.6",
+        "keywords": [
+          "heart",
+          "love"
+        ],
+        "subcategory": "emotion",
+        "artwork": {}
+      }
+    }
+  ],
+  "forms": {
+    "❤": "❤️",
+    "❤️": "❤️"
+  },
+  "shortcodes": {
+    "cldr": {
+      "red_heart": [
+        "❤️"
+      ]
+    },
+    "github": {
+      "heart": [
+        "❤️"
+      ]
+    },
+    "slack": {},
+    "discord": {}
+  },
+  "legacy": {
+    "heart": "❤️"
+  },
+  "scope": {
+    "filters": {},
+    "complete_inventory": true
+  },
+  "search": {
+    "native": {
+      "❤️": {
+        "name": "Heart",
+        "keywords": [
+          "love"
+        ],
+        "order": null
+      }
+    },
+    "localized_keywords": []
+  },
+  "localization": {
+    "requested_locale": "fr",
+    "resolved_locale": "fr",
+    "translated_names": 1,
+    "translated_keywords": 0,
+    "fallback_names": 0,
+    "fallback_keywords": 1
+  }
+}

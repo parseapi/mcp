@@ -1,5 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/server';
-import { parseAPI, type RequestOptions } from '@parseapi/sdk';
+import { parseAPI, type RequestOptions, type EmojiMetadata } from '@parseapi/sdk';
 import * as z from 'zod';
 import { noKeyResult, ok, toErrorResult, type ToolResult } from './errors.js';
 import { registerDiscovery, type CatalogMode, type CatalogOperation } from './discovery.js';
@@ -37,9 +37,21 @@ const titleWords: Record<string, string> = {
 const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
 	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
 	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
-	'measure_units', 'emoji', 'emoji_search', 'point']);
+	'measure_units', 'emoji', 'emoji_search', 'emoji_browse', 'emoji_parse', 'emoji_catalog', 'point']);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
+
+const emojiFilters = {
+	limit: z.number().int().min(1).max(50).optional().describe('Maximum results per page.'),
+	category: z.string().optional().describe('Category from emoji_categories.'),
+	subcategory: z.string().optional().describe('Subcategory from emoji_categories.'),
+	version: z.string().optional().describe('Exact Emoji release version, such as 17.0.'),
+	max_version: z.string().optional().describe('Latest Emoji release to include, such as 16.0.'),
+	include_skin_tones: z.boolean().optional().describe('Include skin-tone variants. Explicit false excludes them.'),
+	offset: z.number().int().min(0).max(100000).optional().describe('Page offset. Reuse next_offset with the same filters.'),
+	deep: deep.describe('Include optional reference detail on every plan.'),
+};
+
 
 /**
  * One server, every ParseAPI lookup as a tool. `key` null serves the funnel:
@@ -843,20 +855,60 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'emoji',
-		'Resolve an emoji character, shortcode or name. Deep adds encoding, keywords and skin variants on every plan.',
-		{ emoji: z.string().describe('Emoji name or the character itself, e.g. rocket'), deep: deep.describe('Include optional detail on every plan.') },
-		(c, a, request) => c.emoji(a.emoji, { ...request, deep: a.deep })
+		'Resolve an emoji character, shortcode, name or codepoint sequence. Deep adds encoding, keywords, tone relationships and artwork on every plan. Artwork is keyed by style: deep.artwork.openmoji.svg and deep.artwork.openmoji.png["72"].',
+		{ emoji: z.string().describe('Emoji input, e.g. rocket, :rocket:, 🚀 or U+1F680'), shortcode_source: z.enum(['cldr', 'github', 'slack', 'discord']).optional().describe('Resolve the shortcode within this source.'), deep: deep.describe('Include optional detail on every plan.') },
+		(c, a, request) => c.emoji(a.emoji, { ...request, deep: a.deep, shortcodeSource: a.shortcode_source })
 	);
 	tool(
 		'emoji_search',
-		'Search emoji by keyword. Deep adds encoding and skin-variant detail inside each result on every plan.',
+		'Search emoji by keyword with optional catalog filters. Explicit offset or filters return total and next_offset. Deep belongs to each result.',
 		{
 			query: z.string().describe('Search keyword, e.g. fire'),
-			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
-			deep: deep.describe('Include optional detail on every plan.'),
+			...emojiFilters,
 		},
-		(c, a, request) => c.emoji.search(a.query, { ...request, deep: a.deep, limit: a.limit })
+		(c, a, request) => c.emoji.search(a.query, { ...request, ...a, maxVersion: a.max_version, includeSkinTones: a.include_skin_tones })
 	);
+	tool(
+		'emoji_browse',
+		'Browse the emoji catalog by category, subcategory or Emoji release. Returns total and next_offset for pagination; omit a search query.',
+		emojiFilters,
+		(c, a, request) => c.emoji.browse({ ...request, ...a, maxVersion: a.max_version, includeSkinTones: a.include_skin_tones })
+	);
+	tool(
+		'emoji_metadata',
+		'Get actual emoji inventory total, content edition, official-source completeness, provenance and artwork coverage. Artwork notice files are linked; data notices travel with the snapshot. One pooled read.',
+		{},
+		async (c, _a, request) => c.emoji.metadata(request)
+	);
+	tool(
+		'emoji_catalog',
+		'Get a JSON catalog download URL and current coverage. One pooled metadata read; the download is a separate request with your API key. The full snapshot stays out of model context.',
+		{ category: emojiFilters.category, subcategory: emojiFilters.subcategory, version: emojiFilters.version, max_version: emojiFilters.max_version, include_skin_tones: emojiFilters.include_skin_tones,
+			profile: z.enum(['full','compact']).optional().describe('JSON download profile. Compact retains offline lookup, search and parse facts while omitting bulky artwork details.'),
+		},
+		async (c, a, request) => {
+			const metadata = await c.emoji.metadata(request);
+			const url = new URL('https://api.parseapi.com/emoji/catalog');
+			for (const [key,value] of Object.entries({ category: a.category, subcategory: a.subcategory, version: a.version, max_version: a.max_version, include_skin_tones: a.include_skin_tones, lang: (request as RequestOptions & {lang?:string}).lang })) if (value !== undefined) url.searchParams.set(key,String(value));
+			if (a.profile) url.searchParams.set('profile',a.profile);
+			return { metadata, download_url: url.href };
+		}
+	);
+	tool(
+		'emoji_categories',
+		'List emoji categories and their subcategories for search and browsing filters.',
+		{},
+		(c, _a, request) => c.emoji.categories(request)
+	);
+	tool(
+		'emoji_parse',
+		'Extract complete Unicode emoji sequences from text. Results group repeated emoji in first-occurrence order, and positions use UTF-16 code units with an exclusive end. Text is sent in the POST body.',
+		{ text: z.string().max(16000).describe('Text to inspect for native Unicode emoji, up to 16000 UTF-16 code units.'), deep: deep.describe('Include optional reference detail inside each result.') },
+		(c, a, request) => c.emoji.parse(a.text, { ...request, deep: a.deep })
+	);
+	tool('emoji_convert', 'Convert Unicode emoji to a named shortcode preset or decode that preset. Unknown, unavailable and ambiguous inputs remain literal with reasons and original UTF-16 offsets. Text is sent in the POST body.',
+		{text:z.string().max(16000),direction:z.enum(['to_shortcodes','to_emoji']),shortcode_source:z.enum(['cldr','github','slack','discord'])},
+		(c,a,request)=>c.emoji.convert(a.text,{...request,direction:a.direction,shortcodeSource:a.shortcode_source}));
 
 	registerDiscovery(server, operations, mode, API_VERSION);
 	registerPreflight(server, parse, transport);

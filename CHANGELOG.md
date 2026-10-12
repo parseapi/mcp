@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.9.1 — 2026-10-12
+
+- Add Emoji search/browse, categories, catalog, metadata, parsing and conversion; keep existing lookup calls and response decoding compatible.
+- Support optional SVG/PNG artwork and translated names. Preserve API 2.0.0 selection, plans and existing non-Emoji behavior.
+- Add the matching Emoji tools using JavaScript SDK 1.10.1; retain existing tools and hosted authentication.
+
 ## 1.8.0 — 2026-09-29
 
 - Add Company stable-ID lookup, candidate search and coverage for the current public-company cohort.

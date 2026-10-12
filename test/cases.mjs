@@ -89,6 +89,12 @@ export const cases = [
 	['holiday_date', { country: 'US', date: '2026-12-25' }, '/holiday/US/2026-12-25'],
 	['emoji', { emoji: '🔥' }, '/emoji/%F0%9F%94%A5'],
 	['emoji_search', { query: 'fire', limit: 3 }, '/emoji', { q: 'fire', limit: '3' }],
+	['emoji_browse', { offset: 2, category: 'Symbols' }, '/emoji', { offset: '2', category: 'Symbols' }],
+	['emoji_categories', {}, '/emoji/categories'],
+	['emoji_metadata', {}, '/emoji/metadata'],
+	['emoji_catalog', { profile: 'compact' }, '/emoji/metadata'],
+	['emoji_parse', { text: 'x 👨‍👩‍👧‍👦 👍🏽' }, '/emoji/parse'],
+	['emoji_convert', { text: ':rocket:', direction: 'to_emoji', shortcode_source: 'github' }, '/emoji/convert', { direction: 'to_emoji', shortcode_source: 'github' }],
 ];
 
 const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
