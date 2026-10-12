@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import { connect, body, publicSurface } from './helpers.mjs';
 import { cases } from './cases.mjs';
+import { VERSION } from '../dist/registry.js';
 
 const response = (data, status = 200) => new Response(JSON.stringify(data), {
 	status, headers: { 'content-type': 'application/json', 'retry-after': '0' },
@@ -148,6 +149,8 @@ async function setup(t, { key = 'test_key', transport = 'stdio', fetch } = {}) {
 test('tool names and argument schemas match the reviewed public baseline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null });
 	const result = await rpc.request('tools/list', {});
+	const packageVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
+	assert.equal(VERSION, packageVersion);
 	const controls = ['task_create', 'task_status', 'task_cancel', 'task_lookup'];
 	assert.deepEqual(result.result.tools.filter(({ name }) => controls.includes(name)).map(({ name }) => name).sort(), controls.sort());
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.2 — 2026-10-12
+
+- Correct the reported MCP server version and read it from the package manifest to prevent drift. Emoji tools and SDK dependency remain unchanged.
+
 ## 1.9.1 — 2026-10-12
 
 - Add Emoji search/browse, categories, catalog, metadata, parsing and conversion; keep existing lookup calls and response decoding compatible.
