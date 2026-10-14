@@ -194,6 +194,8 @@ Call `measure` with `{ "measure": "5 ft 11 in", "to": "cm" }`. The result keeps 
 
 Call `measure_units` with `{ "unit": "m" }` to discover compatible targets, or `{}` for the reviewed catalog. Optional `query` and `type` filters narrow the list. Ambiguous input remains a successful result with `valid: false`, `reason`, and `choices`. Invalid targets return the ordinary API error. Both tools use pooled requests.
 
+Successful JSON has `measure`, `valid`, `type`, `amount`, and `unit`. Invalid input adds `reason`. `choices` appears only when alternatives are available.
+
 ## Development
 
 ```bash

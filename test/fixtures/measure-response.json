@@ -1,0 +1,51 @@
+[
+  {
+    "measure": "0 m",
+    "valid": true,
+    "type": "length",
+    "amount": "0",
+    "unit": "m"
+  },
+  {
+    "measure": "1.00000000000000000001 m",
+    "valid": true,
+    "type": "length",
+    "amount": "1",
+    "unit": "m"
+  },
+  {
+    "measure": "180",
+    "valid": false,
+    "type": null,
+    "amount": null,
+    "unit": null,
+    "reason": "missing_unit"
+  },
+  {
+    "measure": "1 gallon",
+    "valid": false,
+    "type": null,
+    "amount": null,
+    "unit": null,
+    "reason": "ambiguous_unit",
+    "choices": [
+      {
+        "unit": "gal_us",
+        "name": "US gallon"
+      },
+      {
+        "unit": "gal_imp",
+        "name": "imperial gallon"
+      }
+    ]
+  },
+  {
+    "measure": "0 m",
+    "valid": true,
+    "type": "length",
+    "amount": "0",
+    "unit": "m",
+    "reason": null,
+    "choices": []
+  }
+]
