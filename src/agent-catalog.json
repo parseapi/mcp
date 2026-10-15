@@ -471,8 +471,8 @@
 			"endpoint": "GET /time or /time/{timezone}",
 			"determines": [
 				"Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-				"The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
-				"With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, actual rule edition and source wall-time resolution",
+				"The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
+				"With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, source wall-time resolution",
 				"Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
 			],
 			"does_not_determine": [
@@ -487,19 +487,17 @@
 				"at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
 				"Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
 				"disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-				"targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+				"targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
 				"For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
 			],
 			"freshness": {
 				"mode": "computed_from_pinned_rules",
 				"timezone_database": "IANA",
-				"timezone_database_version": "2026c",
 				"cache_control": "no-store",
 				"next_transition_horizon_days": 400,
 				"uniform_refresh_interval_seconds": null,
 				"actual_age_seconds": null,
-				"actual_age_status": "not_exposed; rule edition is pinned, current time is evaluated for each request",
-				"answer_evidence": "deep.timezone_database_version binds a requested detailed answer to the bundled rule edition, independently of coordinate boundary and display-name data"
+				"actual_age_status": "not_exposed; clock facts use maintained timezone rules and may change after government rule changes"
 			},
 			"uncertainty": {
 				"timezone": {
@@ -732,19 +730,14 @@
 			"freshness": {
 				"mode": "pinned_reference",
 				"timezone_database": "IANA",
-				"timezone_database_version": "2026c",
-				"version_field": "timezone_database_version",
 				"uniform_refresh_interval_seconds": null,
 				"actual_age_seconds": null,
-				"actual_age_status": "not_exposed; the response identifies the actual bundled rule edition"
+				"actual_age_status": "not_exposed; clock facts use maintained timezone rules and may change after government rule changes"
 			},
 			"uncertainty": {
 				"timezones": {
 					"empty_array": "No supported identifier matches the search; not a statement about whether a place exists",
 					"array": "Serving identifiers and aliases matching filters, sorted by identifier or requested numerical offset"
-				},
-				"timezone_database_version": {
-					"value": "Pinned IANA rule edition, not a live-update guarantee"
 				},
 				"zones": {
 					"omitted": "Rich rows not requested",
@@ -877,8 +870,8 @@
 				"Complete translations merely from an accepted language"
 			],
 			"required_context": [
-				"query: 1\u2013256 characters",
-				"limit: 1\u201350; offset: 0\u2013100000 when paging is required",
+				"query: 1–256 characters",
+				"limit: 1–50; offset: 0–100000 when paging is required",
 				"Filtered or explicit-offset search returns total and next_offset; legacy plain-query envelope is preserved"
 			],
 			"freshness": {
@@ -951,7 +944,7 @@
 			],
 			"required_context": [
 				"Omit q to browse",
-				"limit: 1\u201350; offset: 0\u2013100000",
+				"limit: 1–50; offset: 0–100000",
 				"Stop when next_offset is null"
 			],
 			"freshness": {
@@ -1071,7 +1064,7 @@
 			"operation": "emoji_metadata",
 			"endpoint": "GET /emoji/metadata",
 			"determines": [
-				"Loaded inventory total, source edition, official-source completeness and provenance",
+				"Loaded inventory total, content edition, completeness and required notices",
 				"Loaded artwork coverage, source licenses and notices"
 			],
 			"does_not_determine": [

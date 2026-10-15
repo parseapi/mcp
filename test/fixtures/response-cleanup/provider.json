@@ -1,0 +1,31 @@
+{
+  "npi": "1881018208",
+  "valid": true,
+  "registered": false,
+  "active": null,
+  "excluded": null,
+  "type": null,
+  "name": null,
+  "first": null,
+  "last": null,
+  "credential": null,
+  "specialty": null,
+  "taxonomy": null,
+  "address": null,
+  "city": null,
+  "state": null,
+  "state_name": null,
+  "postal": null,
+  "country": null,
+  "phone": null,
+  "deep": {
+    "deactivated_at": null,
+    "medicare": null,
+    "opt_out": null,
+    "enrollments": null,
+    "enumerated_at": null,
+    "updated_at": null,
+    "reactivated_at": null,
+    "taxonomies": null
+  }
+}

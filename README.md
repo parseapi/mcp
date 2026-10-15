@@ -96,7 +96,7 @@ Example tool arguments:
 
 Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
 
-Canonical Time source deep includes `timezone_database_version` and nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
+Time Deep includes nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
 
 Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
 
@@ -112,8 +112,8 @@ with an identifier. Review the candidates, then pass the chosen `id` to
 `company_id`. Send the returned `next` as `cursor` with the same selector,
 filters and `limit` for another page. Directory deep adds detail in the same
 pooled request on every plan and belongs to each company result.
-Selected website descriptions, logos, socials and founding claims include
-field-level sources. Logo URLs are returned without fetching images. Directory
+Selected website descriptions, logos, socials and founding claims are returned
+where available. Logo URLs are returned without fetching images. Directory
 tools do not accept `lang`. `company_coverage` describes the edition's records,
 and empty listings do not establish private ownership. The existing `company`
 tool continues to parse national registration numbers.
@@ -121,7 +121,7 @@ tool continues to parse national registration numbers.
 For discovery without an identity selector, supply `country` or both `industry` and `industry_type`. For example: `{ "country": "US", "industry": "0700", "industry_type": "sic" }`. SIC is the supported namespace; its exact four-digit code stays a string. Empty requests, incomplete industry pairs and multiple selectors are rejected. Country means the profile country. Filters intersect, unknown values do not match, and the same filters and limit must accompany a returned cursor. Filter-only candidates carry `match: { "field": "filters", "value": null }`.
 
 
-Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Core `sources` is available on every plan: NPPES, LEIE, PECOS and opt-out each have nullable edition metadata (`edition`, `published_at`, `through`, `imported_at`). Provider record dates are separate from source publication and completed import dates. Older responses may omit these additions. Edition details remain null until a verified source is served.
+Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Provider record dates describe the provider record, not live verification.
 
 Pass the original NPI as a string. `valid` checks its format and checksum; `registered` means a match in the stored NPPES snapshot. `active` reflects recorded NPI deactivation, not licensure. `excluded` is an NPI-only OIG LEIE match; `false` is not a complete exclusion clearance. These directory facts do not verify credentials, current practice contact or payment eligibility.
 
@@ -239,7 +239,7 @@ Successful checks may be reused for up to 24 hours. `pretty` optionally formats 
 The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellation still aborts the request.
 
 
-Time `targets` accepts 1-10 destination IDs instead of `to`. Results retain the requested order and duplicates at one instant in a single pooled request. Unknown source coordinates return `targets: null`. Unknown destination IDs return `not_found` for the whole request. Use `time_zones` to search serving IDs or omit its query for the complete sorted list and pinned rule edition. An empty search result is `timezones: []`.
+Time `targets` accepts 1-10 destination IDs instead of `to`. Results retain the requested order and duplicates at one instant in a single pooled request. Unknown source coordinates return `targets: null`. Unknown destination IDs return `not_found` for the whole request. Use `time_zones` to search serving IDs or omit its query for the complete sorted list. An empty search result is `timezones: []`.
 
 `time` accepts one explicit IP, city, country, IATA airport, ICAO airport, port UN/LOCODE or address input. Country/state may narrow city or address. Address point lookup currently requires US country context. Port reference coverage is a reviewed subset of UN/LOCODE. Hosted calls never infer the user's IP from the server. Ambiguous or missing inputs return null clock fields and `location` candidates. Ask for the missing context or let the user choose rather than selecting a candidate silently.
 

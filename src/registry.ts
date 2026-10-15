@@ -532,7 +532,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'provider',
-		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Core sources provides nullable edition metadata on every plan. Paid deep adds all published taxonomies and reported license details, provider enumeration/update/reactivation dates, deactivation date, Medicare enrollment, opt-out and enrollment rows. Reported licenses are not verified licenses; provider update dates are not source freshness. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
+		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Paid deep adds all published taxonomies and reported license details, provider enumeration/update/reactivation dates, deactivation date, Medicare enrollment, opt-out and enrollment rows. Reported licenses are not verified licenses; provider update dates are not source freshness. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
 		{
 			npi: z.string().describe('Original NPI input as a string, normally 10 digits. Preserve the input; invalid values return valid=false with unknown provider fields. Do not URI-decode it.'),
 			deep: deep.describe('Include taxonomies, enumerated_at, updated_at, reactivated_at, deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null lists are unavailable; [] means the source recorded no rows.'),
@@ -727,7 +727,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'time',
-		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds rule edition, wall-time resolution, standard/seasonal offsets and actual DST-season transitions on every plan.',
+		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds wall-time resolution, standard/seasonal offsets and actual DST-season transitions on every plan.',
 		{
 			timezone: z.string().min(1).refine(zone => !['zones', 'help'].includes(zone.trim().toLowerCase()), { message: 'Time source must be an IANA timezone ID. Use time_zones to list IDs.' }).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when all source selectors are absent'),
 			lat: lat.optional(),
@@ -762,7 +762,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'time_zones',
-		'Search serving IANA timezone identifiers and their pinned rule edition. Filter by country, IANA area, exact offset, abbreviation or DST facts at one instant. Abbreviations return candidate identifiers and never choose a timezone. Empty timezones means no match. Details adds aligned rows and the evaluation instant. One pooled request.',
+		'Search serving IANA timezone identifiers. Filter by country, IANA area, exact offset, abbreviation or DST facts at one instant. Abbreviations return candidate identifiers and never choose a timezone. Empty timezones means no match. Details adds aligned rows and the evaluation instant. One pooled request.',
 		{
 			query: z.string().trim().max(64).optional().describe('Identifier search, e.g. New York or Europe. Spaces and underscores match the same way.'),
 			country: z.string().regex(/^[A-Za-z]{2}$/).optional().describe('ISO2 country association, e.g. US.'),
@@ -877,7 +877,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'emoji_metadata',
-		'Get actual emoji inventory total, content edition, official-source completeness, provenance and artwork coverage. Artwork notice files are linked; data notices travel with the snapshot. One pooled read.',
+		'Get actual emoji inventory total, content edition, completeness, required notices and artwork coverage. Artwork notice files are linked; data notices travel with the snapshot. One pooled read.',
 		{},
 		async (c, _a, request) => c.emoji.metadata(request)
 	);

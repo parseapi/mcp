@@ -49,7 +49,7 @@ test('Time discovery includes reviewed clock uncertainty and pooled depth withou
 	t.after(() => rpc.close());
 	const result = body(await rpc.call('discover', { operation: 'time' })).operations[0];
 	assert.equal(result.policy_available, true);
-	assert.equal(result.policy.freshness.timezone_database_version, '2026c');
+	assert.equal(result.policy.freshness.timezone_database_version, undefined);
 	assert.equal(result.policy.freshness.cache_control, 'no-store');
 	assert.equal(result.policy.billing.metered, null);
 	assert.equal(result.policy.billing.conversion_extra_units, 0);

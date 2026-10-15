@@ -1,0 +1,127 @@
+{
+  "edition": "78edefe561cf625b809efbcd55d9517366797ad1b252d9d69d3b73c6652311e4",
+  "max_version": "0.6",
+  "total": 1,
+  "completeness": {
+    "missing_count": 3962,
+    "unexpected_count": 0
+  },
+  "shortcode_sources": {
+    "cldr": {
+      "records": 1,
+      "missing_records": 0,
+      "ambiguous_aliases": 0
+    },
+    "github": {
+      "records": 1,
+      "missing_records": 0,
+      "ambiguous_aliases": 0
+    },
+    "slack": {
+      "records": 1,
+      "missing_records": 0,
+      "ambiguous_aliases": 0
+    },
+    "discord": {
+      "records": 1,
+      "missing_records": 0,
+      "ambiguous_aliases": 0
+    }
+  },
+  "sources": [
+    {
+      "id": "unicode",
+      "source_url": "https://unicode.org/Public/18.0.0/emoji/emoji-test.txt",
+      "license": "Unicode-3.0",
+      "license_url": "https://www.unicode.org/license.txt"
+    },
+    {
+      "id": "cldr",
+      "source_url": "https://raw.githubusercontent.com/unicode-org/cldr/7cdeb9e7fac52c59f22fc7248b05f989ee5689c2/common/annotations/en.xml",
+      "license": "Unicode-3.0",
+      "license_url": "https://raw.githubusercontent.com/unicode-org/cldr/7cdeb9e7fac52c59f22fc7248b05f989ee5689c2/LICENSE"
+    },
+    {
+      "id": "emojibase",
+      "source_url": "https://cdn.jsdelivr.net/npm/emojibase-data@17.0.0/en/data.json",
+      "license": "MIT",
+      "license_url": "https://cdn.jsdelivr.net/npm/emojibase-data@17.0.0/LICENSE"
+    }
+  ],
+  "notices": [
+    {
+      "id": "unicode",
+      "license": "Unicode-3.0",
+      "notice": "COPYRIGHT AND PERMISSION NOTICE\n\nCopyright © 2001–2026 Unicode, Inc.\n\nUnicode Technical Standard #35, Unicode Locale Data Markup Language\n(LDML) made available in this repository is protected by copyright, and\npermission must be obtained from Unicode, Inc. prior to any\nreproduction, modification, or other use not permitted by the Unicode\nTerms of Use <https://www.unicode.org/copyright.html>. Specifically, you\nmay make copies of this publication and may annotate and translate it\nsolely for personal or internal business purposes and not for public\ndistribution, provided that any such permitted copies and modifications\nfully reproduce all copyright and other legal notices contained in the\noriginal. You may not make copies of or modifications to this\npublication for public distribution, or incorporate it in whole or in\npart into any product or publication without the express written\npermission of Unicode. Notwithstanding the foregoing, you may within\nthis repository provide comments and propose changes to this standard\nand may make copies/forks solely for such purposes provided that you\nreproduce this copyright notice and these terms of use in any such\ncopy/fork.\n\nAll other content in this repo is released under UNICODE LICENSE V3\n\nNOTICE TO USER: Carefully read the following legal agreement. BY\nDOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR\nSOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE\nTERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT\nDOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.\n\nPermission is hereby granted, free of charge, to any person obtaining a\ncopy of data files and any associated documentation (the \"Data Files\") or\nsoftware and any associated documentation (the \"Software\") to deal in the\nData Files or Software without restriction, including without limitation\nthe rights to use, copy, modify, merge, publish, distribute, and/or sell\ncopies of the Data Files or Software, and to permit persons to whom the\nData Files or Software are furnished to do so, provided that either (a)\nthis copyright and permission notice appear with all copies of the Data\nFiles or Software, or (b) this copyright and permission notice appear in\nassociated Documentation.\n\nTHE DATA FILES AND SOFTWARE ARE PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY\nKIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF\nTHIRD PARTY RIGHTS.\n\nIN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE\nBE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,\nOR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,\nWHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,\nARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA\nFILES OR SOFTWARE.\n\nExcept as contained in this notice, the name of a copyright holder shall\nnot be used in advertising or otherwise to promote the sale, use or other\ndealings in these Data Files or Software without prior written\nauthorization of the copyright holder.\n\nSPDX-License-Identifier: Unicode-3.0\n"
+    },
+    {
+      "id": "emojibase",
+      "license": "MIT",
+      "notice": "MIT License\n\nCopyright (c) 2017-2019 Miles Johnson\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n"
+    }
+  ],
+  "artwork_sources": [
+    {
+      "style": "noto",
+      "version": "v2026-09-24-unicode18_0",
+      "unicode_version": "18.0",
+      "source_url": "https://github.com/googlefonts/noto-emoji/tree/e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e",
+      "license": "Apache-2.0",
+      "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+      "attribution": "Noto Emoji by Google and contributors.",
+      "notices": [
+        "https://cdn.parseapi.com/emoji/noto/18.0.0/notices/2D/svg/LICENSE",
+        "https://cdn.parseapi.com/emoji/noto/18.0.0/notices/LICENSE",
+        "https://cdn.parseapi.com/emoji/noto/18.0.0/notices/LICENSE-ARTWORK.txt",
+        "https://cdn.parseapi.com/emoji/noto/18.0.0/notices/NOTICE.txt",
+        "https://cdn.parseapi.com/emoji/noto/18.0.0/notices/third_party/region-flags/LICENSE"
+      ],
+      "flag_license": {
+        "license": "LicenseRef-Noto-Region-Flags",
+        "license_url": "https://github.com/googlefonts/noto-emoji/blob/e20cbc2bbec1926686be9f9bee7d1d2cfa1fea0e/third_party/region-flags/LICENSE",
+        "description": "Noto's retained flag-source notice records public-domain or copyright-exempt origins, including national-law exemptions."
+      },
+      "loaded_coverage": {
+        "svg": 1,
+        "png": 1
+      }
+    },
+    {
+      "style": "twemoji",
+      "version": "v17.0.3",
+      "unicode_version": "17.0",
+      "source_url": "https://github.com/jdecked/twemoji/tree/b6b55fef1e8636b540a6d016a4729ca8cdf2e60b",
+      "license": "CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "attribution": "Twemoji graphics by Twitter, Inc. and other contributors, maintained by the Twemoji community.",
+      "notices": [
+        "https://cdn.parseapi.com/emoji/twemoji/17.0.3/notices/LICENSE",
+        "https://cdn.parseapi.com/emoji/twemoji/17.0.3/notices/LICENSE-ARTWORK.txt",
+        "https://cdn.parseapi.com/emoji/twemoji/17.0.3/notices/LICENSE-GRAPHICS",
+        "https://cdn.parseapi.com/emoji/twemoji/17.0.3/notices/NOTICE.txt"
+      ],
+      "loaded_coverage": {
+        "svg": 1,
+        "png": 1
+      }
+    },
+    {
+      "style": "openmoji",
+      "version": "17.0.0",
+      "unicode_version": "17.0",
+      "source_url": "https://github.com/hfg-gmuend/openmoji/tree/f9fc506a3f913be9897ab0181d611d4c910a4104",
+      "license": "CC-BY-SA-4.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+      "attribution": "All emojis designed by OpenMoji – the open-source emoji and icon project. License: CC BY-SA 4.0.",
+      "notices": [
+        "https://cdn.parseapi.com/emoji/openmoji/17.0.0/notices/LICENSE-ARTWORK.txt",
+        "https://cdn.parseapi.com/emoji/openmoji/17.0.0/notices/LICENSE.txt",
+        "https://cdn.parseapi.com/emoji/openmoji/17.0.0/notices/NOTICE.txt"
+      ],
+      "loaded_coverage": {
+        "svg": 1,
+        "png": 1
+      }
+    }
+  ]
+}

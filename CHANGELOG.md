@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.5
+
+- Align tool descriptions and discovery with the cleaned API responses while retaining useful facts and required notices. Existing calls and request options stay unchanged.
+
 ## 1.9.2 — 2026-10-12
 
 - Correct the reported MCP server version and read it from the package manifest to prevent drift. Emoji tools and SDK dependency remain unchanged.
