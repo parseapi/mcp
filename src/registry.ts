@@ -22,7 +22,7 @@ const deep = z
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
-const tariffEdition = z.string().regex(/^[a-f0-9]{64}$/).optional().describe('Exact immutable edition fingerprint. Without date, returns undated schedule context.');
+const tariffEdition = z.string().max(64).regex(/^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\s\S])/).refine(value => (value.length === 64 && /^[a-f0-9]{64}$/.test(value)) || (/^ted_[1-9][0-9]{0,19}(?![\s\S])/.test(value) && (value.length < 24 || value.slice(4) <= '18446744073709551615')), 'Use an exact edition ID such as ted_3.').optional().describe('Exact edition returned by Tariff, such as ted_3. Without date, returns undated schedule context.');
 const tariffDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD with verified source coverage. Combine with edition only when it covers this date.');
 const countryOpt = z
 	.string()

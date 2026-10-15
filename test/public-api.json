@@ -1792,8 +1792,9 @@
           "type": "boolean"
         },
         "edition": {
-          "pattern": "^[a-f0-9]{64}$",
-          "type": "string"
+          "pattern": "^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\\s\\S])",
+          "type": "string",
+          "maxLength": 64
         },
         "origin": {
           "type": "string"
@@ -1817,8 +1818,9 @@
           "type": "string"
         },
         "edition": {
-          "pattern": "^[a-f0-9]{64}$",
-          "type": "string"
+          "pattern": "^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\\s\\S])",
+          "type": "string",
+          "maxLength": 64
         },
         "query": {
           "type": "string"
