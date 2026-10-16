@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.10.0 — 2026-10-15
+
+- Add City spelling search, reviewed hierarchy and relationships, coordinate-nearby lists and city distance tools.
+- Keep existing tool names and default City responses; add geographic filters and predictable continuation.
+- Use @parseapi/sdk 1.11.0; retain private source data and exclude deferred coverage/change-feed tools.
+
 ## 1.9.5
 
 - Align tool descriptions and discovery with the cleaned API responses while retaining useful facts and required notices. Existing calls and request options stay unchanged.

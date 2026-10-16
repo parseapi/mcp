@@ -390,17 +390,13 @@
 			],
 			"freshness": {
 				"mode": "maintained_reference",
-				"population_period_field": "deep.population_period",
 				"uniform_refresh_interval_seconds": null,
 				"actual_age_seconds": null,
-				"actual_age_status": "not_exposed; population period describes that statistic only"
+				"actual_age_status": "not_exposed; population observation evidence remains internal"
 			},
 			"uncertainty": {
 				"name_local": {
 					"null": "Native name unavailable or identical to the original name before display translation"
-				},
-				"deep.population_period": {
-					"null": "Observation period is unknown; never infer it from an import date"
 				},
 				"deep.water_area": {
 					"null": "Unknown or inconsistent with the archived total",
@@ -1327,6 +1323,118 @@
 			"docs": {
 				"help": "https://api.parseapi.com/version/2.0.0/emoji/help",
 				"guide": "https://parseapi.com/docs/emoji"
+			}
+		},
+		"city": {
+			"operation": "city",
+			"endpoint": "GET /city/{name}",
+			"endpoints": {
+				"resource": "GET /city/id/{id}?format=resource",
+				"typeahead": "GET /city?q={query}",
+				"browse": "GET /city?browse=true&format=list",
+				"spelling": "GET /city/search?q={query}&match={exact|prefix|fuzzy}",
+				"nearby_coordinates": "GET /city?lat={lat}&lon={lon}&nearby=true&format=list",
+				"children": "GET /city/id/{id}/children",
+				"ancestors": "GET /city/id/{id}/ancestors",
+				"siblings": "GET /city/id/{id}/siblings",
+				"distance": "GET /city/id/{id}/distance/{other}"
+			},
+			"determines": [
+				"Covered place identity, native/display names, source place type, geography and timezone where available",
+				"Optional reviewed grain, immediate parent and partial direct place relationships",
+				"Filtered paged City collections; optional paid Deep population, observation date, elevation and area",
+				"Great-circle distance between recorded centers; optional admitted official romanization"
+			],
+			"does_not_determine": [
+				"Complete worldwide place or field coverage",
+				"Road distance, routing or travel time",
+				"Official romanization from ASCII folding",
+				"A fresh upstream acquisition on every request",
+				"City execution through /task or /preflight; those admission policies are separate"
+			],
+			"required_context": [
+				"Store the own city_ ID from a selected response; do not substitute an upstream identifier or a display name",
+				"Keep country and state codes together; state names are not valid state filters",
+				"Choose grain=municipality when selecting a reviewed whole municipality; type retains source terminology",
+				"Use ambiguity=error for exact selection that requires a caller choice; 409 candidates are bounded public identities",
+				"Keep all filters, limit, language and shape options unchanged when reusing next_cursor"
+			],
+			"response": {
+				"resource": "format=resource: object=city and the complete ordinary City fields, including own id",
+				"collection": "format=list: object=list, data and next_cursor; keep request filters unchanged for continuation",
+				"legacy": "Default lookup, typeahead and named-nearby envelopes remain compatible",
+				"geojson": "format=geojson: Feature or FeatureCollection; null geometry when coordinates are unavailable"
+			},
+			"freshness": {
+				"mode": "maintained_source_reference",
+				"actual_age_seconds": null,
+				"actual_age_status": "Fact observation dates where available; an import date is not an observation date",
+				"notes": "Population dates and place boundaries may differ between records. Coverage and limits are documented on the City lander and reference."
+			},
+			"uncertainty": {
+				"null": "Unsupported, missing or conflicting facts remain null. Null population is not zero. Unknown grain and parent remain null.",
+				"coverage": "Partial curated reference. A catalog or index must pass its activation gate; readiness503 is not an empty match.",
+				"romanization": "romanized=true returns admitted official aliases only; missing or conflicting aliases return null.",
+				"relationships": "coverage=partial; no parent or relation is inferred from a matching name or distance.",
+				"distance": "method=great_circle; known zero is preserved, unknown coordinates yield null."
+			},
+			"errors": {
+				"400": "Invalid controls or cursor from another query/catalog; restart pagination when the edition changes",
+				"409": "ambiguous_city under ambiguity=error; bounded safe candidates without Deep",
+				"404": "City ID or name is not present in the serving catalog",
+				"503": "Required catalog or admitted spelling index unavailable"
+			},
+			"billing": {
+				"pooled_requests_per_success": 1,
+				"metered": null,
+				"deep_extra_units": 0,
+				"monetary_quote": null,
+				"account_state": "unknown; access, allowance and accepted account terms still apply",
+				"conditional_reads": "A 304 response does not waive ordinary request billing"
+			},
+			"access": {
+				"api_key_required": true,
+				"key_types": [
+					"secret",
+					"public",
+					"app"
+				],
+				"key_fences": {
+					"public": "Allowed browser origin required",
+					"app": "Allowed X-App-Id required"
+				},
+				"effective_access": null,
+				"effective_access_status": "not_checked; key fences, account access and quotas still apply"
+			},
+			"retry": {
+				"client": "javascript_sdk_and_mcp",
+				"default_retries": 2,
+				"retry_http_statuses": [
+					429,
+					500,
+					502,
+					503,
+					504
+				],
+				"retry_network_errors": true,
+				"successful_unknown_retried": false,
+				"guidance": "Do not retry a409 automatically. Select a bounded candidate. Correct invalid filters and restart rejected cursors. Respect Retry-After; empty matches are not an outage."
+			},
+			"privacy": {
+				"public_identity": "Own City IDs only",
+				"not_exposed": [
+					"upstream identifiers",
+					"source record keys",
+					"private evidence URLs",
+					"source hashes",
+					"complete dataset exports"
+				]
+			},
+			"docs": {
+				"help": "https://api.parseapi.com/version/2.0.0/city/help",
+				"guide": "https://parseapi.com/docs/city",
+				"selection": "https://parseapi.com/docs/city#choose-a-city",
+				"continuity": "https://parseapi.com/docs/city#stable-ids"
 			}
 		}
 	}

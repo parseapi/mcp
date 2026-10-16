@@ -1,4 +1,4 @@
-import { ParseAPIError } from '@parseapi/sdk';
+import { ParseAPIError, type CityAmbiguityCandidate } from '@parseapi/sdk';
 
 export interface ToolResult {
 	content: { type: 'text'; text: string }[];
@@ -10,18 +10,19 @@ export function ok(data: unknown): ToolResult {
 	return { content: [{ type: 'text', text: JSON.stringify(data) }] };
 }
 
-function errorJson(code: string, message: string, docs: string | null, requestId: string | null, retryAfter?: string | null): ToolResult {
+function errorJson(code: string, message: string, docs: string | null, requestId: string | null, retryAfter?: string | null, candidates?: CityAmbiguityCandidate[]): ToolResult {
 	return {
 		isError: true,
 		content: [{ type: 'text', text: JSON.stringify({ code, message, docs, request_id: requestId,
-			...(retryAfter == null ? {} : { retry_after: retryAfter }) }) }],
+			...(retryAfter == null ? {} : { retry_after: retryAfter }),
+			...(candidates === undefined ? {} : { candidates }) }) }],
 	};
 }
 
 /** Preserve the edge error plus Retry-After when supplied. Agents branch on `code`. */
 export function toErrorResult(err: unknown): ToolResult {
 	if (err instanceof ParseAPIError) {
-		return errorJson(err.code, err.message, err.docs, err.requestId, err.retryAfter);
+		return errorJson(err.code, err.message, err.docs, err.requestId, err.retryAfter, err.status === 409 && err.code === 'ambiguous_city' ? err.candidates : undefined);
 	}
 	const message = err instanceof Error ? err.message : String(err);
 	return errorJson('network_error', message, null, null);

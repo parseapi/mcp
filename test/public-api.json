@@ -268,10 +268,33 @@
     "name": "city",
     "inputSchema": {
       "properties": {
+        "aliases": {
+          "type": "boolean"
+        },
+        "ambiguity": {
+          "const": "error",
+          "type": "string"
+        },
         "country": {
           "type": "string"
         },
         "deep": {
+          "type": "boolean"
+        },
+        "format": {
+          "const": "resource",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
           "type": "boolean"
         },
         "lang": {
@@ -282,12 +305,115 @@
         "name": {
           "type": "string"
         },
+        "romanized": {
+          "type": "boolean"
+        },
         "state": {
+          "type": "string"
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
           "type": "string"
         }
       },
       "required": [
         "name"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "city_ancestors",
+    "inputSchema": {
+      "properties": {
+        "deep": {
+          "type": "boolean"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$",
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "romanized": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "city_children",
+    "inputSchema": {
+      "properties": {
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$",
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "romanized": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "city_distance",
+    "inputSchema": {
+      "properties": {
+        "from": {
+          "pattern": "^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$",
+          "type": "string"
+        },
+        "to": {
+          "pattern": "^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "to"
       ],
       "type": "object"
     },
@@ -302,6 +428,13 @@
         "deep": {
           "type": "boolean"
         },
+        "format": {
+          "const": "resource",
+          "type": "string"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
         "id": {
           "type": "string"
         },
@@ -309,6 +442,9 @@
           "maxLength": 64,
           "minLength": 2,
           "type": "string"
+        },
+        "romanized": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -321,13 +457,71 @@
     }
   },
   {
-    "name": "city_nearby",
+    "name": "city_list",
     "inputSchema": {
       "properties": {
+        "bbox": {
+          "type": "string"
+        },
+        "countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
         "country": {
           "type": "string"
         },
+        "cursor": {
+          "type": "string"
+        },
         "deep": {
+          "type": "boolean"
+        },
+        "exclude_countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "format": {
+          "const": "list",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
           "type": "boolean"
         },
         "lang": {
@@ -340,14 +534,230 @@
           "minimum": 1,
           "type": "integer"
         },
+        "max_elevation": {
+          "type": "number"
+        },
+        "max_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "min_elevation": {
+          "type": "number"
+        },
+        "min_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "order": {
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "type": "string"
+        },
+        "romanized": {
+          "type": "boolean"
+        },
+        "sort": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[+-]?(name|population|country|elevation)(,[+-]?(name|population|country|elevation))*$",
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "timezones": {
+          "anyOf": [
+            {
+              "maxLength": 5049,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "city_nearby",
+    "inputSchema": {
+      "properties": {
+        "aliases": {
+          "type": "boolean"
+        },
+        "ambiguity": {
+          "const": "error",
+          "type": "string"
+        },
+        "bbox": {
+          "type": "string"
+        },
+        "countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "country": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "exclude_countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "format": {
+          "const": "list",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "max_elevation": {
+          "type": "number"
+        },
+        "max_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "min_elevation": {
+          "type": "number"
+        },
+        "min_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
         "name": {
           "type": "string"
+        },
+        "order": {
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "type": "string"
+        },
+        "page": {
+          "type": "boolean"
         },
         "radius": {
           "exclusiveMinimum": 0,
           "type": "number"
         },
+        "romanized": {
+          "type": "boolean"
+        },
+        "sort": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[+-]?(distance|name|population|country|elevation)(,[+-]?(distance|name|population|country|elevation))*$",
+          "type": "string"
+        },
         "state": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "timezones": {
+          "anyOf": [
+            {
+              "maxLength": 5049,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
           "type": "string"
         },
         "unit": {
@@ -368,10 +778,201 @@
     }
   },
   {
+    "name": "city_nearby_coordinates",
+    "inputSchema": {
+      "properties": {
+        "bbox": {
+          "type": "string"
+        },
+        "countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "country": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "exclude_countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "format": {
+          "const": "list",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "lat": {
+          "maximum": 90,
+          "minimum": -90,
+          "type": "number"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "lon": {
+          "maximum": 180,
+          "minimum": -180,
+          "type": "number"
+        },
+        "max_elevation": {
+          "type": "number"
+        },
+        "max_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "min_elevation": {
+          "type": "number"
+        },
+        "min_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "order": {
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "type": "string"
+        },
+        "radius": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "romanized": {
+          "type": "boolean"
+        },
+        "sort": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[+-]?(distance|name|population|country|elevation)(,[+-]?(distance|name|population|country|elevation))*$",
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "timezones": {
+          "anyOf": [
+            {
+              "maxLength": 5049,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "km",
+            "mi"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "lat",
+        "lon"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "city_nearest",
     "inputSchema": {
       "properties": {
+        "country": {
+          "type": "string"
+        },
         "deep": {
+          "type": "boolean"
+        },
+        "format": {
+          "const": "resource",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
           "type": "boolean"
         },
         "lang": {
@@ -388,6 +989,17 @@
           "maximum": 180,
           "minimum": -180,
           "type": "number"
+        },
+        "romanized": {
+          "type": "boolean"
+        },
+        "state": {
+          "type": "string"
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
+          "type": "string"
         }
       },
       "required": [
@@ -404,10 +1016,71 @@
     "name": "city_search",
     "inputSchema": {
       "properties": {
+        "aliases": {
+          "type": "boolean"
+        },
+        "bbox": {
+          "type": "string"
+        },
+        "countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
         "country": {
           "type": "string"
         },
+        "cursor": {
+          "type": "string"
+        },
         "deep": {
+          "type": "boolean"
+        },
+        "exclude_countries": {
+          "anyOf": [
+            {
+              "maxLength": 149,
+              "minLength": 2,
+              "type": "string"
+            },
+            {
+              "items": {
+                "pattern": "^[a-zA-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "format": {
+          "const": "list",
+          "type": "string"
+        },
+        "grain": {
+          "enum": [
+            "municipality",
+            "subdivision",
+            "locality",
+            "metropolitan_area"
+          ],
+          "type": "string"
+        },
+        "hierarchy": {
           "type": "boolean"
         },
         "lang": {
@@ -420,15 +1093,137 @@
           "minimum": 1,
           "type": "integer"
         },
+        "match": {
+          "enum": [
+            "exact",
+            "prefix",
+            "fuzzy"
+          ],
+          "type": "string"
+        },
+        "max_distance": {
+          "anyOf": [
+            {
+              "const": 1,
+              "type": "number"
+            },
+            {
+              "const": 2,
+              "type": "number"
+            }
+          ]
+        },
+        "max_elevation": {
+          "type": "number"
+        },
+        "max_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "min_elevation": {
+          "type": "number"
+        },
+        "min_population": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "order": {
+          "enum": [
+            "asc",
+            "desc"
+          ],
+          "type": "string"
+        },
+        "page": {
+          "type": "boolean"
+        },
         "query": {
           "type": "string"
         },
+        "romanized": {
+          "type": "boolean"
+        },
+        "sort": {
+          "maxLength": 100,
+          "minLength": 1,
+          "pattern": "^[+-]?(relevance|name|population|country|elevation)(,[+-]?(relevance|name|population|country|elevation))*$",
+          "type": "string"
+        },
         "state": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "timezones": {
+          "anyOf": [
+            {
+              "maxLength": 5049,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "items": {
+                "maxLength": 100,
+                "minLength": 1,
+                "type": "string"
+              },
+              "maxItems": 50,
+              "minItems": 1,
+              "type": "array"
+            }
+          ]
+        },
+        "type": {
+          "maxLength": 60,
+          "minLength": 1,
           "type": "string"
         }
       },
       "required": [
         "query"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "city_siblings",
+    "inputSchema": {
+      "properties": {
+        "cursor": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "hierarchy": {
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$",
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "limit": {
+          "maximum": 50,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "romanized": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id"
       ],
       "type": "object"
     },

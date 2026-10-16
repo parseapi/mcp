@@ -35,10 +35,39 @@ const titleWords: Record<string, string> = {
 	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', mac: 'MAC', useragent: 'User Agent',
 };
 
-const languageTools = new Set(['ip', 'ip_self', 'asn', 'company', 'npi', 'provider', 'continent', 'continent_countries', 'bloc_countries', 'country', 'country_states',
-	'state', 'state_districts', 'district', 'city', 'city_id', 'city_search', 'city_nearest', 'city_nearby',
-	'postal', 'postal_nearby', 'postal_distance', 'currency', 'language', 'date', 'time', 'timezone',
-	'measure_units', 'emoji', 'emoji_search', 'emoji_browse', 'emoji_parse', 'emoji_catalog', 'point']);
+const cityScope = {
+	type: z.string().min(1).max(60).optional().describe('Stored place type, such as city or ward; filters eligible places without inferring legal status.'),
+	grain: z.enum(['municipality', 'subdivision', 'locality', 'metropolitan_area']).optional().describe('Reviewed entity grain. Unreviewed places do not match; requires City foundation readiness.'),
+	hierarchy: z.boolean().optional().describe('Include reviewed grain and immediate parent summary, or null when unknown. Requires foundation readiness; otherwise 503.'),
+};
+const cityAliases = z.boolean().optional().describe('Match reviewed normalized aliases. Compatibility characters, case and whitespace normalize; native marks and accents remain. No spelling guesses. Requires foundation readiness.');
+const cityAmbiguity = z.literal('error').optional().describe('Reject an exact name or nearby anchor matching multiple eligible places with HTTP 409 ambiguous_city and bounded candidate identities. Add filters or choose a stable id from city_search.');
+const cityRomanized = z.boolean().optional().describe('Include a reviewed official romanized name and its language. No ASCII-folding fallback; missing or conflicting forms are null.');
+const cityResourceResponse = { romanized: cityRomanized, format: z.literal('resource').optional().describe('Opt into object:city without changing classic responses.') };
+const cityListResponse = { romanized: cityRomanized, format: z.literal('list').optional().describe('Opt into object:list, data and next_cursor. A null cursor ends the collection; keep the same options on continuation.') };
+const citySort = (terms: readonly string[]) => z.string().min(1).max(100).regex(new RegExp(`^[+-]?(${terms.join('|')})(,[+-]?(${terms.join('|')}))*$`)).optional().describe('Comma-separated sort terms. Prefix a term with + or - for its direction. Stable ids break ties; unknown values sort last.');
+const cityCodeList = z.union([z.string().min(2).max(149), z.array(z.string().regex(/^[a-zA-Z]{2}$/)).min(1).max(50)]).optional();
+const cityCollectionFilters = {
+	min_population: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional().describe('Minimum stored population. Unknown values do not match; the count may be undated.'),
+	max_population: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER).optional().describe('Maximum stored population. Unknown values do not match; the count may be undated.'),
+	min_elevation: z.number().finite().optional().describe('Minimum stored elevation in meters. Unknown values do not match.'),
+	max_elevation: z.number().finite().optional().describe('Maximum stored elevation in meters. Unknown values do not match.'),
+	countries: cityCodeList.describe('Include ISO2 countries, as CSV or an array. Intersects with a single country filter; on named nearby, country selects the anchor.'),
+	exclude_countries: cityCodeList.describe('Exclude ISO2 countries, as CSV or an array.'),
+	timezones: z.union([z.string().min(1).max(5049), z.array(z.string().min(1).max(100)).min(1).max(50)]).optional().describe('Include exact IANA timezones, as CSV or an array. Intersects with a single timezone filter.'),
+	timezone: z.string().optional().describe('Exact IANA timezone filter, e.g. Europe/Vienna.'),
+	bbox: z.string().optional().describe('Stored-center bounds as west,south,east,north in degrees. West greater than east crosses the date line.'),
+	order: z.enum(['asc', 'desc']).optional().describe('Sort direction; default asc except population defaults to desc. Stable ids break ties.'),
+	cursor: z.string().optional().describe('Opaque continuation cursor. Reuse with exactly the same query, filters, limit, display language, Deep, hierarchy and origin.'),
+};
+const cityPage = z.boolean().optional().describe('Opt into next_cursor on search or named-nearby collections. A cursor also enables paging.');
+function cityCollectionArguments(args: { min_population?: number; max_population?: number; min_elevation?: number; max_elevation?: number; countries?: string | string[]; exclude_countries?: string | string[]; timezones?: string | string[]; timezone?: string; bbox?: string; sort?: string; order?: 'asc' | 'desc'; page?: boolean; cursor?: string; format?: 'list'; romanized?: boolean }) {
+	return { minPopulation: args.min_population, maxPopulation: args.max_population, minElevation: args.min_elevation, maxElevation: args.max_elevation,
+		countries: args.countries, excludeCountries: args.exclude_countries, timezones: args.timezones, timezone: args.timezone,
+		bbox: args.bbox, sort: args.sort, order: args.order, page: args.page || undefined, cursor: args.cursor, format: args.format, romanized: args.romanized || undefined };
+}
+
+const languageTools = new Set(["ip","ip_self","asn","company","npi","provider","continent","continent_countries","bloc_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","measure_units","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
@@ -197,7 +226,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'country',
-		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile on paid plans, including population with its reporting period, land/water area in km2, coastline in km, mean and extreme elevations in metres, tax and locale conventions. Unknown geography values stay null.',
+		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile on paid plans, including population, land/water area in km2, coastline in km, mean and extreme elevations in metres, tax and locale conventions. Unknown geography values stay null.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
@@ -209,7 +238,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'state',
-		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans, including population_period when verified. Pass country to resolve a colliding code.',
+		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
@@ -219,17 +248,17 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'state_districts',
-		'List the districts, counties or departments of a state. Deep adds population and its reporting period to each result on paid plans.',
+		'List the districts, counties or departments of a state. Deep adds population to each result on paid plans.',
 		{
 			code: z.string().describe('State code or name, e.g. NC, colorado'),
 			country: countryOpt,
-			deep: deep.describe('Include population and its reporting period in each district detail bag on a paid plan.'),
+			deep: deep.describe('Include population in each district detail bag on a paid plan.'),
 		},
 		(c, a, request) => c.state.districts(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'district',
-		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name. Population includes a reporting year or period when verified. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
+		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
 		{
 			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
 			country: countryOpt,
@@ -240,35 +269,41 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'city',
-		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties. Population includes a reporting year or period when verified.',
+		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate, e.g. NC'),
+			...cityScope, ...cityResourceResponse, aliases: cityAliases, ambiguity: cityAmbiguity,
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.city(a.name, { ...request, deep: a.deep, country: a.country, state: a.state })
+		(c, a, request) => c.city(a.name, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ambiguity: a.ambiguity, format: a.format, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_id',
 		'Resolve a stable city id. Deep adds the city profile on paid plans.',
-		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
-		(c, a, request) => c.city.id(a.id, { ...request, deep: a.deep })
+		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb'), ...cityResourceResponse, hierarchy: cityScope.hierarchy, deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		(c, a, request) => c.city.id(a.id, { ...request, deep: a.deep, hierarchy: a.hierarchy || undefined, format: a.format, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_search',
-		'Search city names. Deep adds the profile inside each returned city on paid plans.',
+		'Search city names. Explicit match uses the spelling search route; numeric/map/timezone/sort filters apply to default prefix search only. Deep adds the profile inside each returned city on paid plans.',
 		{
-			query: z.string().describe('Name prefix, e.g. char'),
+			query: z.string().describe('City name query, e.g. char'),
+			match: z.enum(['exact', 'prefix', 'fuzzy']).optional().describe('Explicit matching mode; default prefix. Fuzzy results carry suggestion evidence.'),
+			max_distance: z.union([z.literal(1), z.literal(2)]).optional().describe('Maximum edit distance for fuzzy matching.'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code filter'),
+			...cityScope, aliases: cityAliases, ...cityCollectionFilters, ...cityListResponse,
+			sort: citySort(['relevance', 'name', 'population', 'country', 'elevation']),
+			page: cityPage,
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
-		(c, a, request) => c.city.search(a.query, { ...request, deep: a.deep, country: a.country, state: a.state, limit: a.limit })
+		(c, a, request) => c.city.search(a.query, { ...request, deep: a.deep, country: a.country, state: a.state, limit: a.limit, match: a.match, maxDistance: a.max_distance, type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ...cityCollectionArguments(a) })
 	);
-	tool('city_nearest', 'Find the nearest city with distance. Deep adds the city profile on paid plans.', { lat, lon, deep }, (c, a, request) =>
-		c.city.nearest(a.lat, a.lon, { ...request, deep: a.deep })
+	tool('city_nearest', 'Find the nearest eligible stored city center within 2,000 km, with distance. Country/state/type/grain constrain candidates; this does not determine which municipality contains the point. Deep adds the paid profile and reviewed observation date/basis when known.', { lat, lon, country: countryOpt, state: z.string().optional().describe('State code filter'), ...cityScope, ...cityResourceResponse, deep }, (c, a, request) =>
+		c.city.nearest(a.lat, a.lon, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, format: a.format, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_nearby',
@@ -277,6 +312,9 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			name: z.string().describe('Anchor city name, e.g. denver'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate the anchor'),
+			...cityScope, aliases: cityAliases, ambiguity: cityAmbiguity, ...cityCollectionFilters, ...cityListResponse,
+			sort: citySort(['distance', 'name', 'population', 'country', 'elevation']),
+			page: cityPage,
 			radius: z.number().positive().optional().describe('Search radius, default 40 km'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results, default 10'),
@@ -284,18 +322,57 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		},
 		(c, a, request) =>
 			c.city.nearby(a.name, {
-				...request,
+				...request, ...cityCollectionArguments(a),
 				deep: a.deep,
 				country: a.country,
 				state: a.state,
+				type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ambiguity: a.ambiguity,
 				radius: a.radius,
 				unit: a.unit,
 				limit: a.limit,
 			})
 	);
+
+	tool(
+		'city_list',
+		'Browse the stored City catalog with filters, stable sorting and opaque cursor paging. Coverage remains curated, not worldwide. Deep adds the paid profile within each record.',
+		{
+			country: countryOpt, state: z.string().optional().describe('State code filter'),
+			...cityScope, ...cityCollectionFilters, ...cityListResponse,
+			sort: citySort(['name', 'population', 'country', 'elevation']),
+			limit: z.number().int().min(1).max(50).optional().describe('Max results per page'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+		},
+		(c, a, request) => c.city.list({ ...request, ...cityCollectionArguments(a), country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, limit: a.limit, deep: a.deep })
+	);
+	tool(
+		'city_nearby_coordinates',
+		'List stored city centers near arbitrary coordinates, with radius, collection filters and cursor paging. The point and distances do not infer municipality containment. Deep adds the paid profile within each record.',
+		{
+			lat, lon, country: countryOpt, state: z.string().optional().describe('State code filter for returned neighbors'),
+			...cityScope, ...cityCollectionFilters, ...cityListResponse,
+			radius: z.number().positive().optional().describe('Search radius, default 40 km'),
+			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
+			sort: citySort(['distance', 'name', 'population', 'country', 'elevation']),
+			limit: z.number().int().min(1).max(50).optional().describe('Max results per page'),
+			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+		},
+		(c, a, request) => c.city.nearbyCoordinates(a.lat, a.lon, { ...request, ...cityCollectionArguments(a), country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, radius: a.radius, unit: a.unit, limit: a.limit, deep: a.deep })
+	);
+
+	const cityRelationId = z.string().regex(/^city_[23456789abcdefghjkmnpqrstuvwxyz]{12}$/).describe('Stable City id selected from a lookup or search.');
+	const cityRelationOptions = { id: cityRelationId, romanized: cityRomanized, hierarchy: cityScope.hierarchy, deep,
+		limit: z.number().int().min(1).max(50).optional().describe('Maximum records per page.'),
+		cursor: cityCollectionFilters.cursor };
+	tool('city_children', 'List reviewed immediate children of a City id. Returns a canonical list with coverage:partial. It does not infer missing relationships.', cityRelationOptions, (c, a, request) => c.city.children(a.id, { ...request, romanized: a.romanized || undefined, limit: a.limit, cursor: a.cursor, hierarchy: a.hierarchy || undefined, deep: a.deep }));
+	tool('city_ancestors', 'Follow reviewed parents of a City id, immediate parent first. Returns a canonical list with coverage:partial; an empty list does not prove the city has no administrative parent.', { id: cityRelationId, romanized: cityRomanized, hierarchy: cityScope.hierarchy, deep }, (c, a, request) => c.city.ancestors(a.id, { ...request, romanized: a.romanized || undefined, hierarchy: a.hierarchy || undefined, deep: a.deep }));
+	tool('city_siblings', 'List reviewed places sharing the selected City id’s immediate parent. Returns a canonical list with parent_id and coverage:partial.', cityRelationOptions, (c, a, request) => c.city.siblings(a.id, { ...request, romanized: a.romanized || undefined, limit: a.limit, cursor: a.cursor, hierarchy: a.hierarchy || undefined, deep: a.deep }));
+	tool('city_distance', 'Great-circle kilometers and miles between two stored City centers. Unknown coordinates return null; this is not travel distance or boundary containment.', { from: cityRelationId, to: cityRelationId }, (c, a, request) => c.city.distance(a.from, a.to, request));
+
+
 	tool(
 		'postal',
-		'Resolve a postal code to its place, coordinates and timezone. Australian core localities lists suburb choices with city, state and state_name. Null or missing means unknown, and [] means no eligible choices in the reviewed reference. A single choice can coexist with city null, so do not infer a city or a user selection. These are geographic choices, not mailing-address verification. Deep adds area, population with its reporting period, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
+		'Resolve a postal code to its place, coordinates and timezone. Australian core localities lists suburb choices with city, state and state_name. Null or missing means unknown, and [] means no eligible choices in the reviewed reference. A single choice can coexist with city null, so do not infer a city or a user selection. These are geographic choices, not mailing-address verification. Deep adds area, population, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
 		{
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
