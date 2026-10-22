@@ -57,7 +57,7 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `vehicle`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -250,7 +250,6 @@ Bank tools send original IBAN, routing and account strings in POST JSON bodies, 
 
 When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
 
-Vehicle lookups use `vin` as the input and response field. The `vin` tool remains available for compatibility.
 
 ## Emoji catalog additions
 

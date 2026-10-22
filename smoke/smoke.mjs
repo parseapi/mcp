@@ -93,7 +93,7 @@ async function smokeStdio() {
 	check('stdio has card', names.includes('card'));
 	check('stdio has bank', names.includes('bank'));
 	check('stdio has npi', names.includes('provider'));
-	check('stdio has vin', names.includes('vin'));
+	check('stdio omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 	check('stdio has no company_search', !names.includes('company_search'));
 	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search')).every((tool) => tool.inputSchema.required.includes('query') && !('q' in tool.inputSchema.properties)));
@@ -221,7 +221,7 @@ async function smokeHttp() {
 		check('http has card', names.includes('card'));
 		check('http has bank', names.includes('bank'));
 		check('http has npi', names.includes('provider'));
-		check('http has vin', names.includes('vin'));
+		check('http omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 		check('http has no company_search', !names.includes('company_search'));
 		check('http has no sanctions', !names.includes('sanctions'));

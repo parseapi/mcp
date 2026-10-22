@@ -31,7 +31,7 @@ const countryOpt = z
 
 const titleWords: Record<string, string> = {
 	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX', vat: 'VAT',
-	iban: 'IBAN', npi: 'NPI', naics: 'NAICS', vin: 'VIN', bin: 'BIN',
+	iban: 'IBAN', npi: 'NPI', naics: 'NAICS', bin: 'BIN',
 	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', mac: 'MAC', useragent: 'User Agent',
 };
 
@@ -694,21 +694,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		'Parse a User-Agent string: browser, OS, device, bot detection.',
 		{ ua: z.string().describe('The User-Agent string to parse'), deep },
 		(c, a, request) => c.useragent(a.ua, { ...request, deep: a.deep })
-	);
-
-	// Decode
-	tool(
-		'vehicle',
-		'Identify a vehicle by VIN: year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns. These do not establish whether this VIN needs a repair.',
-		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
-		(c, a, request) => c.vehicle(a.vin, { ...request, deep: a.deep })
-	);
-
-	tool(
-		'vin',
-		'Compatibility entry for vehicle. Decode a VIN to year, make, model, trim, body and vehicle type. Paid deep adds specifications, manufacturing detail and model-level recall campaigns.',
-		{ vin: z.string().describe('The VIN as you have it. Spaces and punctuation fold out'), deep },
-		(c, a, request) => c.vin(a.vin, { ...request, deep: a.deep })
 	);
 	tool(
 		'tariff',

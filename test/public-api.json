@@ -2862,46 +2862,6 @@
     }
   },
   {
-    "name": "vehicle",
-    "inputSchema": {
-      "properties": {
-        "deep": {
-          "type": "boolean"
-        },
-        "vin": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "vin"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "vin",
-    "inputSchema": {
-      "properties": {
-        "deep": {
-          "type": "boolean"
-        },
-        "vin": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "vin"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "weather",
     "inputSchema": {
       "properties": {
