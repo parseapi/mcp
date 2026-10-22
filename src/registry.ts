@@ -28,8 +28,8 @@ const countryOpt = z
 	.describe('ISO2, ISO3, or a country name. Optional when the lookup is unique.');
 
 const titleWords: Record<string, string> = {
-	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX', vat: 'VAT',
-	iban: 'IBAN', npi: 'NPI', naics: 'NAICS', bin: 'BIN',
+	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX',
+	iban: 'IBAN', naics: 'NAICS', bin: 'BIN',
 	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', mac: 'MAC', useragent: 'User Agent',
 };
 
@@ -95,7 +95,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, company numbers, email, VAT, IBAN, NPI, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, IBAN, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }

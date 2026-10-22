@@ -7,7 +7,7 @@
 		"url": "https://github.com/parseapi/mcp",
 		"source": "github"
 	},
-	"version": "1.10.2",
+	"version": "1.10.3",
 	"remotes": [
 		{
 			"type": "streamable-http",
@@ -26,7 +26,7 @@
 		{
 			"registryType": "npm",
 			"identifier": "parseapi-mcp",
-			"version": "1.10.2",
+			"version": "1.10.3",
 			"transport": {
 				"type": "stdio"
 			},
