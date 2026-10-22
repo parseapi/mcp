@@ -57,7 +57,7 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `vat`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `provider`, `industry`, `industry_search`, `tariff`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -75,8 +75,6 @@ Example tool arguments:
 | `asn` | `{"asn":"AS13335"}` |
 | `mac` | `{"mac":"00:1B:63:84:45:E6"}` |
 | `card` | `{"bin":"424242"}` |
-| `provider` | `{"npi":"1881018208"}` (provider directory record) |
-| `provider` | `{"npi":"1881018208","deep":true}` (stored Medicare and deactivation detail on paid plans) |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company` | `{"number":"552100554","country":"FR"}` |
@@ -122,12 +120,6 @@ For discovery without an identity selector, supply `country` or both `industry` 
 
 
 Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Provider record dates describe the provider record, not live verification.
-
-Pass the original NPI as a string. `valid` checks its format and checksum; `registered` means a match in the stored NPPES snapshot. `active` reflects recorded NPI deactivation, not licensure. `excluded` is an NPI-only OIG LEIE match; `false` is not a complete exclusion clearance. These directory facts do not verify credentials, current practice contact or payment eligibility.
-
-Invalid input returns `valid: false` with unknown provider fields. A checksum-valid number missing from the snapshot returns `registered: false`; unavailable storage remains an API error. Preserve `null` as unknown.
-
-The default pooled lookup includes provider identity, specialty and practice contact where held. Paid `deep` adds `deactivated_at`, `medicare`, `opt_out` and `enrollments` from stored source files, with no separate check meter or live verification. `enrollments: null` means unavailable; `[]` means no enrollment rows are returned. The API omits unrequested `deep` and returns `{}` when requested on Free.
 
 Ordinary lookups retry up to twice after a transient failure. A valid `Retry-After` is honored when the wait is at most five seconds; longer waits return the API error immediately without retrying early. When the response supplies this header, the error includes `retry_after` with its original seconds or HTTP-date value. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 
@@ -295,9 +287,6 @@ Search defaults to prefix matching. Exact and fuzzy matching are explicit; fuzzy
 Reviewed children, ancestors and siblings use canonical lists with partial relationship coverage. Empty data does not prove there are no geographic relatives. Children/siblings accept page controls; ancestors do not. Distance reports great-circle kilometers and miles between stored centers: zero is known zero, null is unknown, and it does not imply travel time or containment.
 
 Strict `ambiguity=error` can return HTTP 409 `ambiguous_city` with up to two safe candidate identities. The existing error constructor and unrelated error metadata are preserved; candidates are retained only for that status/code and never contain Deep. GeoJSON is available through HTTP; these typed City list methods do not return GeoJSON.
-
-
-
 
 
 Coverage by country and available fields is described at https://parseapi.com/city#coverage.

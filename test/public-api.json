@@ -161,45 +161,6 @@
     }
   },
   {
-    "name": "bloc",
-    "inputSchema": {
-      "properties": {
-        "code": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "bloc_countries",
-    "inputSchema": {
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "lang": {
-          "maxLength": 64,
-          "minLength": 2,
-          "type": "string"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "caller",
     "inputSchema": {
       "properties": {
@@ -2290,31 +2251,6 @@
     }
   },
   {
-    "name": "npi",
-    "inputSchema": {
-      "properties": {
-        "deep": {
-          "type": "boolean"
-        },
-        "lang": {
-          "maxLength": 64,
-          "minLength": 2,
-          "type": "string"
-        },
-        "npi": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "npi"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "phone",
     "inputSchema": {
       "properties": {
@@ -2470,31 +2406,6 @@
     }
   },
   {
-    "name": "provider",
-    "inputSchema": {
-      "properties": {
-        "deep": {
-          "type": "boolean"
-        },
-        "lang": {
-          "maxLength": 64,
-          "minLength": 2,
-          "type": "string"
-        },
-        "npi": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "npi"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "stack",
     "inputSchema": {
       "properties": {
@@ -2565,64 +2476,6 @@
       },
       "required": [
         "code"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "tariff",
-    "inputSchema": {
-      "properties": {
-        "code": {
-          "type": "string"
-        },
-        "date": {
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-          "type": "string"
-        },
-        "deep": {
-          "type": "boolean"
-        },
-        "edition": {
-          "pattern": "^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\\s\\S])",
-          "type": "string",
-          "maxLength": 64
-        },
-        "origin": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "code"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "tariff_search",
-    "inputSchema": {
-      "properties": {
-        "date": {
-          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-          "type": "string"
-        },
-        "edition": {
-          "pattern": "^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\\s\\S])",
-          "type": "string",
-          "maxLength": 64
-        },
-        "query": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "query"
       ],
       "type": "object"
     },
@@ -2828,32 +2681,6 @@
       },
       "required": [
         "ua"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "vat",
-    "inputSchema": {
-      "properties": {
-        "country": {
-          "type": "string"
-        },
-        "deep": {
-          "type": "boolean"
-        },
-        "from": {
-          "type": "string"
-        },
-        "number": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "number"
       ],
       "type": "object"
     },

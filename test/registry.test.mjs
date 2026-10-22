@@ -156,7 +156,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 81);
+	assert.equal(tools.length, 74);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -164,7 +164,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 86);
+	assert.equal(result.tools.length, 79);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -218,7 +218,7 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 39);
+	assert.equal(localized.length, 36);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
@@ -239,7 +239,7 @@ test('display language reaches each supported tool request and stays request-loc
 
 test('search requires query and rejects the retired q input before any HTTP call', async (t) => {
 	const { rpc, calls } = await setup(t);
-	for (const name of ['city_search', 'address_search', 'tariff_search', 'industry_search', 'emoji_search']) {
+	for (const name of ['city_search', 'address_search', 'industry_search', 'emoji_search']) {
 		const called = await rpc.call(name, { q: 'coffee' });
 		assert.equal(called.result?.isError, true, JSON.stringify(called));
 	}
@@ -304,7 +304,7 @@ test('metered core and deep calls inherit zero retries from the SDK', async (t) 
 	const { rpc, calls } = await setup(t, { fetch: () => response({ code: 'unavailable', message: 'Try later' }, 503) });
 	for (const [name, args] of [
 		['carrier', { number: '555-0100' }], ['caller', { number: '555-0100' }], ['hlr', { number: '555-0100' }],
-		['email', { email: 'a@example.com', deep: true }], ['vat', { number: 'DE123', deep: true }],
+		['email', { email: 'a@example.com', deep: true }],
 		['address', { address: '10 Main St', deep: true }],
 	]) {
 		const count = calls.length;

@@ -89,17 +89,17 @@ async function smokeStdio() {
 	check('stdio tools/list has 58 lookups, discovery and preflight', names.length === 60 && names.includes('discover') && names.includes('preflight'), `got ${names.length}`);
 	check('stdio has dns', names.includes('dns'));
 	check('stdio has ip_self', names.includes('ip_self'));
-	check('stdio has vat', names.includes('vat'));
+	check('stdio omits vat', !names.includes('vat'));
 	check('stdio has card', names.includes('card'));
 	check('stdio has bank', names.includes('bank'));
-	check('stdio has npi', names.includes('provider'));
+	check('stdio omits npi', !names.includes('provider'));
 	check('stdio omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 	check('stdio has no company_search', !names.includes('company_search'));
 	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search')).every((tool) => tool.inputSchema.required.includes('query') && !('q' in tool.inputSchema.properties)));
 	check('stdio has no sanctions', !names.includes('sanctions'));
 	check('stdio has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
-	check('stdio has tariff', names.includes('tariff') && names.includes('tariff_search'));
+	check('stdio omits tariff', !names.includes('tariff') && !names.includes('tariff_search'));
 	check(
 		'stdio has the phone family',
 		names.includes('carrier') && names.includes('caller') && names.includes('hlr')
@@ -217,16 +217,16 @@ async function smokeHttp() {
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
 		check('http tools/list has 57 lookups, discovery and preflight (no ip_self)', names.length === 59 && names.includes('discover') && names.includes('preflight') && !names.includes('ip_self'), `got ${names.length}`);
-		check('http has vat', names.includes('vat'));
+		check('http omits vat', !names.includes('vat'));
 		check('http has card', names.includes('card'));
 		check('http has bank', names.includes('bank'));
-		check('http has npi', names.includes('provider'));
+		check('http omits npi', !names.includes('provider'));
 		check('http omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
 		check('http has no company_search', !names.includes('company_search'));
 		check('http has no sanctions', !names.includes('sanctions'));
 		check('http has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
-		check('http has tariff', names.includes('tariff') && names.includes('tariff_search'));
+		check('http omits tariff', !names.includes('tariff') && !names.includes('tariff_search'));
 
 		const funnel = await postRpc(port, {
 			jsonrpc: '2.0',

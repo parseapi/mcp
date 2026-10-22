@@ -22,8 +22,6 @@ const deep = z
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
-const tariffEdition = z.string().max(64).regex(/^(?:[a-f0-9]{64}|ted_[1-9][0-9]{0,19})(?![\s\S])/).refine(value => (value.length === 64 && /^[a-f0-9]{64}$/.test(value)) || (/^ted_[1-9][0-9]{0,19}(?![\s\S])/.test(value) && (value.length < 24 || value.slice(4) <= '18446744073709551615')), 'Use an exact edition ID such as ted_3.').optional().describe('Exact edition returned by Tariff, such as ted_3. Without date, returns undated schedule context.');
-const tariffDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('YYYY-MM-DD with verified source coverage. Combine with edition only when it covers this date.');
 const countryOpt = z
 	.string()
 	.optional()
@@ -67,7 +65,7 @@ function cityCollectionArguments(args: { min_population?: number; max_population
 		bbox: args.bbox, sort: args.sort, order: args.order, page: args.page || undefined, cursor: args.cursor, format: args.format, romanized: args.romanized || undefined };
 }
 
-const languageTools = new Set(["ip","ip_self","asn","company","npi","provider","continent","continent_countries","bloc_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","measure_units","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
+const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","measure_units","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
@@ -203,26 +201,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		'List every country on a continent.',
 		{ code: z.string().describe('Continent code: AF, AN, AS, EU, NA, OC, SA') },
 		(c, a, request) => c.continent.countries(a.code, request)
-	);
-	tool(
-		'bloc',
-		'Look up a country group by code: EU, EEA, Schengen, Eurozone, SEPA, NATO, and more. Returns the official name and the current member count.',
-		{
-			code: z
-				.string()
-				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
-		},
-		(c, a, request) => c.bloc(a.code, request)
-	);
-	tool(
-		'bloc_countries',
-		'List the current members of a country group, each with name, flag, and calling code.',
-		{
-			code: z
-				.string()
-				.describe('Bloc code: EU, EEA, EFTA, SCHENGEN, EUROZONE, SEPA, NATO, OECD, G7, ASEAN, GCC, MERCOSUR'),
-		},
-		(c, a, request) => c.bloc.countries(a.code, request)
 	);
 	tool(
 		'country',
@@ -529,17 +507,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);
 	tool(
-		'vat',
-		'Validate a VAT number: format and checksum on every call. Deep asks the live EU registry for registered, legal name, and address. Pass from with your own VAT for a consultation identifier.',
-		{
-			number: z.string().describe('VAT number, with or without the country prefix'),
-			country: iso2('country code when the number has no prefix').optional(),
-			from: z.string().optional().describe('Your own VAT number. Returns a consultation identifier for your audit file'),
-			deep,
-		},
-		(c, a, request) => c.vat(a.number, { ...request, country: a.country, from: a.from, deep: a.deep })
-	);
-	tool(
 		'iban',
 		'Parse an IBAN and check its format, ISO checksum, and published national BBAN checks, with known bank identifiers. Deep adds check digits, branch and account decomposition on every plan. Does not verify an account exists.',
 		{
@@ -557,15 +524,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
 		},
 		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
-	);
-	tool(
-		'npi',
-		'Validate an NPI and identify the registered provider, active/exclusion status, specialty and practice contact. Paid deep adds deactivation date and Medicare enrollment evidence.',
-		{
-			npi: z.string().describe('10-digit NPI number'),
-			deep,
-		},
-		(c, a, request) => c.npi(a.npi, { ...request, deep: a.deep })
 	);
 	tool(
 		'bank',
@@ -606,15 +564,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			deep: deep.describe('Include recorded issuer details, pooled on every plan. Omitted by default; fewer than six digits returns all-null Deep fields.'),
 		},
 		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
-	);
-	tool(
-		'provider',
-		'Look up an NPI in stored provider-directory sources. valid is format/checksum only; registered means found in the NPPES snapshot; active is recorded NPI activation, not licensure. excluded is an NPI-only OIG LEIE match, and false is not complete exclusion clearance. Returns identity, specialty and practice contact where held. Paid deep adds all published taxonomies and reported license details, provider enumeration/update/reactivation dates, deactivation date, Medicare enrollment, opt-out and enrollment rows. Reported licenses are not verified licenses; provider update dates are not source freshness. Null means unknown. No live credential or payment-eligibility verification. Pooled request; no separate check meter.',
-		{
-			npi: z.string().describe('Original NPI input as a string, normally 10 digits. Preserve the input; invalid values return valid=false with unknown provider fields. Do not URI-decode it.'),
-			deep: deep.describe('Include taxonomies, enumerated_at, updated_at, reactivated_at, deactivated_at, medicare, opt_out and enrollments from stored sources on paid plans. Omitted by default; Free returns {}. Null lists are unavailable; [] means the source recorded no rows.'),
-		},
-		(c, a, request) => c.provider(a.npi, { ...request, deep: a.deep })
 	);
 	tool(
 		'phone',
@@ -694,24 +643,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		'Parse a User-Agent string: browser, OS, device, bot detection.',
 		{ ua: z.string().describe('The User-Agent string to parse'), deep },
 		(c, a, request) => c.useragent(a.ua, { ...request, deep: a.deep })
-	);
-	tool(
-		'tariff',
-		'Look up a US tariff code, description, lineage, published base general rate, exact edition and answering date. Paid deep adds schedule columns, units and matched Chapter 99 measures. Origin is the country where goods originate, not the shipping country. Optional edition pins immutable source bytes. Optional date requires verified source coverage; edition without date returns date null and no effective rate. Default requests use today. deep.reason explains a null effective_rate, including incomplete_coverage; null never means zero. Matched measures are inspectable candidates, not complete duty or landed cost.',
-		{
-			code: z.string().describe('US HTS code: 4, 6, 8 or 10 ASCII digits, dots and whitespace optional, e.g. 8471.30.01.00'),
-			origin: iso2('country where the goods originate, not the shipping country; only read with deep').optional(),
-			edition: tariffEdition,
-			date: tariffDate,
-			deep,
-		},
-		(c, a, request) => c.tariff(a.code, { ...request, deep: a.deep, origin: a.origin, edition: a.edition, date: a.date })
-	);
-	tool(
-		'tariff_search',
-		'Search US tariff schedule descriptions by product words. Returns up to 20 candidate lines with hts, description, general rate and parent lineage, plus the exact edition and answering date. Optional edition pins immutable source bytes. Optional date requires verified source coverage; combine only when that edition covers the date. Edition without date returns date null. Description search is not product classification.',
-		{ query: z.string().describe('Product words, e.g. sunglasses, laptop, coffee'), edition: tariffEdition, date: tariffDate },
-		(c, a, request) => c.tariff.search(a.query, { ...request, edition: a.edition, date: a.date })
 	);
 	tool(
 		'industry',
