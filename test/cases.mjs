@@ -8,7 +8,6 @@ export const cases = [
 	["company_search",{"identifier":"0000081061","authority":"SEC"},"/company",{"identifier":"0000081061","authority":"SEC"}],
 	["company_coverage",{},"/company/directory/coverage"],
 	['bin', { bin: '00 1234-56', deep: true }, '/bin/00%201234-56', { deep: 'true' }],
-	['iban', { iban: 'DE89 3704', country: 'DE' }, '/iban/DE89%203704', { country: 'DE' }],
 	['naics', { code: '31-33' }, '/industry/31-33'],
 	['naics_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
 	['card', { bin: '00 1234-56' }, '/card/00%201234-56'],
@@ -44,9 +43,6 @@ export const cases = [
 	['elevation', { lat: 0, lon: 0 }, '/elevation', { lat: '0', lon: '0' }],
 	['weather', { lat: 0, lon: 0, deep: true, date: '2026-08-01' }, '/weather', { lat: '0', lon: '0', deep: 'true', date: '2026-08-01' }],
 	['email', { email: 'a+b@example.com', deep: true }, '/email/a%2Bb%40example.com', { deep: 'true' }],
-	['bank', { iban: 'DE89 3704', country: 'DE' }, '/bank'],
-	['bank_us_ach', { routing: '011-000-015', account: ' 00aB-%20' }, '/bank'],
-	['bank_requirements', { country: 'US', format: 'us_ach' }, '/bank/requirements', { country: 'US', format: 'us_ach' }],
 	['phone', { number: '+14155552671', country: 'US', deep: true }, '/phone/%2B14155552671', { country: 'US', deep: 'true' }],
 	['carrier', { number: '+14155552671', country: 'US' }, '/carrier/%2B14155552671', { country: 'US' }],
 	['caller', { number: '+18004633339', country: 'US' }, '/caller/%2B18004633339', { country: 'US' }],
@@ -116,5 +112,5 @@ export const cases = [
 ];
 
 
-const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "bank", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
 cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,name === 'bank' ? {} : {...query,deep:'true'}]));

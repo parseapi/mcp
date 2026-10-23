@@ -9,7 +9,6 @@ import { registerTasks } from './task.js';
 import packageJson from '../package.json' with { type: 'json' };
 export const VERSION = packageJson.version;
 const API_VERSION = '2.0.0';
-const US_ROUTING_NOTICE = 'Routing reference attribution: https://parseapi.com/legal/attribution#routing-numbers';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -95,7 +94,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, company numbers, email, IBAN, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -130,9 +129,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				const result = ok(data);
 				if (['postal', 'postal_nearby', 'postal_distance'].includes(name) && data && typeof data === 'object' && 'country' in data && data.country === 'AU') {
 					result.content.push({ type: 'text', text: AU_POSTAL_NOTICE });
-				}
-				if (name === 'bank_us_ach' && data && typeof data === 'object' && 'bank_name' in data && typeof data.bank_name === 'string' && data.bank_name.length > 0) {
-					result.content.push({ type: 'text', text: US_ROUTING_NOTICE });
 				}
 				return result;
 			} catch (err) {
@@ -507,16 +503,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
 	);
 	tool(
-		'iban',
-		'Parse an IBAN and check its format, ISO checksum, and published national BBAN checks, with known bank identifiers. Deep adds check digits, branch and account decomposition on every plan. Does not verify an account exists.',
-		{
-			iban: z.string().describe('IBAN, with or without spaces, with or without the country prefix'),
-			country: iso2('country code when the number has no prefix').optional(),
-			deep: deep.describe('Include optional detail on every plan.'),
-		},
-		(c, a, request) => c.iban(a.iban, { ...request, deep: a.deep, country: a.country })
-	);
-	tool(
 		'bin',
 		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand key, brand name, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
 		{
@@ -524,34 +510,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
 		},
 		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
-	);
-	tool(
-		'bank',
-		'Send an IBAN in a POST JSON body, keeping it out of the request URL. Parse with core checks and issues for input, country, length, structure, ISO checksum and supported national checks. not_supported is not a failed national check. Known bank names and BICs are independent nullable directory facts. Deep adds check digits, branch, the BBAN account remainder and source edition/match grain when a directory lookup ran, on every plan. Does not verify account existence, ownership or payment reachability.',
-		{
-			iban: z.string().describe('Original IBAN input, with or without the country prefix. Preserve characters exactly so the API can report invalid input. Do not strip punctuation or decode percent escapes.'),
-			country: iso2('country code when the number has no prefix').optional(),
-			deep: deep.describe('Include optional detail on every plan.'),
-		},
-		(c, a, request) => c.bank(a.iban, { ...request, deep: a.deep, country: a.country })
-	);
-	tool(
-		'bank_us_ach',
-		'Check US routing-number format and ABA checksum plus account-field syntax. Sends original strings in a POST JSON body. No universal account checksum is available. A nullable bank_name is routing-directory identity only; this does not establish ACH eligibility, account existence or ownership. No deep option.',
-		{
-			routing: z.string().describe('Original US routing string. Preserve leading zeros and characters; the API validates accepted separators.'),
-			account: z.string().describe('Original account string. Preserve all characters, letter case and leading zeros; do not trim, normalize or decode.'),
-		},
-		(c, a, request) => c.bankUsAch({ routing: a.routing, account: a.account }, request)
-	);
-	tool(
-		'bank_requirements',
-		'Describe supported Bank input fields, normalization rules, check scope and limitations for a country and format. Metadata only: support does not establish directory completeness or payment reachability.',
-		{
-			country: iso2('country code'),
-			format: z.string().optional().describe('Input format, currently iban (default) or us_ach. Unknown formats report supported false.'),
-		},
-		(c, a, request) => c.bankRequirements(a.country, { ...request, format: a.format })
 	);
 
 	tool(

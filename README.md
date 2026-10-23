@@ -57,7 +57,7 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `bank`, `bank_us_ach`, `bank_requirements`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `bank_us_ach`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -206,11 +206,9 @@ The [agent benchmark](eval/README.md) compares full and compact discovery on fix
 MIT licensed.
 
 
-Bank returns core `checks` for input, country, length, structure, checksum and national rules, plus an `issues` list. States are `passed`, `failed`, `not_checked` or `not_supported`. Unsupported national checking is not a failure. `valid` covers the implemented format and checksum rules, not account existence, ownership or payment reachability. Directory names and BICs may be null independently. Older responses may omit `checks` and `issues`, and future states and issue codes remain strings. Pass the original input unchanged so the API can report invalid characters. Deep `account` remains the BBAN remainder.
-
 ## Optional detail
 
-Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone, Bank and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
 Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
 

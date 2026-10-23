@@ -47,25 +47,6 @@ test('Australian Postal choices preserve core ambiguity and source notice on bot
 	}
 });
 
-test('Bank checks, issues and raw input survive both transports', async (t) => {
-	const fixture = JSON.parse(await readFile(new URL('./bank-fixtures.json', import.meta.url), 'utf8'));
-	let record;
-	const { rpc, calls } = await setup(t, { fetch: () => response(record) });
-	const hosted = await connect('test_key', 'http');
-	t.after(() => hosted.close());
-	for (const target of [rpc, hosted]) {
-		for (const payload of fixture.records) {
-			record = payload;
-			for (const iban of fixture.inputs) {
-				assert.deepEqual(body(await target.call('bank', { iban, deep: true })), payload);
-				assert.equal(calls.at(-1).url.pathname + calls.at(-1).url.search, '/bank');
-				assert.equal(calls.at(-1).init.method, 'POST');
-				assert.deepEqual(JSON.parse(calls.at(-1).init.body), { iban, deep: true });
-			}
-		}
-	}
-});
-
 test('Australian Postal choices preserve core ambiguity and source notice on both transports', async (t) => {
 	let record;
 	const { rpc } = await setup(t, { fetch: () => response(record) });
@@ -156,7 +137,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 74);
+	assert.equal(tools.length, 70);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -164,7 +145,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 79);
+	assert.equal(result.tools.length, 75);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);

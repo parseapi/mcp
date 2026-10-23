@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { connect, body } from './helpers.mjs';
 
-const retired = ['provider','npi','vat','bloc','bloc_countries','tariff','tariff_search','tariff_calculate','tariff_calculate_batch','tariff_coverage','tariff_changes','tariff_remedies','tariff_fee_estimates'];
+const retired = ['bank','iban','ach','routing','bank_us_ach','bank_requirements','iban_requirements','ach_requirements','provider','npi','vat','bloc','bloc_countries','tariff','tariff_search','tariff_calculate','tariff_calculate_batch','tariff_coverage','tariff_changes','tariff_remedies','tariff_fee_estimates'];
 for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact']) {
  test(`retired catalog tools cannot dispatch an API call over ${transport}/${mode}`, async t => {
   let calls = 0;
