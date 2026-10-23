@@ -2,12 +2,12 @@
 	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
 	"name": "com.parseapi/mcp",
 	"title": "ParseAPI",
-	"description": "Official ParseAPI MCP. Place, IP, email, phone, weather, currency lookups.",
+	"description": "Official ParseAPI MCP. Place, IP, email, phone, weather lookups.",
 	"repository": {
 		"url": "https://github.com/parseapi/mcp",
 		"source": "github"
 	},
-	"version": "1.10.4",
+	"version": "1.10.5",
 	"remotes": [
 		{
 			"type": "streamable-http",
@@ -26,7 +26,7 @@
 		{
 			"registryType": "npm",
 			"identifier": "parseapi-mcp",
-			"version": "1.10.4",
+			"version": "1.10.5",
 			"transport": {
 				"type": "stdio"
 			},

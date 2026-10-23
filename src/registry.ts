@@ -29,7 +29,7 @@ const countryOpt = z
 const titleWords: Record<string, string> = {
 	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX',
 	iban: 'IBAN', naics: 'NAICS', bin: 'BIN',
-	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', mac: 'MAC', useragent: 'User Agent',
+	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', useragent: 'User Agent',
 };
 
 const cityScope = {
@@ -64,7 +64,7 @@ function cityCollectionArguments(args: { min_population?: number; max_population
 		bbox: args.bbox, sort: args.sort, order: args.order, page: args.page || undefined, cursor: args.cursor, format: args.format, romanized: args.romanized || undefined };
 }
 
-const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","measure_units","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
+const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
@@ -94,7 +94,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, company numbers, email, phone, domains, weather, currency, measurements, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, phone, domains, weather, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -148,28 +148,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			(args, context) => invoke(args, context.mcpReq.signal)
 		);
 	}
-
-	tool(
-		'measure',
-		'Parse a measurement or convert it to a target unit. Supports mixed measurements such as 5 ft 11 in. Amount is a decimal string. Without to, returns the canonical unit for its type. Successful JSON omits reason and choices. Invalid input adds reason, and ambiguous units add choices. Use measure_units to discover accepted units. Pooled request, no separate check charge.',
-		{
-			measure: z.string().min(1).max(256).describe('Measurement to parse, e.g. 5 ft 11 in or 10 kg'),
-			to: z.string().min(1).max(128).optional().describe('Target unit, e.g. cm or lb'),
-			locale: z.string().min(1).max(32).optional().describe('Explicit number locale, e.g. de-DE'),
-			system: z.enum(['us', 'imperial']).optional().describe('Resolve an ambiguous customary unit using the stated system'),
-		},
-		(c, a, request) => c.measure(a.measure, { ...request, to: a.to, locale: a.locale, system: a.system })
-	);
-	tool(
-		'measure_units',
-		'Discover the reviewed measurement units, canonical codes, types and aliases. With no filters, returns the full catalog. Pass unit to find compatible conversion targets. Combine query and type to narrow results.',
-		{
-			query: z.string().max(128).optional().describe('Search text, e.g. foot'),
-			type: z.string().min(1).max(64).optional().describe('Measurement type, e.g. length'),
-			unit: z.string().min(1).max(128).optional().describe('Return units compatible with this unit, e.g. m'),
-		},
-		(c, a, request) => c.measure.units({ ...request, query: a.query, type: a.type, unit: a.unit })
-	);
 
 	// Locate
 	tool(
@@ -579,10 +557,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		c.asn(a.asn, request)
 	);
 
-	tool('mac', 'Normalize a 48-bit MAC address and return its registered assignment holder, local flag, and multicast flag. Vendor is null for local or multicast addresses.', { mac: z.string().describe('MAC address') }, (c, a, request) =>
-		c.mac(a.mac, request)
-	);
-
 	tool(
 		'dns',
 		'Look up published DNS records with TTLs. Pooled on every plan. Omit type to check all ten supported types. The selected question may include its CNAME chain. Values retain DNS presentation syntax, including TXT quoting.',
@@ -633,31 +607,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			deep: deep.describe('Include the complete detail bag on a paid plan.'),
 		},
 		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
-	);
-	tool(
-		'currency',
-		'Currency name, symbols and decimal places. Deep adds numeric code, plural name and using countries on every plan.',
-		{ code: z.string().describe('ISO 4217 code, e.g. USD'), deep: deep.describe('Include optional detail on every plan.') },
-		(c, a, request) => c.currency(a.code, { ...request, deep: a.deep })
-	);
-	tool(
-		'currency_rate',
-		'Reference exchange rate between two currencies. Pass date for a past business day, amount to convert.',
-		{
-			base: z.string().describe('Base currency ISO 4217 code, e.g. USD'),
-			quote: z.string().describe('Quote currency ISO 4217 code, e.g. EUR'),
-			date: z
-				.string()
-				.optional()
-				.describe(
-					'YYYY-MM-DD. Official rate for that business day. A weekend or holiday resolves to the last published day on or before it'
-				),
-			amount: z
-				.number()
-				.optional()
-				.describe('Appends amount and converted, rounded to the quote currency minor-unit digits'),
-		},
-		(c, a, request) => c.currency.rate(a.base, a.quote, { ...request, date: a.date, amount: a.amount })
 	);
 	tool(
 		'language',

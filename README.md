@@ -1,6 +1,6 @@
 # parseapi-mcp
 
-Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, currency, timezones, dates and more from your AI agent.
+Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, timezones, dates and more from your AI agent.
 
 ## Hosted
 
@@ -73,7 +73,6 @@ Example tool arguments:
 | `dns` | `{"domain":"example.com","type":"TXT"}` |
 | `mx` | `{"domain":"example.com"}` |
 | `asn` | `{"asn":"AS13335"}` |
-| `mac` | `{"mac":"00:1B:63:84:45:E6"}` |
 | `card` | `{"bin":"424242"}` |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
@@ -177,16 +176,8 @@ package does not activate it.
 
 Display names follow available source translations. IDs, native-name fields,
 numbers and input parsing stay unchanged. Omitted language keeps the default
-behavior. Measure parsing, currency rates, Holiday and prove tools have no new
+behavior. Holiday and prove tools have no new
 language argument.
-
-## Measurements
-
-Call `measure` with `{ "measure": "5 ft 11 in", "to": "cm" }`. The result keeps the amount as the decimal string `"180.34"`. Without `to`, the result uses the canonical unit for its type. Optional `locale` and `system` (`us` or `imperial`) resolve explicit number or customary-unit ambiguity.
-
-Call `measure_units` with `{ "unit": "m" }` to discover compatible targets, or `{}` for the reviewed catalog. Optional `query` and `type` filters narrow the list. Ambiguous input remains a successful result with `valid: false`, `reason`, and `choices`. Invalid targets return the ordinary API error. Both tools use pooled requests.
-
-Successful JSON has `measure`, `valid`, `type`, `amount`, and `unit`. Invalid input adds `reason`. `choices` appears only when alternatives are available.
 
 ## Development
 
@@ -208,7 +199,7 @@ MIT licensed.
 
 ## Optional detail
 
-Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Currency, Language, Emoji, Phone and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Language, Emoji, Phone and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
 Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
 

@@ -14,10 +14,6 @@ export const cases = [
 	['industry', { code: '31-33' }, '/industry/31-33'],
 	['industry_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],
 	['industry_search', { query: 'plumbing' }, '/industry', { q: 'plumbing' }],
-	['measure', { measure: '5 ft 11 in', to: 'cm', locale: 'en-US', system: 'us' }, '/measure/5%20ft%2011%20in', { to: 'cm', locale: 'en-US', system: 'us' }],
-	['measure', { measure: '1 kg/m^3', to: 'g/L' }, '/measure/1%20kg%2Fm%5E3', { to: 'g/L' }],
-	['measure_units', { query: 'US gallon', type: 'volume', unit: 'L' }, '/measure/units', { q: 'US gallon', type: 'volume', unit: 'L' }],
-	['measure_units', {}, '/measure/units'],
 	['ip', { ip: '2001:db8::1', deep: true }, '/ip/2001%3Adb8%3A%3A1', { deep: 'true' }],
 	['ip_self', { deep: true }, '/ip', { deep: 'true' }],
 	['continent', { code: 'NA' }, '/continent/NA'],
@@ -50,13 +46,10 @@ export const cases = [
 	['stack', { domain: 'bücher.example', pretty: true }, '/stack/b%C3%BCcher.example', { pretty: 'true' }],
 	['domain', { domain: 'example.com', deep: true }, '/domain/example.com', { deep: 'true' }],
 	['asn', { asn: 'AS13335' }, '/asn/AS13335'],
-	['mac', { mac: '00:1B:63:84:45:E6' }, '/mac/00%3A1B%3A63%3A84%3A45%3AE6'],
 	['dns', { domain: 'example.com' }, '/dns/example.com'],
 	['dns', { domain: '_dmarc.bücher.example.', type: 'TXT' }, '/dns/_dmarc.b%C3%BCcher.example.', { type: 'TXT' }],
 	['mx', { domain: 'example.com' }, '/mx/example.com'],
 	['useragent', { ua: 'Example Browser/1.0', deep: true }, '/useragent', { deep: 'true' }],
-	['currency', { code: 'USD' }, '/currency/USD'],
-	['currency_rate', { base: 'USD', quote: 'EUR', date: '2026-08-01', amount: 0 }, '/currency/USD/EUR', { date: '2026-08-01', amount: '0' }],
 	['language', { code: 'en' }, '/language/en'],
 	['name', { name: 'Smith, John' }, '/name/Smith%2C%20John'],
 	['name', { name: 'Andrea', country: 'IT' }, '/name/Andrea', { country: 'IT' }],
@@ -112,5 +105,5 @@ export const cases = [
 ];
 
 
-const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "currency", "date", "district", "emoji", "emoji_search", "hlr", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
+const adpDeep = new Set(["carrier", "city", "city_id", "city_nearby", "city_nearest", "city_search", "country", "date", "district", "emoji", "emoji_search", "hlr", "language", "naics", "naics_search", "industry", "industry_search", "name", "postal", "postal_distance", "postal_nearby", "state", "time"]);
 cases.push(...cases.filter(([name]) => adpDeep.has(name)).map(([name,args,path,query = {}]) => [name,{...args,deep:true},path,name === 'bank' ? {} : {...query,deep:'true'}]));

@@ -137,7 +137,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
 	assert.deepEqual(publicSurface(tools), expected);
-	assert.equal(tools.length, 70);
+	assert.equal(tools.length, expected.length);
 	assert.deepEqual([...new Set(cases.map(([name]) => name))].sort(), tools.map(({ name }) => name).sort());
 	assert.equal(calls.length, 0);
 });
@@ -145,7 +145,8 @@ test('tool names and argument schemas match the reviewed public baseline', async
 test('hosted scope excludes only ip_self; listing and keyless calls stay offline', async (t) => {
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
-	assert.equal(result.tools.length, 75);
+	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
+	assert.equal(result.tools.length, expected.length + 5);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -199,7 +200,7 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 36);
+	assert.equal(localized.length, 34);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
@@ -208,7 +209,7 @@ test('display language reaches each supported tool request and stays request-loc
 		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), name === 'emoji_catalog' ? {} : { ...query, lang: 'zh-Hant-HK' });
 		if (name === 'emoji_catalog') assert.equal(new URL(body(called).download_url).searchParams.get('lang'), 'zh-Hant-HK');
 	}
-	for (const name of ['email', 'phone', 'measure', 'currency_rate', 'holiday']) {
+	for (const name of ['email', 'phone', 'holiday']) {
 		assert.equal(result.tools.find(tool => tool.name === name).inputSchema.properties.lang, undefined);
 	}
 	await rpc.call('country', { code: 'DE' });
@@ -323,32 +324,6 @@ test('MCP cancellation aborts the SDK request without retrying', async (t) => {
 	// The protocol may suppress the response to a cancelled request.
 	await rpc.close();
 	await request.response;
-});
-
-
-test('measurement choices and exact amounts stay structured without becoming tool errors', async (t) => {
-	const fixture = { measure: '1 gallon', valid: false, type: null, amount: null, unit: null, reason: 'ambiguous_unit', choices: [{ unit: 'us_gal', name: 'US liquid gallon' }], future: null };
-	const { rpc } = await setup(t, { fetch: () => response(fixture) });
-	const result = await rpc.call('measure', { measure: '1 gallon' });
-	assert.equal(result.result?.isError, undefined);
-	assert.deepEqual(body(result), fixture);
-});
-
-test('measurement bounds and system reject invalid arguments before HTTP', async (t) => {
-	const { rpc, calls } = await setup(t);
-	for (const args of [{ measure: '' }, { measure: 'x'.repeat(257) }, { measure: '1 gallon', system: 'guessed' }, { measure: '1 m', to: '' }]) {
-		assert.equal((await rpc.call('measure', args)).result?.isError, true);
-	}
-	assert.equal(calls.length, 0);
-});
-
-test('incompatible measurement target preserves the API error', async (t) => {
-	const error = { code: 'bad_request', message: 'Incompatible measurement units', docs: null, request_id: 'req_measure' };
-	const { rpc, calls } = await setup(t, { fetch: () => response(error, 400) });
-	const result = await rpc.call('measure', { measure: '1 m', to: 'kg' });
-	assert.equal(result.result.isError, true);
-	assert.deepEqual(body(result), { ...error, retry_after: '0' });
-	assert.equal(calls.length, 1);
 });
 
 
