@@ -167,6 +167,30 @@ Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertis
 
 The policy source is the API's `src/route/help/agent-catalog.json`. Current API help exposes the same metadata as `agent`. Frozen API 1.0.0 help stays unchanged. In a ParseAPI workspace, run `npm run catalog:sync` to copy a reviewed policy change, then `npm run catalog:check`. An independent checkout can pass `-- --source /path/to/api`. Package builds use the checked-in copy and do not need the API checkout or a network request.
 
+## Bulk files
+
+Agents can process a whole CSV using five tools in either catalog mode:
+
+| Tool | Action |
+|---|---|
+| `bulk_upload` | Create an account-owned job and get a private upload URL from the filename and exact byte count. |
+| `bulk_preview` | Confirm the upload, analyze detected columns, select checks and get a sample and quote. |
+| `bulk_start` | Start the current quote within the user's approved `max_cost_cents` in USD cents. |
+| `bulk_status` | Read progress and any required user action. |
+| `bulk_result` | Get a private download URL for the finished file. |
+
+The agent needs a file-capable runtime. Transfer the CSV bytes directly to `upload_url` with `upload_headers` using HTTP PUT. Convert Excel or Numbers to CSV in that runtime first. Tool arguments contain file metadata and job IDs. They accept no file contents, base64, source URLs or server filesystem paths.
+
+First call `bulk_preview` with the upload's `id` and no `checks` to confirm the completed upload and request analysis. Poll `bulk_status` until `job.status` is `quoted`. Then call `bulk_preview`, optionally passing `checks`, such as `["email", "phone", "ip"]`, to select operations present in the detected columns. Changing the selection requests analysis again. Repeat status and preview until the response includes a current `quote`. Inspect the sample and required setup before starting.
+
+`bulk_start` requires that `id`, `quote.id` as `quote_id` and the user's approved `max_cost_cents`. Zero permits only zero additional cost. The server verifies the quote and ceiling. Paid jobs return a payment handoff when needed, and the tool does not charge a saved card. Keep the same job, quote and ceiling when recovering a start request. A lost create response must not trigger a blind second upload.
+
+Fetch the finished `download_url` directly without an API key header. URLs expire and are private capabilities. File contents stay outside model context unless the user separately asks the agent to inspect them. Preserve the original columns and unknown answers in the customer's follow-up task.
+
+Existing Bulk job URLs remain shareable. Treat job IDs and download URLs as file-access capabilities.
+
+The existing API key or OAuth connection owns these jobs. The website origin can be configured with `PARSEAPI_WEB_URL`, independently of the lookup API origin.
+
 ## Display language
 
 This source candidate adds optional `lang` to supported tools. For example,

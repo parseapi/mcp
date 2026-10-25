@@ -1,10 +1,16 @@
 // Live smoke for parseapi-mcp. Run: node smoke/smoke.mjs
 // With PARSEAPI_KEY set it also makes real calls against the edge.
 import { spawn } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { once } from 'node:events';
+import { createServer } from 'node:net';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 const KEY = process.env.PARSEAPI_KEY ?? null;
+const lookupNames = JSON.parse(readFileSync(new URL('../test/public-api.json', import.meta.url), 'utf8')).map(tool => tool.name);
+const controls = ['discover','preflight','task_create','task_status','task_cancel','task_lookup','bulk_upload','bulk_preview','bulk_start','bulk_status','bulk_result'];
+const expectedNames = (transport) => [...lookupNames.filter(name => transport !== 'http' || name !== 'ip_self'), ...controls].sort();
+const catalogMatches = (names, transport) => JSON.stringify([...names].sort()) === JSON.stringify(expectedNames(transport));
 let failures = 0;
 
 function check(name, cond, detail) {
@@ -86,17 +92,17 @@ async function smokeStdio() {
 	await bare.init();
 	const list = await bare.request('tools/list', {});
 	const names = list.result.tools.map((t) => t.name);
-	check('stdio tools/list has 58 lookups, discovery and preflight', names.length === 60 && names.includes('discover') && names.includes('preflight'), `got ${names.length}`);
+	check('stdio catalog matches lookup baseline and Bulk/task controls', catalogMatches(names, 'stdio'), `got ${names.length}`);
 	check('stdio has dns', names.includes('dns'));
 	check('stdio has ip_self', names.includes('ip_self'));
 	check('stdio omits vat', !names.includes('vat'));
 	check('stdio has card', names.includes('card'));
-	check('stdio has bank', names.includes('bank'));
+	check('stdio omits retired Banking tools', !['bank','iban','ach','iban_requirements','ach_requirements'].some(name => names.includes(name)));
 	check('stdio omits npi', !names.includes('provider'));
 	check('stdio omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 	check('stdio has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
-	check('stdio has no company_search', !names.includes('company_search'));
-	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search')).every((tool) => tool.inputSchema.required.includes('query') && !('q' in tool.inputSchema.properties)));
+	check('stdio Company search matches reviewed baseline', names.includes('company_search') === lookupNames.includes('company_search'));
+	check('search tools take query', list.result.tools.filter((tool) => tool.name.endsWith('_search') && tool.name !== 'company_search').every((tool) => tool.inputSchema.required?.includes('query') && !('q' in tool.inputSchema.properties)));
 	check('stdio has no sanctions', !names.includes('sanctions'));
 	check('stdio has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
 	check('stdio omits tariff', !names.includes('tariff') && !names.includes('tariff_search'));
@@ -168,7 +174,10 @@ async function postRpc(port, msg, headers = {}) {
 
 async function smokeHttp() {
 	console.log('\n-- http --');
-	const port = 8917;
+	const reservation = createServer();
+	await new Promise((resolve, reject) => { reservation.once('error', reject); reservation.listen(0, '127.0.0.1', resolve); });
+	const port = reservation.address().port;
+	await new Promise((resolve, reject) => reservation.close(error => error ? reject(error) : resolve()));
 	const child = spawn(process.execPath, ['dist/http.js'], {
 		env: { ...process.env, PORT: String(port), PARSEAPI_KEY: '', PARSEAPI_MCP_MODE: 'full' },
 		stdio: ['ignore', 'inherit', 'inherit'],
@@ -216,14 +225,14 @@ async function smokeHttp() {
 
 		const list = await postRpc(port, { jsonrpc: '2.0', id: 2, method: 'tools/list', params: {} }, dummyKey);
 		const names = (list.result?.tools ?? []).map((t) => t.name);
-		check('http tools/list has 57 lookups, discovery and preflight (no ip_self)', names.length === 59 && names.includes('discover') && names.includes('preflight') && !names.includes('ip_self'), `got ${names.length}`);
+		check('http catalog matches lookup baseline and Bulk/task controls', catalogMatches(names, 'http'), `got ${names.length}`);
 		check('http omits vat', !names.includes('vat'));
 		check('http has card', names.includes('card'));
-		check('http has bank', names.includes('bank'));
+		check('http omits retired Banking tools', !['bank','iban','ach','iban_requirements','ach_requirements'].some(name => names.includes(name)));
 		check('http omits npi', !names.includes('provider'));
 		check('http omits retired vehicle tools', !names.includes('vin') && !names.includes('vehicle'));
 		check('http has address lookup/search and company', ['address', 'address_search', 'company'].every((name) => names.includes(name)));
-		check('http has no company_search', !names.includes('company_search'));
+		check('http Company search matches reviewed baseline', names.includes('company_search') === lookupNames.includes('company_search'));
 		check('http has no sanctions', !names.includes('sanctions'));
 		check('http has no held lookups', !names.some((name) => ['swift', 'routing', 'litigator', 'ofac', 'rnd', 'reassigned'].includes(name)));
 		check('http omits tariff', !names.includes('tariff') && !names.includes('tariff_search'));

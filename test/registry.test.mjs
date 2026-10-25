@@ -132,7 +132,7 @@ test('tool names and argument schemas match the reviewed public baseline', async
 	const result = await rpc.request('tools/list', {});
 	const packageVersion = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version;
 	assert.equal(VERSION, packageVersion);
-	const controls = ['task_create', 'task_status', 'task_cancel', 'task_lookup'];
+	const controls = ['task_create', 'task_status', 'task_cancel', 'task_lookup', ...['bulk_upload', 'bulk_preview', 'bulk_start', 'bulk_status', 'bulk_result']];
 	assert.deepEqual(result.result.tools.filter(({ name }) => controls.includes(name)).map(({ name }) => name).sort(), controls.sort());
 	const tools = result.result.tools.filter(({ name }) => !['discover', 'preflight', ...controls].includes(name));
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
@@ -146,7 +146,7 @@ test('hosted scope excludes only ip_self; listing and keyless calls stay offline
 	const { rpc, calls } = await setup(t, { key: null, transport: 'http' });
 	const { result } = await rpc.request('tools/list', {});
 	const expected = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
-	assert.equal(result.tools.length, expected.length + 5);
+	assert.equal(result.tools.length, expected.length + 10);
 	assert.equal(result.tools.some(({ name }) => name === 'ip_self'), false);
 	const called = await rpc.call('company', { number: '552100554', country: 'FR' });
 	assert.equal(called.result.isError, true);
@@ -199,7 +199,7 @@ for (const transport of ['stdio', 'http']) {
 test('display language reaches each supported tool request and stays request-local', async (t) => {
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
-	const localized = result.tools.filter(tool => tool.inputSchema.properties.lang).map(tool => tool.name);
+	const localized = result.tools.filter(tool => !tool.name.startsWith('bulk_') && tool.inputSchema.properties.lang).map(tool => tool.name);
 	assert.equal(localized.length, 34);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);

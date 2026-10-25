@@ -21,15 +21,15 @@ async function setup(t, { key = 'test_key', transport = 'http', mode = 'compact'
 test('compact catalog advertises discovery and task controls; full preserves every lookup schema', async (t) => {
 	const { rpc, calls } = await setup(t);
 	const compact = (await rpc.request('tools/list', {})).result.tools;
-	assert.deepEqual(compact.map(t => t.name).sort(), ['discover', 'lookup', 'preflight', 'task_cancel', 'task_create', 'task_lookup', 'task_status']);
+	assert.deepEqual(compact.map(t => t.name).sort(), ['discover', 'lookup', 'preflight', 'task_cancel', 'task_create', 'task_lookup', 'task_status', ...['bulk_upload', 'bulk_preview', 'bulk_start', 'bulk_status', 'bulk_result']].sort());
 	const expected = JSON.parse(await readFile(new URL('./discovery-api.json', import.meta.url), 'utf8'));
-	assert.deepEqual(publicSurface(compact.filter(tool => !tool.name.startsWith('task_'))), expected);
+	assert.deepEqual(publicSurface(compact.filter(tool => !tool.name.startsWith('task_') && !tool.name.startsWith('bulk_'))), expected);
 	const full = await connect(null, 'http');
 	t.after(() => full.close());
 	const listed = (await full.request('tools/list', {})).result.tools;
 	const expectedNames = JSON.parse(await readFile(new URL('./public-api.json', import.meta.url), 'utf8'));
-	assert.equal(listed.length, expectedNames.length + 5);
-	assert.ok(JSON.stringify(compact).length < JSON.stringify(listed).length / 4);
+	assert.equal(listed.length, expectedNames.length + 10);
+	assert.ok(JSON.stringify(compact.filter(tool => !tool.name.startsWith('bulk_'))).length < JSON.stringify(listed.filter(tool => !tool.name.startsWith('bulk_'))).length / 4);
 	for (const name of ['email', 'domain', 'dns', 'mx', 'country']) {
 		const detail = body(await rpc.call('discover', { operation: name }));
 		const actual = publicSurface([{ name, inputSchema: detail.operations[0].inputSchema }]);
@@ -48,7 +48,7 @@ test('discovery is local, versioned and separates static policy from account fac
 	assert.equal(data.api_version, '2.0.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
-	assert.deepEqual(data.policy_operations, ["card", "city", "country", "dns", "domain", "email", "emoji", "emoji_browse", "emoji_catalog", "emoji_categories", "emoji_convert", "emoji_metadata", "emoji_parse", "emoji_search", "mx", "time", "time_zones"]);
+	assert.deepEqual(data.policy_operations, ["card", "city", "country", "dns", "domain", "email", "emoji", "emoji_browse", "emoji_catalog", "emoji_categories", "emoji_convert", "emoji_metadata", "emoji_parse", "emoji_search", "holiday", "mx", "postal", "postal_distance", "postal_nearby", "time", "time_zones"]);
 	const source = JSON.parse(await readFile(new URL('../src/agent-catalog.json', import.meta.url), 'utf8'));
 	assert.deepEqual(data.operations[0].policy, source.operations.email);
 	assert.equal(data.operations[0].policy_available, true);
