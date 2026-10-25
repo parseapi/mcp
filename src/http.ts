@@ -86,8 +86,36 @@ async function gate(req: IncomingMessage, res: ServerResponse): Promise<void> {
 	return nodeHandler(req, res);
 }
 
+/** Only explicit browser navigation redirects; wildcard and MCP requests stay MCP. */
+function isBrowserVisit(req: IncomingMessage, path: string | undefined): boolean {
+	if (path !== '/' || (req.method !== 'GET' && req.method !== 'HEAD')) return false;
+	const headers = req.headers;
+	if (headers.authorization !== undefined || headers['x-api-key'] !== undefined ||
+		headers['mcp-session-id'] !== undefined || headers['mcp-protocol-version'] !== undefined) return false;
+	let html = false;
+	for (const range of (headers.accept ?? '').split(',')) {
+		const [media, ...parameters] = range.trim().toLowerCase().split(';');
+		const quality = parameters.find(parameter => parameter.trim().startsWith('q='));
+		const q = quality === undefined ? 1 : Number(quality.trim().slice(2));
+		if (!Number.isFinite(q) || q <= 0 || q > 1) continue;
+		if (media?.trim() === 'text/event-stream' || media?.trim() === 'application/json') return false;
+		if (media?.trim() === 'text/html') html = true;
+	}
+	return html;
+}
+
 createServer((req, res) => {
 	const path = (req.url ?? '/').split('?')[0];
+
+	// Keep setup content on the existing website; MCP clients retain this URL.
+	if (isBrowserVisit(req, path)) {
+		res.writeHead(302, {
+			location: 'https://parseapi.com/mcp',
+			'cache-control': 'no-store',
+			vary: 'Accept',
+		}).end();
+		return;
+	}
 
 	if (req.method === 'GET' && path === '/health') {
 		res.writeHead(200, { 'content-type': 'text/plain' }).end('ok');
