@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.1 — 2026-10-27
+
+- Describe the latest available Country Deep statistics; existing tools and inputs are unchanged.
+
 ## 1.10.0 — 2026-10-15
 
 - Add City spelling search, reviewed hierarchy and relationships, coordinate-nearby lists and city distance tools.
