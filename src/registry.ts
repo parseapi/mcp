@@ -550,7 +550,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'domain',
-		'Check whether a domain is registered. Deep adds registration dates, registrar, status and DNSSEC, included on paid plans. Use dns for DNS records and mx for mail routing.',
+		'Check whether a domain is registered: available is true for unregistered, false for registered, and null when unknown. Deep adds available registration dates, registrar, status and DNSSEC on paid plans. Missing or null DNSSEC is unknown, while false means unsigned. Use dns for DNS records and mx for mail routing.',
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep: deep.describe('Include registration details on a paid plan.') },
 		(c, a, request) => c.domain(a.domain, { ...request, deep: a.deep })
 	);
