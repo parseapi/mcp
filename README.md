@@ -88,16 +88,18 @@ Example tool arguments:
 | `time` | `{"timezone":"America/New_York","at":"2026-11-01T01:30:00","to":"UTC","disambiguation":"later"}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
 | `elevation` | `{"lat":35.2271,"lon":-80.8431}` |
-| `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
-| `elevation` | `{"path":"35.2271,-80.8431|35.5951,-82.5515","samples":100}` |
+| `elevation` | `{"points":"39.7392,-104.9903|39.75,-104.98"}` |
+| `elevation` | `{"path":"39.7392,-104.9903|39.75,-104.98","samples":100}` |
 
 Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
 
 Time Deep includes nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
 
-Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
+Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 points per local batch as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. An accepted local list uses one pooled request, with JSON POST selected automatically for long URLs.
 
-A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. A path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
+A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. An accepted local path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
+
+Each local batch is limited to 25 km between any two coordinates and 12 distinct terrain files in total across the fine grid and all possible global fallback files. For paths, both the supplied vertices and generated samples must fit the 25 km span. The terrain file budget applies to the sampled coordinates. This is a span limit, not a limit on cumulative path length. Send longer or more spread-out routes in shorter sections. An over-limit batch returns HTTP 400. MCP does not silently split or discard coordinates.
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
