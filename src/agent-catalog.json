@@ -134,7 +134,7 @@
         "A live registry query on every request"
       ],
       "required_context": [
-        "domain: a hostname rather than a URL or email address"
+        "domain: a registrable domain such as example.com or example.co.uk, not a URL or email address; Unicode or ASCII IDNA accepted"
       ],
       "freshness": {
         "mode": "observation_reuse",
@@ -150,7 +150,7 @@
         "available": {
           "true": "Registry reported unregistered",
           "false": "Registry reported registered",
-          "null": "No usable current registry observation; availability is unknown"
+          "null": "No usable current registry observation, or this name is a subdomain, public suffix or unsupported registration suffix; availability is unknown"
         },
         "deep": {
           "omitted": "Not requested",
@@ -158,6 +158,12 @@
         },
         "deep.registration": {
           "omitted": "No entitled, usable registration observation"
+        },
+        "deep.registration.dnssec": {
+          "true": "Registry supplied evidence of signed delegation",
+          "false": "Registry supplied evidence of unsigned delegation",
+          "null": "Registry did not supply delegation-signing evidence",
+          "omitted": "No usable registered-domain detail; an unregistered observation contains only registered=false"
         }
       },
       "billing": {
