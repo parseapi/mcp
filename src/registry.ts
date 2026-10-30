@@ -179,7 +179,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'country',
-		'Country names, language codes, currency, calling code and timezones. Deep adds the country reference profile on paid plans, including latest available GDP in US dollars, GDP per person, population growth percent, urban population percent, internet use percent, population, land/water area in km2, coastline in km, mean and extreme elevations in metres, tax and locale conventions. Unknown geography values stay null.',
+		'Country everyday reference: name, name_full, name_local, demonym, ISO3 and numeric codes, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, lat, lon). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);

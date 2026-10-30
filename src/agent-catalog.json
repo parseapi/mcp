@@ -376,8 +376,8 @@
       "operation": "country",
       "endpoint": "GET /country/{code}",
       "determines": [
-        "Country reference information by ISO2, ISO3 or name",
-        "With entitled deep=true, geography, population and national reference attributes"
+        "Country everyday reference by ISO2, ISO3 or name; Core includes name, name_full, name_local, demonym, ISO3 and numeric identity, continent, region and subregion, currency, languages, calling code, flag, timezones, neighboring countries, bloc memberships and capital object (name, lat, lon)",
+        "With entitled deep=true, population, total area, physical geography and national statistics, including gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent, internet_users_percent and elevation_average in meters"
       ],
       "does_not_determine": [
         "A live census or uniform observation date for every field",

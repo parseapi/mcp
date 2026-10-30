@@ -1,0 +1,110 @@
+{
+  "country": "US",
+  "iso3": "USA",
+  "numeric": 840,
+  "name": "United States",
+  "name_full": "United States of America",
+  "name_local": null,
+  "demonym": "American",
+  "continent": "NA",
+  "region": "Americas",
+  "subregion": "Northern America",
+  "currency": "USD",
+  "currency_name": "United States Dollar",
+  "currency_symbol": "$",
+  "calling_code": "+1",
+  "flag": "🇺🇸",
+  "languages": [
+    "en"
+  ],
+  "timezones": [
+    "America/Adak",
+    "America/Anchorage",
+    "America/Boise",
+    "America/Chicago",
+    "America/Denver",
+    "America/Detroit",
+    "America/Indiana/Indianapolis",
+    "America/Indiana/Knox",
+    "America/Indiana/Marengo",
+    "America/Indiana/Petersburg",
+    "America/Indiana/Tell_City",
+    "America/Indiana/Vevay",
+    "America/Indiana/Vincennes",
+    "America/Indiana/Winamac",
+    "America/Juneau",
+    "America/Kentucky/Louisville",
+    "America/Kentucky/Monticello",
+    "America/Los_Angeles",
+    "America/Menominee",
+    "America/Metlakatla",
+    "America/New_York",
+    "America/Nome",
+    "America/North_Dakota/Beulah",
+    "America/North_Dakota/Center",
+    "America/North_Dakota/New_Salem",
+    "America/Phoenix",
+    "America/Sitka",
+    "America/Yakutat",
+    "Pacific/Honolulu"
+  ],
+  "borders": [
+    "CA",
+    "MX"
+  ],
+  "blocs": [
+    "G7",
+    "NATO",
+    "OECD"
+  ],
+  "capital": {
+    "name": "Washington, D.C.",
+    "lat": 38.89,
+    "lon": -77.05
+  },
+  "deep": {
+    "population": 340110988,
+    "gdp_usd": 30769700000000,
+    "gdp_per_capita_usd": 90026.52,
+    "population_growth_percent": 0.52,
+    "urban_population_percent": 80.19,
+    "internet_users_percent": 94.69,
+    "area": 9629091,
+    "land_area": null,
+    "water_area": null,
+    "coastline": 19924,
+    "lowest_point": {
+      "name": "Death Valley",
+      "elevation": -86
+    },
+    "highest_point": {
+      "name": "Mount McKinley",
+      "elevation": 6190
+    },
+    "elevation_average": 760,
+    "tld": ".us",
+    "week_start": "sunday",
+    "units": "imperial",
+    "driving_side": "right",
+    "plugs": [
+      "A",
+      "B"
+    ],
+    "voltage": 120,
+    "frequency": 60,
+    "emergency": {
+      "police": "911",
+      "ambulance": "911",
+      "fire": "911"
+    },
+    "postal_format": "#####",
+    "postal_regex": "^(?:(\\d{5})(?:[ \\-](\\d{4}))?)$",
+    "tax": {
+      "name": null,
+      "rate": null
+    },
+    "ioc": "USA",
+    "fifa": "USA",
+    "plate": "USA"
+  }
+}

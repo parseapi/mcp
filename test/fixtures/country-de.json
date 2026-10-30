@@ -1,0 +1,95 @@
+{
+  "country": "DE",
+  "iso3": "DEU",
+  "numeric": 276,
+  "name": "Germany",
+  "name_full": "Federal Republic of Germany",
+  "name_local": "Deutschland",
+  "demonym": "German",
+  "continent": "EU",
+  "region": "Europe",
+  "subregion": "Western Europe",
+  "currency": "EUR",
+  "currency_name": "Euro",
+  "currency_symbol": "€",
+  "calling_code": "+49",
+  "flag": "🇩🇪",
+  "languages": [
+    "de"
+  ],
+  "timezones": [
+    "Europe/Berlin",
+    "Europe/Zurich"
+  ],
+  "borders": [
+    "AT",
+    "BE",
+    "CH",
+    "CZ",
+    "DK",
+    "FR",
+    "LU",
+    "NL",
+    "PL"
+  ],
+  "blocs": [
+    "EEA",
+    "EU",
+    "EUROZONE",
+    "G7",
+    "NATO",
+    "OECD",
+    "SCHENGEN",
+    "SEPA"
+  ],
+  "capital": {
+    "name": "Berlin",
+    "lat": 52.52,
+    "lon": 13.4
+  },
+  "deep": {
+    "population": 83516593,
+    "gdp_usd": 5050922925047.05,
+    "gdp_per_capita_usd": 60496.44,
+    "population_growth_percent": -0.03,
+    "urban_population_percent": 82.14,
+    "internet_users_percent": 93.5,
+    "area": 357021,
+    "land_area": null,
+    "water_area": null,
+    "coastline": 2389,
+    "lowest_point": {
+      "name": "Neuendorf bei Wilster",
+      "elevation": -3.5
+    },
+    "highest_point": {
+      "name": "Zugspitze",
+      "elevation": 2963
+    },
+    "elevation_average": 263,
+    "tld": ".de",
+    "week_start": "monday",
+    "units": "metric",
+    "driving_side": "right",
+    "plugs": [
+      "C",
+      "F"
+    ],
+    "voltage": 230,
+    "frequency": 50,
+    "emergency": {
+      "police": "110",
+      "ambulance": "112",
+      "fire": "112"
+    },
+    "postal_format": "#####",
+    "postal_regex": "^(?:\\d{5})$",
+    "tax": {
+      "name": "VAT",
+      "rate": 19
+    },
+    "ioc": "GER",
+    "fifa": "GER",
+    "plate": "D"
+  }
+}
