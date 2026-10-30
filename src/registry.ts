@@ -543,7 +543,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'stack',
-		'Identify website technologies and available versions by category. Requires a hostname only. CMS, servers, frameworks, ecommerce, analytics, chat, payments and hosting are arrays of technology, name and nullable version. checked_at gives the check time. Scope is homepage or site; pages counts successfully checked HTML pages. Partial is true for homepage-only or incomplete bounded checks, false only when known in-scope candidates finished, never a guarantee every page was visited. When no page could be checked, checked_at and all categories are null, pages is 0 and partial is null. Empty arrays mean no matches. Missing detections do not prove absence. Uses one request from the plan allowance. Successful checks may be reused for up to 24 hours.',
+		'Identify website technologies and available versions by category. Requires a hostname only. CMS, servers, frameworks, ecommerce, analytics, chat, payments and hosting are arrays of technology, name and nullable version. checked_at gives the check time. The check covers static homepage HTML and response headers. When no page could be checked, checked_at and all categories are null. Empty arrays mean no matches. Detections describe the checked homepage. Uses one request from the plan allowance. Successful checks may be reused for up to 24 hours.',
 		{ domain: z.string().min(1).max(253).describe('Public website hostname only, e.g. example.com. No scheme, path, port or IP address.'), pretty: z.boolean().optional().describe('Format the JSON response.') },
 		(c, a, request) => c.stack(a.domain, { ...request, pretty: a.pretty })
 	);
