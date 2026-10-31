@@ -426,11 +426,11 @@
         "capital.name": {
           "null": "Selected capital name unavailable"
         },
-        "capital.lat": {
+        "capital.latitude": {
           "null": "Selected capital latitude unavailable",
           "zero": "Known latitude at the equator"
         },
-        "capital.lon": {
+        "capital.longitude": {
           "null": "Selected capital longitude unavailable",
           "zero": "Known longitude at the prime meridian"
         }

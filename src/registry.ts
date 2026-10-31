@@ -179,7 +179,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'country',
-		'Country everyday reference: name, name_full, name_local, demonym, iso_alpha3 and iso_numeric identifiers, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, lat, lon). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
+		'Country everyday reference: name, name_full, name_local, demonym, iso_alpha3 and iso_numeric identifiers, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, latitude, longitude). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
