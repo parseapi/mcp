@@ -70,8 +70,8 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 64);
-	assert.equal(names.length, 64);
+	assert.equal(new Set(names).size, 66);
+	assert.equal(names.length, 66);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);

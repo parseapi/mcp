@@ -1,6 +1,8 @@
 // Expected public HTTP mapping, independent of the registry implementation.
 // All knobs are populated to catch silently dropped arguments.
 export const cases = [
+	['currency', { code: 'USD' }, '/currency/USD'],
+	['currency_rate', { base: 'USD', quote: 'EUR', date: '2026-08-01', amount: 0 }, '/currency/USD/EUR', { date: '2026-08-01', amount: '0' }],
 	["company_id",{"id":"co_id/with #?","deep":true},"/company/id/co_id%2Fwith%20%23%3F",{"deep":"true"}],
 	["company_search",{"query":"Café & Labs","country":"US","limit":3,"cursor":"page+/=?","deep":true},"/company",{"q":"Café & Labs","country":"US","limit":"3","cursor":"page+/=?","deep":"true"}],
 	["company_search",{"domain":"https://www.example.com/a?b=c&d=e","deep":false},"/company",{"domain":"https://www.example.com/a?b=c&d=e"}],

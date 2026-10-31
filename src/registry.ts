@@ -65,7 +65,7 @@ function cityCollectionArguments(args: { min_population?: number; max_population
 		bbox: args.bbox, sort: args.sort, order: args.order, page: args.page || undefined, cursor: args.cursor, format: args.format, romanized: args.romanized || undefined };
 }
 
-const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
+const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
@@ -812,6 +812,31 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		{text:z.string().max(16000),direction:z.enum(['to_shortcodes','to_emoji']),shortcode_source:z.enum(['cldr','github','slack','discord'])},
 		(c,a,request)=>c.emoji.convert(a.text,{...request,direction:a.direction,shortcodeSource:a.shortcode_source}));
 
+tool(
+		'currency',
+		'Currency numeric code, names, symbols, decimal places and country references, all included in the ordinary lookup.',
+		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
+		(c, a, request) => c.currency(a.code, request)
+	);
+tool(
+		'currency_rate',
+		'Reference exchange rate between two currencies. Pass date for a past business day, amount to convert.',
+		{
+			base: z.string().describe('Base currency ISO 4217 code, e.g. USD'),
+			quote: z.string().describe('Quote currency ISO 4217 code, e.g. EUR'),
+			date: z
+				.string()
+				.optional()
+				.describe(
+					'YYYY-MM-DD. Official rate for that business day. A weekend or holiday resolves to the last published day on or before it'
+				),
+			amount: z
+				.number()
+				.optional()
+				.describe('Appends amount and converted, rounded to the quote currency minor-unit digits'),
+		},
+		(c, a, request) => c.currency.rate(a.base, a.quote, { ...request, date: a.date, amount: a.amount })
+	);
 	registerDiscovery(server, operations, mode, API_VERSION);
 	registerPreflight(server, parse, transport);
 	registerTasks(server, parse, transport);

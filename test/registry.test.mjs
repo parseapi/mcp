@@ -200,7 +200,7 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => !tool.name.startsWith('bulk_') && tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 34);
+	assert.equal(localized.length, 35);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });

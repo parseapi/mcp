@@ -1335,6 +1335,55 @@
     }
   },
   {
+    "name": "currency",
+    "inputSchema": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "currency_rate",
+    "inputSchema": {
+      "properties": {
+        "amount": {
+          "type": "number"
+        },
+        "base": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "quote": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "quote"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "date",
     "inputSchema": {
       "properties": {
