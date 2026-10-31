@@ -1,0 +1,93 @@
+[
+  {
+    "operation": "country",
+    "code": "US",
+    "deep": false,
+    "body": {
+      "country": "US",
+      "iso3": "USA",
+      "numeric": 840
+    }
+  },
+  {
+    "operation": "country",
+    "code": "US",
+    "deep": false,
+    "body": {
+      "country": "US",
+      "iso_alpha3": "USA",
+      "iso_numeric": 840
+    }
+  },
+  {
+    "operation": "country",
+    "code": "AQ",
+    "deep": false,
+    "body": {
+      "country": "AQ",
+      "iso_alpha3": "ATA",
+      "iso_numeric": 10
+    }
+  },
+  {
+    "operation": "state",
+    "code": "CA",
+    "country": "US",
+    "deep": true,
+    "body": {
+      "state": "CA",
+      "country": "US",
+      "deep": {
+        "iso_3166_2": "US-CA"
+      }
+    }
+  },
+  {
+    "operation": "state",
+    "code": "CA",
+    "country": "US",
+    "deep": false,
+    "body": {
+      "state": "CA",
+      "country": "US",
+      "iso_subdivision": "US-CA"
+    }
+  },
+  {
+    "operation": "language",
+    "code": "hr",
+    "deep": true,
+    "body": {
+      "language": "hr",
+      "deep": {
+        "iso3": "hrv",
+        "countries": [
+          "BA",
+          "HR"
+        ]
+      }
+    }
+  },
+  {
+    "operation": "language",
+    "code": "hr",
+    "deep": false,
+    "body": {
+      "language": "hr",
+      "iso_alpha3": "hrv",
+      "countries": [
+        "BA",
+        "HR"
+      ]
+    }
+  },
+  {
+    "operation": "language",
+    "code": "gsw",
+    "deep": false,
+    "body": {
+      "language": "gsw",
+      "iso_alpha3": "gsw"
+    }
+  }
+]

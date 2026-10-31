@@ -382,8 +382,8 @@
       "operation": "country",
       "endpoint": "GET /country/{code}",
       "determines": [
-        "Country everyday reference by ISO2, ISO3 or name; Core includes name, name_full, name_local, demonym, ISO3 and numeric identity, continent, region and subregion, currency, languages, calling code, flag, timezones, neighboring countries, bloc memberships and capital object (name, lat, lon)",
-        "With entitled deep=true, population, total area, physical geography and national statistics, including gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent, internet_users_percent and elevation_average in meters"
+        "Country everyday identity and references by ISO2, ISO3 or name: names (name, name_full, name_local), demonym, primary country code, iso_alpha3 and iso_numeric, continent, region, subregion, currency, calling code, flag, languages, timezones, borders, bloc codes and capital with coordinates",
+        "With entitled deep=true, specialist geography, population, economic and national reference attributes"
       ],
       "does_not_determine": [
         "A live census or uniform observation date for every field",
@@ -412,16 +412,27 @@
           "null": "Unknown",
           "zero": "Reported landlocked coastline"
         },
-        "deep.tax": {
-          "null": "No national consumption levy is named; local levies may still apply"
-        },
-        "deep.tax_rate": {
-          "null": "Unavailable or no national levy applies",
-          "zero": "Known zero national reference rate"
-        },
         "deep": {
           "omitted": "Not requested",
           "empty_object": "Requested but the plan does not unlock the profile"
+        },
+        "deep.tax.name": {
+          "null": "No national consumption levy is named; local levies may still apply"
+        },
+        "deep.tax.rate": {
+          "null": "Unavailable or no national levy applies",
+          "zero": "Known zero national reference rate"
+        },
+        "capital.name": {
+          "null": "Selected capital name unavailable"
+        },
+        "capital.lat": {
+          "null": "Selected capital latitude unavailable",
+          "zero": "Known latitude at the equator"
+        },
+        "capital.lon": {
+          "null": "Selected capital longitude unavailable",
+          "zero": "Known longitude at the prime meridian"
         }
       },
       "billing": {
@@ -473,7 +484,7 @@
       "endpoint": "GET /time or /time/{timezone}",
       "determines": [
         "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
+        "The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
         "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, source wall-time resolution",
         "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
       ],
@@ -489,7 +500,7 @@
         "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
         "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
         "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
         "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
       ],
       "freshness": {
@@ -872,8 +883,8 @@
         "Complete translations merely from an accepted language"
       ],
       "required_context": [
-        "query: 1\u2013256 characters",
-        "limit: 1\u201350; offset: 0\u2013100000 when paging is required",
+        "query: 1–256 characters",
+        "limit: 1–50; offset: 0–100000 when paging is required",
         "Filtered or explicit-offset search returns total and next_offset; legacy plain-query envelope is preserved"
       ],
       "freshness": {
@@ -946,7 +957,7 @@
       ],
       "required_context": [
         "Omit q to browse",
-        "limit: 1\u201350; offset: 0\u2013100000",
+        "limit: 1–50; offset: 0–100000",
         "Stop when next_offset is null"
       ],
       "freshness": {

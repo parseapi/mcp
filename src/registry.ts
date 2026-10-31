@@ -179,7 +179,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'country',
-		'Country everyday reference: name, name_full, name_local, demonym, ISO3 and numeric codes, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, lat, lon). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
+		'Country everyday reference: name, name_full, name_local, demonym, iso_alpha3 and iso_numeric identifiers, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, lat, lon). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
 		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
@@ -191,7 +191,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'state',
-		'Look up a state or province by code or name. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
+		'Look up a state or province by code or name, with its full iso_subdivision identifier. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
@@ -611,7 +611,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'language',
-		'Language names, script and writing direction. Deep adds ISO3 and country associations on every plan.',
+		'Language names, script, writing direction, iso_alpha3 identifier and country associations.',
 		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('Include optional detail on every plan.') },
 		(c, a, request) => c.language(a.code, { ...request, deep: a.deep })
 	);

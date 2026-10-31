@@ -53,6 +53,15 @@ For local stdio, pin the MCP package version in your application configuration a
 
 MCP packages older than 1.0.0 keep their existing behavior and use the team's default. Keep that default unchanged while older applications depend on it. Rolling back to a package without a version header restores the team default, so rollback only restores the old contract when that default has stayed unchanged. See [API versions and migration](https://parseapi.com/docs/versioning).
 
+## ISO identifiers
+
+Country uses `iso_alpha3` and `iso_numeric`, State uses the full
+`iso_subdivision` code such as `US-CA`, Language uses `iso_alpha3`, and Currency
+uses `iso_numeric`. Primary `country`, `state`, `language` and `currency` codes
+keep their meaning. Results retain the selected API contract's exact keys,
+values, nulls and nesting. Earlier server contracts retain their earlier ISO
+spellings. Use the existing lookup methods for each resource.
+
 ## Tools
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
@@ -225,7 +234,7 @@ MIT licensed.
 
 ## Optional detail
 
-Country Core contains the everyday reference: `name`, `name_full`, `name_local`, demonym and country codes, continent, region and subregion, currency, calling code, `flag`, language and timezone codes, borders, bloc memberships and `capital: { name, lat, lon }`. Paid Deep adds specialist detail, including population, total area and national statistics. `gdp_usd` and `gdp_per_capita_usd` are current US dollars; `population_growth_percent`, `urban_population_percent` and `internet_users_percent` use a 0–100 percent scale (growth can be negative or exceed 100). GDP per person and these three percentages round once to two decimals in the API response. `elevation_average` is average terrain elevation in meters; `lowest_point.elevation` and `highest_point.elevation` keep their point-specific meaning. Unknown stays null and a known zero stays zero. Country tax references are grouped once as `deep.tax: { name, rate }`; the rate remains a percentage. Read capital from the Core object and read the tax name and rate from the Deep tax object.
+Country Core contains the everyday reference: `name`, `name_full`, `name_local`, demonym, `iso_alpha3` and `iso_numeric` country identifiers, continent, region and subregion, currency, calling code, `flag`, language and timezone codes, borders, bloc memberships and `capital: { name, lat, lon }`. Paid Deep adds specialist detail, including population, total area and national statistics. `gdp_usd` and `gdp_per_capita_usd` are current US dollars; `population_growth_percent`, `urban_population_percent` and `internet_users_percent` use a 0–100 percent scale (growth can be negative or exceed 100). GDP per person and these three percentages round once to two decimals in the API response. `elevation_average` is average terrain elevation in meters; `lowest_point.elevation` and `highest_point.elevation` keep their point-specific meaning. Unknown stays null and a known zero stays zero. Country tax references are grouped once as `deep.tax: { name, rate }`; the rate remains a percentage. Read capital from the Core object and read the tax name and rate from the Deep tax object.
 
 Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Language, Emoji, Phone and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
