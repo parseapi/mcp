@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.3 — 2026-11-01
+
+- Correct non-Card descriptions of existing optional Deep access; preserve tool inputs, handlers and API response JSON.
+
 ## 1.12.2 — 2026-10-31
 
 - Clarify Weather minute precipitation rates and preserve historical daily totals, nullable collections and raw JSON on both transports.

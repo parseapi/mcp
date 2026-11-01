@@ -529,7 +529,7 @@
         },
         "deep": {
           "omitted": "Not requested",
-          "object": "Requested; optional detail is included on every plan"
+          "object": "Requested; optional detail is included on paid plans or with retained Deep access. Locked requests return {}"
         },
         "http_status": {
           "400": "Invalid input, or a repeated/nonexistent source wall time with disambiguation=reject. Supply an explicit UTC offset or choose earlier/later",
@@ -584,7 +584,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Optional time detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
@@ -848,7 +848,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Included reference detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
       },
@@ -922,7 +922,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Included reference detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
       },
@@ -995,7 +995,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Included reference detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
       },
@@ -1184,7 +1184,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Included reference detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
       },
@@ -1257,7 +1257,7 @@
           "app": "Allowed X-App-Id required"
         },
         "deep": {
-          "entitlement": "Included reference detail on every plan"
+          "entitlement": "Included on paid plans. Existing accounts retain their current Deep access"
         },
         "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
       },

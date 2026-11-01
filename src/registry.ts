@@ -77,7 +77,7 @@ const emojiFilters = {
 	max_version: z.string().optional().describe('Latest Emoji release to include, such as 16.0.'),
 	include_skin_tones: z.boolean().optional().describe('Include skin-tone variants. Explicit false excludes them.'),
 	offset: z.number().int().min(0).max(100000).optional().describe('Page offset. Reuse next_offset with the same filters.'),
-	deep: deep.describe('Include optional reference detail on every plan.'),
+	deep: deep.describe("Include optional detail when supported; access follows this operation's plan or included-unit rules."),
 };
 
 
@@ -429,7 +429,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'point',
-		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds terrain and a compact nearest-city summary on every plan. The timezone ID stays in core. Nearest city is null when none is within 200 km.',
+		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds terrain and a compact nearest-city summary with its ID and distance on paid plans; existing accounts retain their current Deep access. The timezone ID stays in core. Nearest city is null when none is within 200 km.',
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
@@ -504,7 +504,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'phone',
-		'Parse and validate a phone number with national and international display formats. Deep adds numbering-plan state and timezone on every plan. These do not locate a handset.',
+		'Parse and validate a phone number with national and international display formats. Deep adds numbering-plan state and timezone on paid plans; existing accounts retain their current Deep access. These do not locate a handset.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -612,7 +612,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	tool(
 		'language',
 		'Language names, script, writing direction, iso_alpha3 identifier and country associations.',
-		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('Include optional detail on every plan.') },
+		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('All language facts are in Core. Requested Deep is empty.') },
 		(c, a, request) => c.language(a.code, { ...request, deep: a.deep })
 	);
 	tool(
@@ -628,7 +628,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'time',
-		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds wall-time resolution, standard/seasonal offsets and actual DST-season transitions on every plan.',
+		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds wall-time resolution, standard/seasonal offsets and actual DST-season transitions on paid plans; existing accounts retain their current Deep access.',
 		{
 			timezone: z.string().min(1).refine(zone => !['zones', 'help'].includes(zone.trim().toLowerCase()), { message: 'Time source must be an IANA timezone ID. Use time_zones to list IDs.' }).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when all source selectors are absent'),
 			lat: lat.optional(),
@@ -645,7 +645,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			disambiguation: z.enum(['compatible', 'earlier', 'later', 'reject']).optional().describe('For offsetless at with to or targets at a clock change. Default compatible chooses the earlier repeated time or advances a skipped time. earlier and later choose the respective instant. For user-entered appointments prefer reject: repeated times return ambiguous_time and skipped times nonexistent_time. Ask for an explicit offset or earlier/later choice. Deep resolution explains a successful choice. Explicit offsets select the instant directly.'),
 			targets: z.array(z.string().trim().min(1).max(64).refine(zone => !zone.includes(','), { message: 'Pass one timezone ID per target.' })).min(1).max(10).optional().describe('Destination IANA IDs, preserving order and duplicates. Use instead of to. All targets share one instant. An unresolved or ambiguous source returns targets null.'),
 			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
-			deep: deep.describe('Include optional detail on every plan.'),
+			deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.'),
 		},
 		(c, a, request) => a.lat !== undefined && a.lon !== undefined
 			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation })
@@ -714,7 +714,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'date',
-		'Parse a date to ISO date, validity and Unix midnight. Ambiguous numeric dates need format. to adds signed days between; omit date for UTC today. Deep adds calendar details on every plan.',
+		'Parse a date to ISO date, validity and Unix midnight. Ambiguous numeric dates need format. to adds signed days between; omit date for UTC today. Deep adds calendar details on paid plans; existing accounts retain their current Deep access.',
 		{
 			date: z
 				.string()
@@ -729,7 +729,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				.string()
 				.optional()
 				.describe('Another date. Appends to (normalized ISO) and days (signed days between)'),
-			deep: deep.describe('Include optional detail on every plan.'),
+			deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.'),
 		},
 		(c, a, request) => {
 			if (a.date == null) return c.date.today({ ...request, deep: a.deep, to: a.to });
@@ -757,8 +757,8 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'emoji',
-		'Resolve an emoji character, shortcode, name or codepoint sequence. Deep adds encoding, keywords, tone relationships and artwork on every plan. Artwork is keyed by style: deep.artwork.openmoji.svg and deep.artwork.openmoji.png["72"].',
-		{ emoji: z.string().describe('Emoji input, e.g. rocket, :rocket:, 🚀 or U+1F680'), shortcode_source: z.enum(['cldr', 'github', 'slack', 'discord']).optional().describe('Resolve the shortcode within this source.'), deep: deep.describe('Include optional detail on every plan.') },
+		'Resolve an emoji character, shortcode, name or codepoint sequence. Deep adds encoding, keywords, tone relationships and artwork on paid plans; existing accounts retain their current Deep access. Artwork is keyed by style: deep.artwork.openmoji.svg and deep.artwork.openmoji.png["72"].',
+		{ emoji: z.string().describe('Emoji input, e.g. rocket, :rocket:, 🚀 or U+1F680'), shortcode_source: z.enum(['cldr', 'github', 'slack', 'discord']).optional().describe('Resolve the shortcode within this source.'), deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.') },
 		(c, a, request) => c.emoji(a.emoji, { ...request, deep: a.deep, shortcodeSource: a.shortcode_source })
 	);
 	tool(

@@ -100,7 +100,7 @@ Example tool arguments:
 | `elevation` | `{"points":"39.7392,-104.9903|39.75,-104.98"}` |
 | `elevation` | `{"path":"39.7392,-104.9903|39.75,-104.98","samples":100}` |
 
-Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
+Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time Deep is available on paid plans in the same pooled request. Existing accounts retain their current Deep access.
 
 Time Deep includes nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
 
