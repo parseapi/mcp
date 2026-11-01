@@ -461,7 +461,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'weather',
-		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Metric and imperial pairs stay together. A date requires paid deep and adds the past UTC day in deep.history alongside current conditions.',
+		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Minute precipitation_rate (mm/h) and precipitation_rate_in (in/h) are rates; deep.history.precipitation and precipitation_in are daily totals. Metric and imperial pairs stay together. A date requires paid deep and adds the past UTC day in deep.history alongside current conditions.',
 		{
 			lat,
 			lon,

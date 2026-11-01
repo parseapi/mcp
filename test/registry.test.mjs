@@ -387,3 +387,16 @@ test('Stack allows a cold scan without changing other tool deadlines', async (t)
 	assert.ok(timer.mock.calls.some(call => call.arguments[1] === 10000));
 	assert.ok(timer.mock.calls.every(call => call.arguments[1] !== 35000));
 });
+
+for (const transport of ['stdio', 'http']) {
+ test(`Postal compact tax and Weather rates preserve raw JSON over ${transport}`, async (t) => {
+  let record;
+  const {rpc} = await setup(t, {transport, fetch: () => response(record)});
+  record = {postal:'10001', country:'US', tax:'Sales tax', tax_rate:8.875, deep:{property_tax:{annual_median:7341}}};
+  assert.deepEqual(body(await rpc.call('postal', {code:'10001', country:'US', deep:true})), record);
+  for (const minutes of [null, [], [{time:'2026-10-31T12:00:00Z',precipitation_rate:0,precipitation_rate_in:null}]]) {
+   record = {latitude:40.7128, longitude:-74.006, deep:{minutes, history:{precipitation:12.4,precipitation_in:0.488}}};
+   assert.deepEqual(body(await rpc.call('weather', {lat:40.7128, lon:-74.006, deep:true})), record);
+  }
+ });
+}

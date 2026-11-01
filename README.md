@@ -327,3 +327,7 @@ Conditional `If-None-Match` reads and GeoJSON currently use HTTP directly. A mat
 Country and State capital coordinates use `latitude` and `longitude`. Update
 `capital.lat` and `capital.lon` reads to `capital.latitude` and
 `capital.longitude` when adopting this release.
+
+## Postal and Weather response corrections
+
+Postal JSON is unchanged: `deep.property_tax` contains `annual_median`; Postal `tax` and `tax_rate` fields remain flat. Weather minute rows use `precipitation_rate` (mm/h) and `precipitation_rate_in` (in/h). Historical `deep.history.precipitation` and `precipitation_in` remain daily totals. Unavailable Weather collections remain `null`; a known empty collection remains `[]`. MCP returns these API values unchanged. Existing clients reading the earlier minute keys must update those reads when using current API 2.0.0; frozen 1.0.0 is preserved.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.12.2 — 2026-10-31
+
+- Clarify Weather minute precipitation rates and preserve historical daily totals, nullable collections and raw JSON on both transports.
+- Verify compact Postal property tax without changing the Postal API response.
+- Use JavaScript SDK 1.13.2; keep every tool, input, entitlement and API selector unchanged.
+
 ## 1.11.1 — 2026-10-27
 
 - Describe the latest available Country Deep statistics; existing tools and inputs are unchanged.
