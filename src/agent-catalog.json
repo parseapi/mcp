@@ -639,7 +639,7 @@
           "deep": {
             "type": "boolean",
             "default": false,
-            "description": "Optional recorded issuer details; included on every plan. Six or more digits enable matching."
+            "description": "Optional recorded issuer details on paid plans; existing accounts retain their current Deep access. Six or more digits enable matching."
           }
         }
       },
@@ -685,7 +685,7 @@
         "metered": null,
         "monetary_quote": null,
         "account_state": "unknown; pooled allowance and accepted account terms are not checked",
-        "deep": "Included in the same pooled request on every plan"
+        "deep": "Included in the same pooled request on paid plans. Existing accounts retain their current Deep access"
       },
       "access": {
         "api_key_required": true,

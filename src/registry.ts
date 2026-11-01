@@ -95,7 +95,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, company numbers, email, phone, domains, weather, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, companies, email, phone, domains, weather, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -381,7 +381,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'company',
-		'Parse a company number and its registered identity, status and address. Paid deep adds business activity and associated identifiers. Geography lookups are separate calls.',
+		'Compatibility national Company-number lookup. This operation is retired on the public API in both contracts. Use company_search and company_id for maintained public-company records. Existing inputs and compatibility methods are preserved.',
 		{
 			number: z.string().describe('Company registration number, e.g. 552100554 with country FR'),
 			country: countryOpt,
@@ -493,12 +493,12 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'card',
-		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional deep adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status. Core identity is independent of issuer coverage. A shorter deep.prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. One pooled request on every plan, including deep.',
+		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional Deep on paid plans adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status; existing accounts retain their current Deep access. Core identity is independent of issuer coverage. A shorter deep.prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. Core uses one pooled request on every plan. Optional Deep follows paid-plan or retained-access rules in that same request.',
 		{
 			bin: z.string().max(64, 'Send a prefix only: 2-11 digits.')
 				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){2,11}$/, 'Send a prefix only: 2-11 digits.')
 				.describe('Processor-provided leading digits as a string, 2-11 ASCII digits. Preserve zeros. Only ASCII space, tab, CR, LF and hyphen separators; at most 64 raw characters. Never send a full card number. Six or more digits enable issuer lookup.'),
-			deep: deep.describe('Include recorded issuer details, pooled on every plan. Omitted by default; fewer than six digits returns all-null Deep fields.'),
+			deep: deep.describe('Include recorded issuer details on paid plans in the same pooled request; existing accounts retain their current Deep access. Omitted by default; locked Deep is empty. With access, fewer than six digits returns all-null Deep fields.'),
 		},
 		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
 	);
@@ -514,7 +514,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'carrier',
-		'Look up current carrier, real line type and burner flag. Deep adds issuing city and state in the same metered lookup, including Free allowance units. No extra check or second paid gate.',
+		'Look up current carrier, line type and burner flag. Type uses the provider observation when mapped; otherwise it retains the numbering-plan type. Deep adds issuing city and state in the same metered lookup, including Free allowance units. No extra check or second paid gate.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),

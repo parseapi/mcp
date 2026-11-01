@@ -1,6 +1,6 @@
 # parseapi-mcp
 
-Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, timezones, dates and more from your AI agent.
+Official ParseAPI MCP server. Look up places, addresses, companies, email, phone, weather, timezones, dates and more from your AI agent.
 
 ## Hosted
 
@@ -66,7 +66,7 @@ spellings. Use the existing lookup methods for each resource.
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `bank_us_ach`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `card`, `industry`, `industry_search`, `dns`, `asn`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -85,7 +85,6 @@ Example tool arguments:
 | `card` | `{"bin":"424242"}` |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
-| `company` | `{"number":"552100554","country":"FR"}` |
 | `company_search` | `{"query":"Cloudflare","country":"US"}` |
 | `company_id` | `{"id":"co_xw3f22es6cjq","deep":true}` |
 | `company_coverage` | `{}` |
@@ -112,24 +111,23 @@ Each local batch is limited to 25 km between any two coordinates and 12 distinct
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
-Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. National-number `company` lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
+Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
 
 For the company directory, call `company_search` with at most one of `query`,
 `domain`, `ticker` or `identifier`. Use `exchange` with a ticker and `authority`
 with an identifier. Review the candidates, then pass the chosen `id` to
 `company_id`. Send the returned `next` as `cursor` with the same selector,
-filters and `limit` for another page. Directory deep adds detail in the same
-pooled request on every plan and belongs to each company result.
+filters and `limit` for another page. Directory Deep adds detail to each company result on paid plans in the same
+pooled request. Existing accounts retain their current Deep access.
 Selected website descriptions, logos, socials and founding claims are returned
 where available. Logo URLs are returned without fetching images. Directory
 tools do not accept `lang`. `company_coverage` describes the edition's records,
-and empty listings do not establish private ownership. The existing `company`
-tool continues to parse national registration numbers.
+and empty listings do not establish private ownership. The `company` tool
+remains listed for compatibility, but national-number lookups are retired on
+the public API. Use `company_search` and `company_id` for maintained public-company records.
 
 For discovery without an identity selector, supply `country` or both `industry` and `industry_type`. For example: `{ "country": "US", "industry": "0700", "industry_type": "sic" }`. SIC is the supported namespace; its exact four-digit code stays a string. Empty requests, incomplete industry pairs and multiple selectors are rejected. Country means the profile country. Filters intersect, unknown values do not match, and the same filters and limit must accompany a returned cursor. Filter-only candidates carry `match: { "field": "filters", "value": null }`.
 
-
-Paid Deep also returns `taxonomies` in published order, with taxonomy code, specialty label, primary flag and provider-reported license number/state, plus `enumerated_at`, `updated_at` and `reactivated_at` record dates. Reported licenses are not verified licenses. Null lists mean unavailable; empty lists mean the edition contains no entries. Provider record dates describe the provider record, not live verification.
 
 Ordinary lookups retry up to twice after a transient failure. A valid `Retry-After` is honored when the wait is at most five seconds; longer waits return the API error immediately without retrying early. When the response supplies this header, the error includes `retry_after` with its original seconds or HTTP-date value. Metered lookups and address deep checks default to no retries. Cancelling a tool call cancels the pending SDK request.
 
@@ -236,7 +234,7 @@ MIT licensed.
 
 Country Core contains the everyday reference: `name`, `name_full`, `name_local`, demonym, `iso_alpha3` and `iso_numeric` country identifiers, continent, region and subregion, currency, calling code, `flag`, language and timezone codes, borders, bloc memberships and `capital: { name, latitude, longitude }`. Paid Deep adds specialist detail, including population, total area and national statistics. `gdp_usd` and `gdp_per_capita_usd` are current US dollars; `population_growth_percent`, `urban_population_percent` and `internet_users_percent` use a 0–100 percent scale (growth can be negative or exceed 100). GDP per person and these three percentages round once to two decimals in the API response. `elevation_average` is average terrain elevation in meters; `lowest_point.elevation` and `highest_point.elevation` keep their point-specific meaning. Unknown stays null and a known zero stays zero. Country tax references are grouped once as `deep.tax: { name, rate }`; the rate remains a percentage. Read capital from the Core object and read the tax name and rate from the Deep tax object.
 
-Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Language, Emoji, Phone and Point include detail on every plan. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Emoji, Phone, Point and Card offer optional detail on paid plans; existing accounts retain their current Deep access. Language includes every reference fact in Core, and requested Deep is empty. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
 
 Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
 
@@ -263,10 +261,6 @@ Time `targets` accepts 1-10 destination IDs instead of `to`. Results retain the 
 
 `time_zones` can filter by country, IANA area, exact offset, abbreviation, DST at an instant or DST occurrence during the UTC calendar year. It preserves explicit false filters. `details` adds rich rows and the common evaluation instant, while the default identifier list remains compact. Abbreviations return candidate zones. Source deep exposes standard and signed seasonal offsets plus actual DST-season transition boundaries. Negative seasonal adjustments and null boundaries retain their meaning.
 
-
-Bank tools send original IBAN, routing and account strings in POST JSON bodies, keeping account input out of URLs. `bank` retains optional country and deep controls. Deep directory evidence identifies the immutable source edition and actual match grain when a directory lookup ran; it does not prove country completeness or reachability. `bank_us_ach` takes routing/account strings and checks the ABA routing checksum plus account-field syntax. It has no deep option and cannot verify an account checksum, existence, ownership or ACH eligibility. Preserve all account characters and leading zeros. `bank_requirements` takes a country and optional format (`iban` by default, or `us_ach`) and returns accepted fields, check scope and limitations. Requirements are metadata, not bank coverage. Avoid logging tool arguments or request bodies containing banking input.
-
-When US ACH returns a bank name, MCP includes a separate [routing reference attribution](https://parseapi.com/legal/attribution#routing-numbers) notice alongside the unchanged JSON result.
 
 
 ## Emoji catalog additions
