@@ -420,12 +420,6 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				return selectors <= 1 && (selectors === 1 || args.country !== undefined || (args.industry !== undefined && args.industry_type !== undefined));
 			}, { message: 'Use at most one selector, or supply country, a complete industry pair.' })
 	);
-	tool(
-		'company_coverage',
-		'Describe the company directory edition, countries and record counts. Counts describe this edition and do not establish complete country or worldwide coverage. A missing profile does not establish that a company does not exist.',
-		{},
-		(c, _a, request) => c.company.coverage(request)
-	);
 
 	tool(
 		'point',

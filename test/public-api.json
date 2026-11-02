@@ -1157,16 +1157,6 @@
     }
   },
   {
-    "name": "company_coverage",
-    "inputSchema": {
-      "properties": {},
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "company_id",
     "inputSchema": {
       "properties": {

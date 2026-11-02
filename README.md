@@ -1,6 +1,6 @@
 # parseapi-mcp
 
-Official ParseAPI MCP server. Look up places, addresses, company numbers, email, phone, weather, timezones, dates and more from your AI agent.
+Official ParseAPI MCP server. Look up places, addresses, companies, email, phone, weather, timezones, dates and more from your AI agent.
 
 ## Hosted
 
@@ -66,7 +66,7 @@ spellings. Use the existing lookup methods for each resource.
 
 Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `bank_us_ach`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `email`, `bank_us_ach`, `card`, `industry`, `industry_search`, `dns`, `asn`, `mac`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
@@ -85,10 +85,8 @@ Example tool arguments:
 | `card` | `{"bin":"424242"}` |
 | `country_states` | `{"code":"US"}` |
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
-| `company` | `{"number":"552100554","country":"FR"}` |
 | `company_search` | `{"query":"Cloudflare","country":"US"}` |
 | `company_id` | `{"id":"co_xw3f22es6cjq","deep":true}` |
-| `company_coverage` | `{}` |
 | `time` | `{}` (UTC now) |
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
@@ -112,19 +110,19 @@ Each local batch is limited to 25 km between any two coordinates and 12 distinct
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
-Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. National-number `company` lookup returns validity, registration status and business details when available. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
+Address lookup returns standardized components and registration status for the US and France. Its `deep` object is currently empty. `address_search` also accepts `postal` and `ip` to narrow or rank matches. French search needs `country: "FR"` and either `postal` or `city`.
 
 For the company directory, call `company_search` with at most one of `query`,
 `domain`, `ticker` or `identifier`. Use `exchange` with a ticker and `authority`
 with an identifier. Review the candidates, then pass the chosen `id` to
 `company_id`. Send the returned `next` as `cursor` with the same selector,
-filters and `limit` for another page. Directory deep adds detail in the same
-pooled request on every plan and belongs to each company result.
+filters and `limit` for another page. Directory Deep adds detail to each company result on paid plans in the same
+pooled request. Existing accounts retain their current Deep access.
 Selected website descriptions, logos, socials and founding claims are returned
 where available. Logo URLs are returned without fetching images. Directory
-tools do not accept `lang`. `company_coverage` describes the edition's records,
-and empty listings do not establish private ownership. The existing `company`
-tool continues to parse national registration numbers.
+tools do not accept `lang`. Empty listings do not establish private ownership. The `company` tool
+remains listed for compatibility, but national-number lookups are retired on
+the public API. Use `company_search` and `company_id` for maintained public-company records.
 
 For discovery without an identity selector, supply `country` or both `industry` and `industry_type`. For example: `{ "country": "US", "industry": "0700", "industry_type": "sic" }`. SIC is the supported namespace; its exact four-digit code stays a string. Empty requests, incomplete industry pairs and multiple selectors are rejected. Country means the profile country. Filters intersect, unknown values do not match, and the same filters and limit must accompany a returned cursor. Filter-only candidates carry `match: { "field": "filters", "value": null }`.
 

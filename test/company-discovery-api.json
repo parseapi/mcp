@@ -1,12 +1,5 @@
 [
   {
-    "name": "company_coverage",
-    "inputSchema": {
-      "properties": {},
-      "type": "object"
-    }
-  },
-  {
     "name": "company_id",
     "inputSchema": {
       "properties": {

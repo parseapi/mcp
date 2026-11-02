@@ -8,7 +8,6 @@ export const cases = [
 	["company_search",{"domain":"https://www.example.com/a?b=c&d=e","deep":false},"/company",{"domain":"https://www.example.com/a?b=c&d=e"}],
 	["company_search",{"ticker":"BRK/B","exchange":"NYSE","country":"US"},"/company",{"ticker":"BRK/B","exchange":"NYSE","country":"US"}],
 	["company_search",{"identifier":"0000081061","authority":"SEC"},"/company",{"identifier":"0000081061","authority":"SEC"}],
-	["company_coverage",{},"/company/directory/coverage"],
 	['bin', { bin: '00 1234-56', deep: true }, '/bin/00%201234-56', { deep: 'true' }],
 	['naics', { code: '31-33' }, '/industry/31-33'],
 	['naics_search', { query: 'coffee & tea', limit: 5 }, '/industry', { q: 'coffee & tea', limit: '5' }],

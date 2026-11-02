@@ -15,7 +15,7 @@ async function setup(t, { mode = 'full', transport = 'http', fetch } = {}) {
 test('directory operations are discoverable without language or invented policies', async t => {
 	const { rpc, calls } = await setup(t, { mode: 'compact' });
 	const rows = [];
-	for (const operation of ['company_id', 'company_search', 'company_coverage']) {
+	for (const operation of ['company_id', 'company_search']) {
 		const item = body(await rpc.call('discover', { operation })).operations[0];
 		assert.equal(item.name, operation); assert.equal(item.policy_available, false); assert.equal(item.policy, null); assert.equal(item.inputSchema.properties.lang, undefined);
 		rows.push({ name: item.name, inputSchema: item.inputSchema });
@@ -45,8 +45,8 @@ test('directory ID and search preserve optional deep, future codes, unknown fiel
 		assert.deepEqual(body(await rpc.call('company_search', { query: 'Cloudflare', deep: true })), value);
 	}
 	value = { companies: [], next: null }; assert.deepEqual(body(await rpc.call('company_search', { domain: 'unknown.example.com' })), value);
-	await rpc.call('company_id', { id, lang: 'fr' }); await rpc.call('company_coverage', { lang: 'fr' });
-	assert.equal(calls.at(-2).url.searchParams.has('lang'), false); assert.equal(calls.at(-1).url.search, '');
+	await rpc.call('company_id', { id, lang: 'fr' });
+	assert.equal(calls.at(-1).url.searchParams.has('lang'), false);
 });
 
 test('directory API errors remain structured and ordinary transient failures retain retries', async t => {
@@ -55,7 +55,7 @@ test('directory API errors remain structured and ordinary transient failures ret
 	const { rpc, calls } = await setup(t, { fetch: () => response(error, status) });
 	let result = await rpc.call('company_search', { query: 'Acme', cursor: 'stale' }); assert.equal(result.result.isError, true); assert.deepEqual(body(result), { ...error, retry_after: '0' }); assert.equal(calls.length, 1);
 	status = 404; result = await rpc.call('company_id', { id }); assert.equal(result.result.isError, true); assert.deepEqual(body(result), { ...error, retry_after: '0' }); assert.equal(calls.length, 2);
-	status = 503; await rpc.call('company_coverage', {}); assert.equal(calls.length, 5);
+	status = 503; await rpc.call('company_search', {query:'Example'}); assert.equal(calls.length, 5);
 });
 
 test('directory cancellation aborts the packed SDK request without retrying', async t => {

@@ -8,7 +8,6 @@ const cases = [
   ['timezones', 'time_zones', { query: 'New York', details: true }],
   ['time', 'time', { iata: 'JFK', at: '2026-10-13T16:00:00Z', deep: true }],
   ['emoji-metadata', 'emoji_metadata', {}],
-  ['company-coverage', 'company_coverage', {}],
   ['company-profile', 'company_id', { id: 'co_222222222222', deep: true }],
 ];
 for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact']) {
