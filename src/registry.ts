@@ -9,7 +9,7 @@ import { registerBulk } from './bulk.js';
 
 import packageJson from '../package.json' with { type: 'json' };
 export const VERSION = packageJson.version;
-const API_VERSION = '2.0.0';
+const API_VERSION = '2.1.0';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -18,7 +18,7 @@ export type Transport = 'stdio' | 'http';
 const deep = z
 	.boolean()
 	.optional()
-	.describe('Include the nested deep object when available. Pricing depends on the operation.');
+	.describe('Legacy profile request flag. API 2.1 paid plans include profile detail automatically. Existing access rules and explicit metered operations remain unchanged.');
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
@@ -29,7 +29,7 @@ const countryOpt = z
 
 const titleWords: Record<string, string> = {
 	ip: 'IP', asn: 'ASN', id: 'ID', dns: 'DNS', mx: 'MX',
-	iban: 'IBAN', naics: 'NAICS', bin: 'BIN',
+	iban: 'IBAN', naics: 'NAICS',
 	us: 'US', ach: 'ACH', url: 'URL', hlr: 'HLR', useragent: 'User Agent',
 };
 
@@ -41,8 +41,8 @@ const cityScope = {
 const cityAliases = z.boolean().optional().describe('Match reviewed normalized aliases. Compatibility characters, case and whitespace normalize; native marks and accents remain. No spelling guesses. Requires foundation readiness.');
 const cityAmbiguity = z.literal('error').optional().describe('Reject an exact name or nearby anchor matching multiple eligible places with HTTP 409 ambiguous_city and bounded candidate identities. Add filters or choose a stable id from city_search.');
 const cityRomanized = z.boolean().optional().describe('Include a reviewed official romanized name and its language. No ASCII-folding fallback; missing or conflicting forms are null.');
-const cityResourceResponse = { romanized: cityRomanized, format: z.literal('resource').optional().describe('Opt into object:city without changing classic responses.') };
-const cityListResponse = { romanized: cityRomanized, format: z.literal('list').optional().describe('Opt into object:list, data and next_cursor. A null cursor ends the collection; keep the same options on continuation.') };
+const cityResourceResponse = { romanized: cityRomanized };
+const cityListResponse = { romanized: cityRomanized };
 const citySort = (terms: readonly string[]) => z.string().min(1).max(100).regex(new RegExp(`^[+-]?(${terms.join('|')})(,[+-]?(${terms.join('|')}))*$`)).optional().describe('Comma-separated sort terms. Prefix a term with + or - for its direction. Stable ids break ties; unknown values sort last.');
 const cityCodeList = z.union([z.string().min(2).max(149), z.array(z.string().regex(/^[a-zA-Z]{2}$/)).min(1).max(50)]).optional();
 const cityCollectionFilters = {
@@ -52,17 +52,15 @@ const cityCollectionFilters = {
 	max_elevation: z.number().finite().optional().describe('Maximum stored elevation in meters. Unknown values do not match.'),
 	countries: cityCodeList.describe('Include ISO2 countries, as CSV or an array. Intersects with a single country filter; on named nearby, country selects the anchor.'),
 	exclude_countries: cityCodeList.describe('Exclude ISO2 countries, as CSV or an array.'),
-	timezones: z.union([z.string().min(1).max(5049), z.array(z.string().min(1).max(100)).min(1).max(50)]).optional().describe('Include exact IANA timezones, as CSV or an array. Intersects with a single timezone filter.'),
-	timezone: z.string().optional().describe('Exact IANA timezone filter, e.g. Europe/Vienna.'),
+	timezones: z.union([z.string().min(1).max(5049), z.array(z.string().min(1).max(100)).min(1).max(50)]).optional().describe('Include exact IANA timezones, as CSV or an array.'),
 	bbox: z.string().optional().describe('Stored-center bounds as west,south,east,north in degrees. West greater than east crosses the date line.'),
-	order: z.enum(['asc', 'desc']).optional().describe('Sort direction; default asc except population defaults to desc. Stable ids break ties.'),
 	cursor: z.string().optional().describe('Opaque continuation cursor. Reuse with exactly the same query, filters, limit, display language, Deep, hierarchy and origin.'),
 };
 const cityPage = z.boolean().optional().describe('Opt into next_cursor on search or named-nearby collections. A cursor also enables paging.');
-function cityCollectionArguments(args: { min_population?: number; max_population?: number; min_elevation?: number; max_elevation?: number; countries?: string | string[]; exclude_countries?: string | string[]; timezones?: string | string[]; timezone?: string; bbox?: string; sort?: string; order?: 'asc' | 'desc'; page?: boolean; cursor?: string; format?: 'list'; romanized?: boolean }) {
+function cityCollectionArguments(args: { min_population?: number; max_population?: number; min_elevation?: number; max_elevation?: number; countries?: string | string[]; exclude_countries?: string | string[]; timezones?: string | string[]; bbox?: string; sort?: string; page?: boolean; cursor?: string; romanized?: boolean }) {
 	return { minPopulation: args.min_population, maxPopulation: args.max_population, minElevation: args.min_elevation, maxElevation: args.max_elevation,
-		countries: args.countries, excludeCountries: args.exclude_countries, timezones: args.timezones, timezone: args.timezone,
-		bbox: args.bbox, sort: args.sort, order: args.order, page: args.page || undefined, cursor: args.cursor, format: args.format, romanized: args.romanized || undefined };
+		countries: args.countries, excludeCountries: args.exclude_countries, timezones: args.timezones,
+		bbox: args.bbox, sort: args.sort, page: args.page || undefined, cursor: args.cursor, romanized: args.romanized || undefined };
 }
 
 const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
@@ -95,7 +93,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			version: VERSION,
 			title: 'ParseAPI',
 			description:
-				'Lookups for agents: IP and place data, addresses, companies, email, phone, domains, weather, timezones, dates and holidays. Real reference data instead of guessing.',
+				'Lookups for agents: IP and place data, addresses, company numbers, email, phone, domains, weather, timezones, dates and holidays. Real reference data instead of guessing.',
 			websiteUrl: 'https://parseapi.com',
 		},
 		{ capabilities: { tools: {} } }
@@ -105,7 +103,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		// Tool descriptions and responses share this contract on both transports.
 		fetch: (input, init) => {
 			const headers = new Headers(init?.headers);
-			headers.set('Parse-Version', API_VERSION);
+			headers.set('X-API-Version', API_VERSION);
 			return fetch(input, { ...init, headers });
 		},
 	}) : null;
@@ -153,7 +151,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	// Locate
 	tool(
 		'ip',
-		'Look up an IPv4 or IPv6 address: country, region, ASN, timezone. Deep adds datacenter, relay, tor and vpn flags.',
+		'Look up an IPv4 or IPv6 address: country, continent and origin ASN/operator. Paid plans automatically include supported approximate city/state, state name, postal code, latitude/longitude, timezone, routed network, ASN category and datacenter/relay/Tor/VPN/proxy flags. Unknown location values are null. ASN category is not subscriber connection technology; proxy/VPN false means unlisted.',
 		{ ip: z.string().describe('IPv4 or IPv6 address, e.g. 8.8.8.8'), deep },
 		(c, a, request) => c.ip(a.ip, { ...request, deep: a.deep })
 	);
@@ -179,8 +177,8 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'country',
-		'Country everyday reference: name, name_full, name_local, demonym, iso_alpha3 and iso_numeric identifiers, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships and capital object (name, latitude, longitude). Paid Deep adds population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
-		{ code: iso2('country code'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		'Country everyday reference: name, name_full, name_local, demonym, iso_alpha3 and iso_numeric identifiers, continent, region and subregion, currency, languages, calling code, flag, timezones, borders, bloc memberships, capital object (name, latitude, longitude), postal_format guidance and postal_regex syntax checking on every plan. Postal patterns do not establish assignment or deliverability. Paid plans automatically include population, total area and national statistics (gdp_usd, gdp_per_capita_usd, population_growth_percent, urban_population_percent and internet_users_percent), geography including elevation_average in meters, and a tax reference object (name, rate) and locale conventions. Unknown values stay null.',
+		{ code: iso2('country code'), deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.') },
 		(c, a, request) => c.country(a.code, { ...request, deep: a.deep })
 	);
 	tool(
@@ -191,56 +189,56 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'state',
-		'Look up a state or province by code or name, with its full iso_subdivision identifier. Deep adds its demographic and tax profile on paid plans. Pass country to resolve a colliding code.',
+		'Look up a state or province by code or name, with its full iso_subdivision identifier. Paid plans include its demographic and tax profile automatically. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.state(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'state_districts',
-		'List the districts, counties or departments of a state. Deep adds population to each result on paid plans.',
+		'List the districts, counties or departments of a state. Paid plans include population to each result automatically.',
 		{
 			code: z.string().describe('State code or name, e.g. NC, colorado'),
 			country: countryOpt,
-			deep: deep.describe('Include population in each district detail bag on a paid plan.'),
+			deep: deep.describe('Include population in each district on a paid plan.'),
 		},
 		(c, a, request) => c.state.districts(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'district',
-		'Look up a district, county or department by code or name. Deep adds area, population and seat on paid plans. Pass state to resolve a colliding name. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
+		'Look up a district, county or department by code or name. Paid plans include area, population and seat automatically. Pass state to resolve a colliding name. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
 		{
 			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
 			country: countryOpt,
 			state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.district(a.code, { ...request, deep: a.deep, country: a.country, state: a.state })
 	);
 	tool(
 		'city',
-		'Resolve a city name to coordinates, timezone and administrative context. Deep adds demographic and geographic detail on paid plans. Pass country or state for name ties.',
+		'Resolve a city name to coordinates, timezone and administrative context. Paid plans include demographic and geographic detail automatically. Pass country or state for name ties.',
 		{
 			name: z.string().describe('City name, e.g. charlotte'),
 			country: countryOpt,
 			state: z.string().optional().describe('State code to disambiguate, e.g. NC'),
 			...cityScope, ...cityResourceResponse, aliases: cityAliases, ambiguity: cityAmbiguity,
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
-		(c, a, request) => c.city(a.name, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ambiguity: a.ambiguity, format: a.format, romanized: a.romanized || undefined })
+		(c, a, request) => c.city(a.name, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ambiguity: a.ambiguity, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_id',
-		'Resolve a stable city id. Deep adds the city profile on paid plans.',
-		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb'), ...cityResourceResponse, hierarchy: cityScope.hierarchy, deep: deep.describe('Include the complete detail bag on a paid plan.') },
-		(c, a, request) => c.city.id(a.id, { ...request, deep: a.deep, hierarchy: a.hierarchy || undefined, format: a.format, romanized: a.romanized || undefined })
+		'Resolve a stable city id. Paid plans include the city profile automatically.',
+		{ id: z.string().describe('Stable city id, e.g. city_mb8mbqrkz8zb'), ...cityResourceResponse, hierarchy: cityScope.hierarchy, deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.') },
+		(c, a, request) => c.city.id(a.id, { ...request, deep: a.deep, hierarchy: a.hierarchy || undefined, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_search',
-		'Search city names. Explicit match uses the spelling search route; numeric/map/timezone/sort filters apply to default prefix search only. Deep adds the profile inside each returned city on paid plans.',
+		'Search city names. Explicit match uses the spelling search route; numeric/map/timezone/sort filters apply to default prefix search only. Paid plans include the profile inside each returned city automatically.',
 		{
 			query: z.string().describe('City name query, e.g. char'),
 			match: z.enum(['exact', 'prefix', 'fuzzy']).optional().describe('Explicit matching mode; default prefix. Fuzzy results carry suggestion evidence.'),
@@ -251,16 +249,16 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			sort: citySort(['relevance', 'name', 'population', 'country', 'elevation']),
 			page: cityPage,
 			limit: z.number().int().min(1).max(50).optional().describe('Max results'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.city.search(a.query, { ...request, deep: a.deep, country: a.country, state: a.state, limit: a.limit, match: a.match, maxDistance: a.max_distance, type: a.type, grain: a.grain, aliases: a.aliases || undefined, hierarchy: a.hierarchy || undefined, ...cityCollectionArguments(a) })
 	);
-	tool('city_nearest', 'Find the nearest eligible stored city center within 2,000 km, with distance. Country/state/type/grain constrain candidates; this does not determine which municipality contains the point. Deep adds the paid profile and reviewed observation date/basis when known.', { lat, lon, country: countryOpt, state: z.string().optional().describe('State code filter'), ...cityScope, ...cityResourceResponse, deep }, (c, a, request) =>
-		c.city.nearest(a.lat, a.lon, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, format: a.format, romanized: a.romanized || undefined })
+	tool('city_nearest', 'Find the nearest eligible stored city center within 2,000 km, with distance. Country/state/type/grain constrain candidates; this does not determine which municipality contains the point. Paid plans automatically include the profile and reviewed observation date/basis when known.', { lat, lon, country: countryOpt, state: z.string().optional().describe('State code filter'), ...cityScope, ...cityResourceResponse, deep }, (c, a, request) =>
+		c.city.nearest(a.lat, a.lon, { ...request, deep: a.deep, country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, romanized: a.romanized || undefined })
 	);
 	tool(
 		'city_nearby',
-		'Find nearby cities with distances. Deep adds the profile inside each returned city on paid plans.',
+		'Find nearby cities with distances. Paid plans include the profile inside each returned city automatically.',
 		{
 			name: z.string().describe('Anchor city name, e.g. denver'),
 			country: countryOpt,
@@ -271,7 +269,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			radius: z.number().positive().optional().describe('Search radius, default 40 km'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results, default 10'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) =>
 			c.city.nearby(a.name, {
@@ -288,19 +286,19 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'city_list',
-		'Browse the stored City catalog with filters, stable sorting and opaque cursor paging. Coverage remains curated, not worldwide. Deep adds the paid profile within each record.',
+		'Browse the stored City catalog with filters, stable sorting and opaque cursor paging. Coverage remains curated, not worldwide. Paid plans automatically include the profile detail within each record.',
 		{
 			country: countryOpt, state: z.string().optional().describe('State code filter'),
 			...cityScope, ...cityCollectionFilters, ...cityListResponse,
 			sort: citySort(['name', 'population', 'country', 'elevation']),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results per page'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.city.list({ ...request, ...cityCollectionArguments(a), country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, limit: a.limit, deep: a.deep })
 	);
 	tool(
 		'city_nearby_coordinates',
-		'List stored city centers near arbitrary coordinates, with radius, collection filters and cursor paging. The point and distances do not infer municipality containment. Deep adds the paid profile within each record.',
+		'List stored city centers near arbitrary coordinates, with radius, collection filters and cursor paging. The point and distances do not infer municipality containment. Paid plans automatically include the profile detail within each record.',
 		{
 			lat, lon, country: countryOpt, state: z.string().optional().describe('State code filter for returned neighbors'),
 			...cityScope, ...cityCollectionFilters, ...cityListResponse,
@@ -308,7 +306,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
 			sort: citySort(['distance', 'name', 'population', 'country', 'elevation']),
 			limit: z.number().int().min(1).max(50).optional().describe('Max results per page'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.city.nearbyCoordinates(a.lat, a.lon, { ...request, ...cityCollectionArguments(a), country: a.country, state: a.state, type: a.type, grain: a.grain, hierarchy: a.hierarchy || undefined, radius: a.radius, unit: a.unit, limit: a.limit, deep: a.deep })
 	);
@@ -325,40 +323,40 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'postal',
-		'Resolve a postal code to its place, coordinates and timezone. Australian core localities lists suburb choices with city, state and state_name. Null or missing means unknown, and [] means no eligible choices in the reviewed reference. A single choice can coexist with city null, so do not infer a city or a user selection. These are geographic choices, not mailing-address verification. Deep adds area, population, tax references, neighbors and metro associations on paid plans. property_tax is a nullable area statistic with annual_median, currency and period: median annual tax payable on owner-occupied homes, adjusted to the final year of the period. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
+		'Resolve a postal code to its place, coordinates and timezone. Australian core localities lists suburb choices with city, state and state_name. Null or missing means unknown, and [] means no eligible choices in the reviewed reference. A single choice can coexist with city null, so do not infer a city or a user selection. These are geographic choices, not mailing-address verification. Paid plans include area, elevation, population, currency, grouped tax references, neighbors and metro associations automatically. property_tax is a nullable area statistic with annual_median in the response currency: median annual tax payable on owner-occupied homes. It is not a rate or property bill. Unsupported, missing and censored estimates are null. Tax rates are percentages and alternative geographic references, not additive.',
 		{
 			code: z.string().describe('Postal or ZIP code, e.g. SW1A 1AA, 28202'),
 			country: countryOpt,
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.postal(a.code, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'postal_nearby',
-		'Find nearby postal codes with distances. Deep adds metropolitan associations to the origin and each result on paid plans.',
+		'Find nearby postal codes with distances. Paid plans include metropolitan associations to the origin and each result automatically.',
 		{
 			code: z.string().describe('Postal code to search around'),
 			country: countryOpt,
 			radius: z.number().positive().optional().describe('Search radius'),
 			unit: z.enum(['km', 'mi']).optional().describe('Radius unit, default km'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.postal.nearby(a.code, { ...request, deep: a.deep, country: a.country, radius: a.radius, unit: a.unit })
 	);
 	tool(
 		'postal_distance',
-		'Distance between two postal codes. Deep adds metropolitan associations inside each endpoint on paid plans.',
+		'Distance between two postal codes. Paid plans include metropolitan associations inside each endpoint automatically.',
 		{
 			from: z.string().describe('First postal code'),
 			to: z.string().describe('Second postal code'),
 			country: countryOpt,
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.postal.distance(a.from, a.to, { ...request, deep: a.deep, country: a.country })
 	);
 	tool(
 		'address',
-		'Look up a US or French street address: house number, street, unit, city, state, postal code and registration status. Registration does not establish deliverability or verify an apartment. Deep is currently an empty object.',
+		'Look up a US or French street address: house number, street, unit, city, state, postal code and registration status. Registration does not establish deliverability or verify an apartment. On supported US results, optional Deep includes electoral code, name and Congress number on paid plans; existing accounts retain their current Deep access.',
 		{
 			address: z.string().describe('Street address, e.g. 1600 Pennsylvania Ave NW, Washington, DC 20500'),
 			country: z.string().optional().describe('Country: US or FR. Use FR or a written France suffix for France. Defaults to US.'),
@@ -381,7 +379,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'company',
-		'Compatibility national Company-number lookup. This operation is retired on the public API in both contracts. Use company_search and company_id for maintained public-company records. Existing inputs and compatibility methods are preserved.',
+		'Parse a company number and its registered identity, status and address. Paid deep adds business activity and associated identifiers. Geography lookups are separate calls.',
 		{
 			number: z.string().describe('Company registration number, e.g. 552100554 with country FR'),
 			country: countryOpt,
@@ -391,7 +389,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'company_id',
-		'Look up a company directory profile by its stable co_ ID. Deep adds available legal details, identifiers, industry, business description, logo, other domains, social profiles, public business contacts, founding precision and reported employees. Employee counts retain their measurement date, organization scope and measurement basis. Reported counts may be rounded. Unavailable details are omitted; source evidence stays internal. A website claim is not legal ownership proof. National registration numbers use company.',
+		'Look up a company directory profile by its stable co_ ID. Paid plans automatically include available legal details, identifiers, industry, business description, logo, other domains, social profiles, public business contacts, founding precision and reported employees. Employee counts retain their measurement date, organization scope and measurement basis. Reported counts may be rounded. Unavailable details are omitted; source evidence stays internal. A website claim is not legal ownership proof. National registration numbers use company.',
 		{ id: z.string().min(1).describe('Stable company directory ID returned by company_search'), deep },
 		(c, a, request) => c.company.id(a.id, { ...request, deep: a.deep })
 	);
@@ -420,16 +418,10 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				return selectors <= 1 && (selectors === 1 || args.country !== undefined || (args.industry !== undefined && args.industry_type !== undefined));
 			}, { message: 'Use at most one selector, or supply country, a complete industry pair.' })
 	);
-	tool(
-		'company_coverage',
-		'Describe the company directory edition, countries and record counts. Counts describe this edition and do not establish complete country or worldwide coverage. A missing profile does not establish that a company does not exist.',
-		{},
-		(c, _a, request) => c.company.coverage(request)
-	);
 
 	tool(
 		'point',
-		'Locate coordinates in their country, state, district and actual IANA timezone. Deep adds terrain and a compact nearest-city summary with its ID and distance on paid plans; existing accounts retain their current Deep access. The timezone ID stays in core. Nearest city is null when none is within 200 km.',
+		'Locate coordinates in their country, state, district and actual IANA timezone. Paid plans automatically include terrain and a compact nearest-city summary with its ID and distance; existing accounts retain their current Deep access. The timezone ID stays in core. Nearest city is null when none is within 200 km.',
 		{ lat, lon, deep },
 		(c, a, request) => c.point(a.lat, a.lon, { ...request, deep: a.deep })
 	);
@@ -461,7 +453,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'weather',
-		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Minute precipitation_rate (mm/h) and precipitation_rate_in (in/h) are rates; deep.history.precipitation and precipitation_in are daily totals. Metric and imperial pairs stay together. A date requires paid deep and adds the past UTC day in deep.history alongside current conditions.',
+		'Current weather with observation time and station distance. Paid deep adds specialist current measurements, forecast, alerts, hourly and daily outlook, air quality and optional history. Minute precipitation_rate (mm/h) and precipitation_rate_in (in/h) are rates; history.precipitation and precipitation_in are daily totals. Metric and imperial pairs stay together. A date requires paid deep and adds the past UTC day in history alongside current conditions.',
 		{
 			lat,
 			lon,
@@ -469,42 +461,35 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			date: z
 				.string()
 				.optional()
-				.describe('A past UTC day, YYYY-MM-DD. Requires paid deep. Adds deep.history alongside current conditions.'),
+				.describe('A past UTC day, YYYY-MM-DD. Requires paid deep. Adds history alongside current conditions.'),
 		},
 		(c, a, request) => c.weather(a.lat, a.lon, { ...request, deep: a.deep, date: a.date })
 	);
 
+	tool('email_verify', 'Run an explicit metered mailbox check. Returns the complete result, including nullable deliverable, catchall, status and reason. No automatic retries by default. App keys are not allowed. A suggested first name is not verified identity.', { email: z.string().describe('Email address to verify') }, (c, a, request) => c.email.verify(a.email, request));
+
 	// Validate
 	tool(
 		'email',
-		'Validate an email address: syntax, domain, mail routing, consumer mailbox, disposable, role, reserved domain type and typo suggestion. Deep adds mailbox deliverability, catch-all, status and the reason for the result, such as mailbox_full or mailbox_not_found. It also includes a suggested first name, no-reply flag, plus-address tag and mail service, such as Google or Microsoft. The suggested name is not a verified identity. Unavailable details are null.',
-		{ email: z.string().describe('Email address to validate'), deep },
+		'Validate an email address: syntax, domain, mail routing, consumer mailbox, disposable, role, reserved domain type and typo suggestion. Use email_verify for a metered mailbox check and the complete result. The basic email tool does not establish deliverability.',
+		{ email: z.string().describe('Email address to validate'), deep: deep.describe('Deprecated compatibility input. true runs email_verify, a metered check. Use email_verify explicitly.') },
 		(c, a, request) => c.email(a.email, { ...request, deep: a.deep })
-	);
-	tool(
-		'bin',
-		'Look up a 6-11 digit payment-card prefix. Returns the actual longest matched prefix, issuer, country, brand key, brand name, card type and prepaid status where known. Unknown fields are null. Does not confirm a card or account exists. Pooled request on every plan.',
-		{
-			bin: z.string().describe('Card prefix as a string, 6-11 digits. Preserve leading zeros. Spaces and hyphens are accepted.'),
-			deep: z.boolean().optional().describe('Include an empty deep object. No extra fields or separate charge.'),
-		},
-		(c, a, request) => c.bin(a.bin, { ...request, deep: a.deep })
 	);
 
 	tool(
 		'card',
-		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional Deep on paid plans adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status; existing accounts retain their current Deep access. Core identity is independent of issuer coverage. A shorter deep.prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. Core uses one pooled request on every plan. Optional Deep follows paid-plan or retained-access rules in that same request.',
+		'Identify a network and its CDN SVG logo from 2-11 leading digits, including processor-provided BIN/IIN prefixes. Unknown or ambiguous networks return null brand and a generic logo. Optional Deep on paid plans adds the longest recorded prefix, issuer, country, funding type and nullable prepaid status; existing accounts retain their current Deep access. Core identity is independent of issuer coverage. A shorter prefix is broader coverage; missing fields never inherit from a parent row. Partial reference data does not prove card validity, account existence or payment acceptance. Core uses one pooled request on every plan. Optional Deep follows paid-plan or retained-access rules in that same request.',
 		{
 			bin: z.string().max(64, 'Send a prefix only: 2-11 digits.')
 				.regex(/^[ \t\r\n-]*(?:[0-9][ \t\r\n-]*){2,11}$/, 'Send a prefix only: 2-11 digits.')
 				.describe('Processor-provided leading digits as a string, 2-11 ASCII digits. Preserve zeros. Only ASCII space, tab, CR, LF and hyphen separators; at most 64 raw characters. Never send a full card number. Six or more digits enable issuer lookup.'),
-			deep: deep.describe('Include recorded issuer details on paid plans in the same pooled request; existing accounts retain their current Deep access. Omitted by default; locked Deep is empty. With access, fewer than six digits returns all-null Deep fields.'),
+			deep: deep.describe('Include recorded issuer details on paid plans in the same pooled request; existing accounts retain their current Deep access. Omitted by default; locked optional fields are absent. With access, fewer than six digits returns all-null Deep fields.'),
 		},
 		(c, a, request) => c.card(a.bin, { ...request, deep: a.deep })
 	);
 	tool(
 		'phone',
-		'Parse and validate a phone number with national and international display formats. Deep adds numbering-plan state and timezone on paid plans; existing accounts retain their current Deep access. These do not locate a handset.',
+		'Parse and validate a phone number with national and international display formats. Paid plans automatically include numbering-plan state and timezone; existing accounts retain their current Deep access. These do not locate a handset.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
@@ -514,11 +499,11 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'carrier',
-		'Look up current carrier, line type and burner flag. Type uses the provider observation when mapped; otherwise it retains the numbering-plan type. Deep adds issuing city and state in the same metered lookup, including Free allowance units. No extra check or second paid gate.',
+		'Look up current carrier, line type and burner flag. Type uses the provider observation when mapped; otherwise it retains the numbering-plan type. The complete result includes issuing city and state when known, within the same metered lookup, including Free allowance units.',
 		{
 			number: z.string().describe('Phone number, e.g. +14155552671'),
 			country: iso2('country code for national-format numbers').optional(),
-			deep: deep.describe('Include available detail within the same metered core unit. No extra charge or paid-plan gate.'),
+			deep: deep.describe('Deprecated compatibility input. The complete metered result is always returned.'),
 		},
 		(c, a, request) => c.carrier(a.number, { ...request, deep: a.deep, country: a.country })
 	);
@@ -533,11 +518,11 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'hlr',
-		'Phone status at the last check: live means assigned and connected means reachable at that check. Cached results may be returned. Deep adds available roaming and network diagnostics in the same metered lookup, including Free allowance units. Null is unconfirmed.',
+		'Phone status at the last check: live means assigned and connected means reachable at that check. Cached results may be returned. Available roaming and network diagnostics are included in the complete metered result, including Free allowance units. Null is unconfirmed.',
 		{
 			number: z.string().describe('Phone number, e.g. +447712345678'),
 			country: iso2('country code for national-format numbers').optional(),
-			deep: deep.describe('Include available detail within the same metered core unit. No extra charge or paid-plan gate.'),
+			deep: deep.describe('Deprecated compatibility input. The complete metered result is always returned.'),
 		},
 		(c, a, request) => c.hlr(a.number, { ...request, deep: a.deep, country: a.country })
 	);
@@ -550,7 +535,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 	tool(
 		'domain',
-		'Check whether a domain is registered: available is true for unregistered, false for registered, and null when unknown. Deep adds available registration dates, registrar, status and DNSSEC on paid plans. Missing or null DNSSEC is unknown, while false means unsigned. Use dns for DNS records and mx for mail routing.',
+		'Check whether a domain is registered: available is true for unregistered, false for registered, and null when unknown. Paid plans include available registration dates, registrar, status and DNSSEC automatically. Missing or null DNSSEC is unknown, while false means unsigned. Use dns for DNS records and mx for mail routing.',
 		{ domain: z.string().describe('Domain name, e.g. example.com'), deep: deep.describe('Include registration details on a paid plan.') },
 		(c, a, request) => c.domain(a.domain, { ...request, deep: a.deep })
 	);
@@ -579,40 +564,40 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'industry',
-		'Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
-		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		'Look up a US NAICS 2022 code, title and parent hierarchy. Paid plans include definition, children and exclusions automatically.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.') },
 		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'industry_search',
-		'Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
+		'Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Paid plans include definition, children and exclusions inside each result automatically.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 	tool(
 		'naics',
-		'Compatibility name for industry. Look up a US NAICS 2022 code, title and parent hierarchy. Deep adds definition, children and exclusions on paid plans.',
-		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Include the complete detail bag on a paid plan.') },
+		'Compatibility name for industry. Look up a US NAICS 2022 code, title and parent hierarchy. Paid plans include definition, children and exclusions automatically.',
+		{ code: z.string().describe('NAICS code, e.g. 541511 or sector range 31-33'), deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.') },
 		(c, a, request) => c.industry(a.code, { ...request, deep: a.deep })
 	);
 	tool(
 		'naics_search',
-		'Compatibility name for industry_search. Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Deep adds definition, children and exclusions inside each result on paid plans.',
+		'Compatibility name for industry_search. Search US NAICS 2022 titles and activities. Matching text and corrections stay with the result. Paid plans include definition, children and exclusions inside each result automatically.',
 		{
 			query: z.string().min(1).max(100).describe('Industry keywords, e.g. coffee shop'),
 			limit: z.number().int().min(1).max(50).optional().describe('Maximum results, 1-50. Default 10.'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.industry.search(a.query, { ...request, deep: a.deep, limit: a.limit })
 	);
 	tool(
 		'language',
 		'Language names, script, writing direction, iso_alpha3 identifier and country associations.',
-		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('All language facts are in Core. Requested Deep is empty.') },
+		{ code: z.string().describe('Language code, e.g. en, ja, gsw'), deep: deep.describe('All language facts are in Core. This option does not add fields.') },
 		(c, a, request) => c.language(a.code, { ...request, deep: a.deep })
 	);
 	tool(
@@ -622,13 +607,13 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			name: z.string().describe('The name to parse, e.g. Smith, John or BILLY OSHALL'),
 			country: z.string().optional().describe('ISO2 country context for gender, e.g. IT'),
 			name_locale: z.string().min(2).max(64).optional().describe('Name-formatting locale, e.g. en or ja. Defaults to en. Changes formatting only, not parsing or gender evidence.'),
-			deep: deep.describe('Include the complete detail bag on a paid plan.'),
+			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
 		},
 		(c, a, request) => c.name(a.name, { ...request, deep: a.deep, country: a.country, name_locale: a.name_locale })
 	);
 	tool(
 		'time',
-		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Deep adds wall-time resolution, standard/seasonal offsets and actual DST-season transitions on paid plans; existing accounts retain their current Deep access.',
+		'Current local time, Unix seconds, exact offset and DST. Use an IANA zone, both coordinates, or one explicit IP, city, country, airport, port or address selector. Omit all for UTC. Resolved place lookups include a compact location with the matched identity and coordinates. Ambiguous or missing locations return null clock fields with location candidates; never choose a candidate for the user. to or targets converts one instant. Paid plans automatically include actual wall-time resolution, standard/seasonal offsets and DST-season transitions; existing accounts retain their current Deep access.',
 		{
 			timezone: z.string().min(1).refine(zone => !['zones', 'help'].includes(zone.trim().toLowerCase()), { message: 'Time source must be an IANA timezone ID. Use time_zones to list IDs.' }).optional().describe('IANA timezone, e.g. America/New_York. Omit for UTC when all source selectors are absent'),
 			lat: lat.optional(),
@@ -645,7 +630,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 			disambiguation: z.enum(['compatible', 'earlier', 'later', 'reject']).optional().describe('For offsetless at with to or targets at a clock change. Default compatible chooses the earlier repeated time or advances a skipped time. earlier and later choose the respective instant. For user-entered appointments prefer reject: repeated times return ambiguous_time and skipped times nonexistent_time. Ask for an explicit offset or earlier/later choice. Deep resolution explains a successful choice. Explicit offsets select the instant directly.'),
 			targets: z.array(z.string().trim().min(1).max(64).refine(zone => !zone.includes(','), { message: 'Pass one timezone ID per target.' })).min(1).max(10).optional().describe('Destination IANA IDs, preserving order and duplicates. Use instead of to. All targets share one instant. An unresolved or ambiguous source returns targets null.'),
 			to: z.string().min(1).optional().describe('Destination IANA timezone, e.g. Asia/Tokyo. Returns to.at and to.unix at the same instant'),
-			deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.'),
+			deep: deep.describe('Compatibility flag; paid plans include profile detail automatically. Existing accounts retain their access; unavailable fields are absent.'),
 		},
 		(c, a, request) => a.lat !== undefined && a.lon !== undefined
 			? c.time.at(a.lat, a.lon, { ...request, deep: a.deep, at: a.at, to: a.to, targets: a.targets, disambiguation: a.disambiguation })
@@ -714,7 +699,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'date',
-		'Parse a date to ISO date, validity and Unix midnight. Ambiguous numeric dates need format. to adds signed days between; omit date for UTC today. Deep adds calendar details on paid plans; existing accounts retain their current Deep access.',
+		'Parse a date to ISO date, validity and Unix midnight. Ambiguous numeric dates need format. to adds signed days between; omit date for UTC today. Paid plans automatically include calendar details; existing accounts retain their current Deep access.',
 		{
 			date: z
 				.string()
@@ -729,11 +714,11 @@ export function buildServer(key: string | null, transport: Transport, options: {
 				.string()
 				.optional()
 				.describe('Another date. Appends to (normalized ISO) and days (signed days between)'),
-			deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.'),
+			deep: deep.describe('Compatibility flag; paid plans include profile detail automatically. Existing accounts retain their access; unavailable fields are absent.'),
 		},
 		(c, a, request) => {
 			if (a.date == null) return c.date.today({ ...request, deep: a.deep, to: a.to });
-			return c.date(a.date, { ...request, deep: a.deep, format: a.format, to: a.to });
+			return c.date(a.date, { ...request, format: a.format, deep: a.deep, to: a.to });
 		},
 		(schema) => schema.refine(
 			(a) => a.format === undefined || a.date !== undefined,
@@ -757,8 +742,8 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'emoji',
-		'Resolve an emoji character, shortcode, name or codepoint sequence. Deep adds encoding, keywords, tone relationships and artwork on paid plans; existing accounts retain their current Deep access. Artwork is keyed by style: deep.artwork.openmoji.svg and deep.artwork.openmoji.png["72"].',
-		{ emoji: z.string().describe('Emoji input, e.g. rocket, :rocket:, 🚀 or U+1F680'), shortcode_source: z.enum(['cldr', 'github', 'slack', 'discord']).optional().describe('Resolve the shortcode within this source.'), deep: deep.describe('Include optional detail on paid plans; existing accounts retain their current Deep access. Requested but locked Deep is empty.') },
+		'Resolve an emoji character, shortcode, name or codepoint sequence. Paid plans automatically include encoding, keywords, tone relationships and artwork; existing accounts retain their current Deep access. Artwork is keyed by style: artwork.openmoji.svg and artwork.openmoji.png["72"].',
+		{ emoji: z.string().describe('Emoji input, e.g. rocket, :rocket:, 🚀 or U+1F680'), shortcode_source: z.enum(['cldr', 'github', 'slack', 'discord']).optional().describe('Resolve the shortcode within this source.'), deep: deep.describe('Compatibility flag; paid plans include profile detail automatically. Existing accounts retain their access; unavailable fields are absent.') },
 		(c, a, request) => c.emoji(a.emoji, { ...request, deep: a.deep, shortcodeSource: a.shortcode_source })
 	);
 	tool(
@@ -777,23 +762,14 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		(c, a, request) => c.emoji.browse({ ...request, ...a, maxVersion: a.max_version, includeSkinTones: a.include_skin_tones })
 	);
 	tool(
-		'emoji_metadata',
-		'Get actual emoji inventory total, content edition, completeness, required notices and artwork coverage. Artwork notice files are linked; data notices travel with the snapshot. One pooled read.',
-		{},
-		async (c, _a, request) => c.emoji.metadata(request)
-	);
-	tool(
 		'emoji_catalog',
-		'Get a JSON catalog download URL and current coverage. One pooled metadata read; the download is a separate request with your API key. The full snapshot stays out of model context.',
+		'Get the JSON catalog download URL. Download it with your API key; the catalog carries inventory and required notices. This tool makes no API request.',
 		{ category: emojiFilters.category, subcategory: emojiFilters.subcategory, version: emojiFilters.version, max_version: emojiFilters.max_version, include_skin_tones: emojiFilters.include_skin_tones,
-			profile: z.enum(['full','compact']).optional().describe('JSON download profile. Compact retains offline lookup, search and parse facts while omitting bulky artwork details.'),
 		},
 		async (c, a, request) => {
-			const metadata = await c.emoji.metadata(request);
 			const url = new URL('https://api.parseapi.com/emoji/catalog');
 			for (const [key,value] of Object.entries({ category: a.category, subcategory: a.subcategory, version: a.version, max_version: a.max_version, include_skin_tones: a.include_skin_tones, lang: (request as RequestOptions & {lang?:string}).lang })) if (value !== undefined) url.searchParams.set(key,String(value));
-			if (a.profile) url.searchParams.set('profile',a.profile);
-			return { metadata, download_url: url.href };
+			return { download_url: url.href };
 		}
 	);
 	tool(
@@ -805,7 +781,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	tool(
 		'emoji_parse',
 		'Extract complete Unicode emoji sequences from text. Results group repeated emoji in first-occurrence order, and positions use UTF-16 code units with an exclusive end. Text is sent in the POST body.',
-		{ text: z.string().max(16000).describe('Text to inspect for native Unicode emoji, up to 16000 UTF-16 code units.'), deep: deep.describe('Include optional reference detail inside each result.') },
+		{ text: z.string().max(16000).describe('Text to inspect for native Unicode emoji, up to 16000 UTF-16 code units.'), deep: deep.describe('Compatibility flag; paid plans include reference detail inside each result automatically.') },
 		(c, a, request) => c.emoji.parse(a.text, { ...request, deep: a.deep })
 	);
 	tool('emoji_convert', 'Convert Unicode emoji to a named shortcode preset or decode that preset. Unknown, unavailable and ambiguous inputs remain literal with reasons and original UTF-16 offsets. Text is sent in the POST body.',
@@ -814,9 +790,9 @@ export function buildServer(key: string | null, transport: Transport, options: {
 
 tool(
 		'currency',
-		'Currency numeric code, names, symbols, decimal places and country references, all included in the ordinary lookup.',
-		{ code: z.string().describe('ISO 4217 code, e.g. USD') },
-		(c, a, request) => c.currency(a.code, request)
+		'Currency name, symbols, decimal places and iso_numeric identifier. Paid plans include plural name and using countries automatically.',
+		{ code: z.string().describe('ISO 4217 code, e.g. USD'), deep: deep.describe('Compatibility option; Currency already includes its complete reference on every plan.') },
+		(c, a, request) => c.currency(a.code, { ...request, deep: a.deep })
 	);
 tool(
 		'currency_rate',

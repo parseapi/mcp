@@ -9,6 +9,20 @@ const response = (data, status = 200) => new Response(JSON.stringify(data), {
 	status, headers: { 'content-type': 'application/json', 'retry-after': '0' },
 });
 
+test('current tool guidance names natural response fields and retains their units', async t => {
+	const rpc = await connect('test_key'); t.after(() => rpc.close());
+	const tools = (await rpc.request('tools/list', {})).result.tools;
+	const emoji = tools.find(tool => tool.name === 'emoji');
+	assert.match(emoji.description, /artwork\.openmoji\.svg/);
+	assert.doesNotMatch(emoji.description, /deep\.artwork/);
+	const postal = tools.find(tool => tool.name === 'postal');
+	assert.match(postal.description, /annual_median in the response currency/);
+	assert.doesNotMatch(postal.description, /deep\.currency/);
+	assert.match(postal.description, /not a rate or property bill/);
+	const language = tools.find(tool => tool.name === 'language');
+	assert.match(language.inputSchema.properties.deep.description, /does not add fields/);
+});
+
 test('Australian Postal choices preserve core ambiguity and source notice on both transports', async (t) => {
 	let record;
 	const { rpc } = await setup(t, { fetch: () => response(record) });
@@ -89,9 +103,9 @@ test('Email enrichment preserves the deep triad, nulls and open codes', async (t
 	let extra = {};
 	const { rpc } = await setup(t, { fetch: () => response({ email: 'jane.doe+news@example.com', ...extra }) });
 	for (const next of [
-		{}, { deep: {} },
-		{ deep: { first_name: null, no_reply: null, tag: null, mail_provider: null, status: null, reason: null } },
-		{ deep: { first_name: 'Jane', no_reply: false, tag: 'news', mail_provider: 'future-provider', deliverable: true, catchall: false, status: 'future-status', reason: 'future_reason' }, future: true },
+		{}, {},
+		{ first_name: null, no_reply: null, tag: null, mail_provider: null, status: null, reason: null },
+		{ future: true, first_name: 'Jane', no_reply: false, tag: 'news', mail_provider: 'future-provider', deliverable: true, catchall: false, status: 'future-status', reason: 'future_reason' },
 	]) {
 		extra = next;
 		assert.deepEqual(body(await rpc.call('email', { email: 'jane.doe+news@example.com', deep: true })), { email: 'jane.doe+news@example.com', ...extra });
@@ -120,7 +134,7 @@ async function setup(t, { key = 'test_key', transport = 'stdio', fetch } = {}) {
 	t.mock.method(globalThis, 'fetch', async (input, init) => {
 		const call = { url: new URL(String(input)), init };
 		calls.push(call);
-		return fetch ? fetch(call) : response({ future: { nullable: null }, deep: {} });
+		return fetch ? fetch(call) : response({ future: { nullable: null } });
 	});
 	const rpc = await connect(key, transport);
 	t.after(() => rpc.close());
@@ -160,21 +174,22 @@ for (const [name, args, pathname, query = {}] of cases) {
 		const called = await rpc.call(name, args);
 		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
 		const payload = body(called);
-		assert.deepEqual(name === 'emoji_catalog' ? payload.metadata : payload, { future: { nullable: null }, deep: {} });
-		if (name === 'emoji_catalog') assert.equal(payload.download_url, 'https://api.parseapi.com/emoji/catalog?profile=compact');
+		if (name === 'emoji_catalog') { assert.equal(payload.download_url, 'https://api.parseapi.com/emoji/catalog'); assert.equal(calls.length, 0); return; }
+		assert.deepEqual(payload, { future: { nullable: null } });
 		assert.equal(calls.length, 1);
 		const { url, init } = calls[0];
 		assert.equal(url.pathname, pathname);
 		assert.deepEqual(Object.fromEntries(url.searchParams), query);
-		if (['bank', 'bank_us_ach', 'emoji_parse', 'emoji_convert'].includes(name)) {
+		if (['email', 'email_verify', 'bank', 'bank_us_ach', 'emoji_parse', 'emoji_convert'].includes(name)) {
 			assert.equal(init.method, 'POST');
-			assert.deepEqual(JSON.parse(init.body), name === 'bank' ? args : name.startsWith('emoji_') ? { text: args.text } : { format: 'us_ach', country: 'US', ...args });
+			assert.deepEqual(JSON.parse(init.body), ['email', 'email_verify'].includes(name) ? { email: args.email } : name === 'bank' ? args : name.startsWith('emoji_') ? { text: args.text } : { format: 'us_ach', country: 'US', ...args });
 		}
 		assert.equal(init.redirect, 'manual');
 		assert.ok(init.signal instanceof AbortSignal);
 		const headers = new Headers(init.headers);
 		assert.equal(headers.get('x-api-key'), 'test_key');
-		assert.equal(headers.get('parse-version'), '2.0.0');
+		assert.equal(headers.get('x-api-version'), '2.1.0');
+		assert.equal(headers.has('parse-version'), false);
 		if (name === 'useragent') assert.equal(headers.get('user-agent'), args.ua);
 	});
 }
@@ -189,7 +204,7 @@ for (const transport of ['stdio', 'http']) {
 		for (const { url, init } of calls) {
 			assert.equal(url.pathname, '/country/US');
 			assert.equal(url.search, '');
-			assert.equal(new Headers(init.headers).get('parse-version'), '2.0.0');
+			assert.equal(new Headers(init.headers).get('x-api-version'), '2.1.0');
 			assert.equal(new Headers(init.headers).get('x-api-key'), 'test_key');
 			assert.equal(init.redirect, 'manual');
 		}
@@ -205,6 +220,7 @@ test('display language reaches each supported tool request and stays request-loc
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });
 		assert.equal(called.result?.isError, undefined, JSON.stringify(called));
+		if (name === 'emoji_catalog') { assert.equal(new URL(body(called).download_url).searchParams.get('lang'), 'zh-Hant-HK'); continue; }
 		assert.equal(calls.at(-1).url.pathname, pathname);
 		assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams), name === 'emoji_catalog' ? {} : { ...query, lang: 'zh-Hant-HK' });
 		if (name === 'emoji_catalog') assert.equal(new URL(body(called).download_url).searchParams.get('lang'), 'zh-Hant-HK');
@@ -359,7 +375,7 @@ test('name_local and null pass through every named tool response', async (t) => 
    ['city', { name: 'Munich' }, record],
    ['language', { code: 'de' }, record],
    ['holiday', { country: 'DE' }, { holidays: [record] }],
-   ['point', { lat: 48, lon: 11, deep: true }, { deep: { city: record } }],
+   ['point', { lat: 48, lon: 11, deep: true }, { city: record }],
   ]) {
    data = value;
    assert.deepEqual(body(await rpc.call(tool, args)), data);
@@ -370,7 +386,7 @@ test('name_local and null pass through every named tool response', async (t) => 
 test('Stack preserves homepage and site inventories with multiple CMS and servers', async (t) => {
  let record;
  const { rpc } = await setup(t, { fetch: () => response(record) });
- for (const next of [{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":null,"scope":"homepage","pages":0,"partial":null,"cms":null,"servers":null,"frameworks":null,"ecommerce":null,"analytics":null,"chat":null,"payments":null,"hosting":null,"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"homepage","pages":1,"partial":true,"cms":[],"servers":[],"frameworks":[],"ecommerce":[],"analytics":[],"chat":[],"payments":[],"hosting":[],"deep":{},"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"homepage","pages":1,"partial":true,"cms":[{"technology":"wordpress","name":"WordPress","version":"6.8.2"}],"servers":[{"technology":"nginx","name":"nginx","version":null}],"frameworks":[{"technology":"react","name":"React","version":null}],"ecommerce":[],"analytics":[],"chat":[],"payments":[],"hosting":[],"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"site","pages":6,"partial":false,"cms":[{"technology":"wordpress","name":"WordPress","version":"6.8.2"},{"technology":"ghost","name":"Ghost","version":null}],"servers":[{"technology":"nginx","name":"nginx","version":null},{"technology":"apache","name":"Apache","version":null}],"frameworks":[{"technology":"nextjs","name":"Next.js","version":"15.0.0","future":true},{"technology":"react","name":"React","version":null}],"ecommerce":[{"technology":"woocommerce","name":"WooCommerce","version":null}],"analytics":[{"technology":"google-analytics","name":"Google Analytics","version":null}],"chat":[{"technology":"intercom","name":"Intercom","version":null}],"payments":[{"technology":"stripe","name":"Stripe","version":null}],"hosting":[{"technology":"vercel","name":"Vercel","version":null}],"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"site","pages":3,"partial":true,"cms":[],"servers":[],"frameworks":[{"technology":"nextjs","name":"Next.js","version":null,"future":true}],"ecommerce":[],"analytics":[],"chat":[],"payments":[],"hosting":[],"deep":{},"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":null,"scope":"site","pages":0,"partial":null,"cms":null,"servers":null,"frameworks":null,"ecommerce":null,"analytics":null,"chat":null,"payments":null,"hosting":null,"deep":{},"future":true}]) {
+ for (const next of [{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":null,"scope":"homepage","pages":0,"partial":null,"cms":null,"servers":null,"frameworks":null,"ecommerce":null,"analytics":null,"chat":null,"payments":null,"hosting":null,"future":true},{ "domain": "xn--bcher-kva.example", "url": "https://xn--bcher-kva.example/", "checked_at": "2026-09-21T12:00:00Z", "scope": "homepage", "pages": 1, "partial": true, "cms": [], "servers": [], "frameworks": [], "ecommerce": [], "analytics": [], "chat": [], "payments": [], "hosting": [], "future": true },{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"homepage","pages":1,"partial":true,"cms":[{"technology":"wordpress","name":"WordPress","version":"6.8.2"}],"servers":[{"technology":"nginx","name":"nginx","version":null}],"frameworks":[{"technology":"react","name":"React","version":null}],"ecommerce":[],"analytics":[],"chat":[],"payments":[],"hosting":[],"future":true},{"domain":"xn--bcher-kva.example","url":"https://xn--bcher-kva.example/","checked_at":"2026-09-21T12:00:00Z","scope":"site","pages":6,"partial":false,"cms":[{"technology":"wordpress","name":"WordPress","version":"6.8.2"},{"technology":"ghost","name":"Ghost","version":null}],"servers":[{"technology":"nginx","name":"nginx","version":null},{"technology":"apache","name":"Apache","version":null}],"frameworks":[{"technology":"nextjs","name":"Next.js","version":"15.0.0","future":true},{"technology":"react","name":"React","version":null}],"ecommerce":[{"technology":"woocommerce","name":"WooCommerce","version":null}],"analytics":[{"technology":"google-analytics","name":"Google Analytics","version":null}],"chat":[{"technology":"intercom","name":"Intercom","version":null}],"payments":[{"technology":"stripe","name":"Stripe","version":null}],"hosting":[{"technology":"vercel","name":"Vercel","version":null}],"future":true},{ "domain": "xn--bcher-kva.example", "url": "https://xn--bcher-kva.example/", "checked_at": "2026-09-21T12:00:00Z", "scope": "site", "pages": 3, "partial": true, "cms": [], "servers": [], "frameworks": [{ "technology": "nextjs", "name": "Next.js", "version": null, "future": true }], "ecommerce": [], "analytics": [], "chat": [], "payments": [], "hosting": [], "future": true },{ "domain": "xn--bcher-kva.example", "url": "https://xn--bcher-kva.example/", "checked_at": null, "scope": "site", "pages": 0, "partial": null, "cms": null, "servers": null, "frameworks": null, "ecommerce": null, "analytics": null, "chat": null, "payments": null, "hosting": null, "future": true }]) {
   record = next;
   assert.deepEqual(body(await rpc.call('stack', { domain: 'bücher.example', pretty: true })), record);
  }
@@ -392,10 +408,10 @@ for (const transport of ['stdio', 'http']) {
  test(`Postal compact tax and Weather rates preserve raw JSON over ${transport}`, async (t) => {
   let record;
   const {rpc} = await setup(t, {transport, fetch: () => response(record)});
-  record = {postal:'10001', country:'US', tax:'Sales tax', tax_rate:8.875, deep:{property_tax:{annual_median:7341}}};
+  record = { postal: '10001', country: 'US', tax: 'Sales tax', tax_rate: 8.875, property_tax: { annual_median: 7341 } };
   assert.deepEqual(body(await rpc.call('postal', {code:'10001', country:'US', deep:true})), record);
   for (const minutes of [null, [], [{time:'2026-10-31T12:00:00Z',precipitation_rate:0,precipitation_rate_in:null}]]) {
-   record = {latitude:40.7128, longitude:-74.006, deep:{minutes, history:{precipitation:12.4,precipitation_in:0.488}}};
+   record = { latitude: 40.7128, longitude: -74.006, minutes, history: { precipitation: 12.4, precipitation_in: 0.488 } };
    assert.deepEqual(body(await rpc.call('weather', {lat:40.7128, lon:-74.006, deep:true})), record);
   }
  });

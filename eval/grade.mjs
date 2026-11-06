@@ -55,7 +55,7 @@ export function gradeScenario(scenario, run) {
 	const simulatedBilledUnits = {};
 	for (const attempt of attempts) {
 		for (const [meter, units] of Object.entries(attempt.simulatedBilledUnits ?? {})) simulatedBilledUnits[meter] = (simulatedBilledUnits[meter] ?? 0) + units;
-		if (attempt.apiVersion !== '2.0.0') errors.push('wrong_api_contract');
+		if (attempt.apiVersion !== '2.1.0') errors.push('wrong_api_contract');
 	}
 	if (tools.length > scenario.budget.maxToolCalls) violations.push('tool_call_budget');
 	if (attempts.length > scenario.budget.maxHttpAttempts) violations.push('http_attempt_budget');

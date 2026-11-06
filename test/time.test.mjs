@@ -24,7 +24,7 @@ for (const transport of ['stdio', 'http']) {
 					assert.deepEqual(body(await time({ ...context, at: '2026-11-01T01:30:00', to: 'UTC', disambiguation })), payload);
 					assert.equal(calls.at(-1).url.searchParams.get('disambiguation'), disambiguation);
 					assert.equal(calls.at(-1).url.searchParams.get('at'), '2026-11-01T01:30:00');
-					assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'), '2.0.0');
+					assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.1.0');
 				}
 			}
 			const before = calls.length;
@@ -105,7 +105,7 @@ for (const mode of ['full', 'compact']) {
  test(`Time recovery codes and rule provenance remain actionable (${mode})`, async t => {
   let calls = 0;
   let status = 200;
-  let payload = { deep: { timezone_database_version: '2026c', resolution: { kind: 'gap', policy: 'earlier', adjustment_seconds: -1800, alternatives: [{ at: '1970-01-01T00:00:00.123+00:00', unix: 0, offset: '+00:00' }] } } };
+  let payload = { timezone_database_version: '2026c', resolution: { kind: 'gap', policy: 'earlier', adjustment_seconds: -1800, alternatives: [{ at: '1970-01-01T00:00:00.123+00:00', unix: 0, offset: '+00:00' }] } };
   let headers = {};
   t.mock.method(globalThis, 'fetch', async () => { calls++; return new Response(JSON.stringify(payload), { status, headers }); });
   const rpc = await connect('test_key', 'stdio', { mode }); t.after(() => rpc.close());
@@ -140,7 +140,7 @@ for (const mode of ['full', 'compact']) {
 for (const mode of ['full', 'compact']) {
  test(`Time explicit locations and rich catalog preserve uncertainty and false filters (${mode})`, async t => {
   const calls=[];
-  const payload={timezone:null,targets:null,location:{input:{type:'city',value:'Springfield'},status:'ambiguous',candidates:[],truncated:false,source:'city_reference'},deep:{standard_offset_seconds:3600,dst_offset_seconds:-3600,season:null}};
+  const payload={ timezone: null, targets: null, location: { input: { type: 'city', value: 'Springfield' }, status: 'ambiguous', candidates: [], truncated: false, source: 'city_reference' }, standard_offset_seconds: 3600, dst_offset_seconds: -3600, season: null };
   t.mock.method(globalThis,'fetch',async input=>{calls.push(new URL(input));return new Response(JSON.stringify(payload));});
   const rpc=await connect('test_key','stdio',{mode});t.after(()=>rpc.close());
   const invoke=(name,args)=>mode==='full'?rpc.call(name,args):rpc.call('lookup',{operation:name,arguments:args});

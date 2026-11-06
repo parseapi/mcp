@@ -77,26 +77,6 @@
     }
   },
   {
-    "name": "bin",
-    "inputSchema": {
-      "properties": {
-        "bin": {
-          "type": "string"
-        },
-        "deep": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "bin"
-      ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
     "name": "caller",
     "inputSchema": {
       "properties": {
@@ -177,10 +157,6 @@
         },
         "deep": {
           "type": "boolean"
-        },
-        "format": {
-          "const": "resource",
-          "type": "string"
         },
         "grain": {
           "enum": [
@@ -325,10 +301,6 @@
         "deep": {
           "type": "boolean"
         },
-        "format": {
-          "const": "resource",
-          "type": "string"
-        },
         "hierarchy": {
           "type": "boolean"
         },
@@ -405,10 +377,6 @@
             }
           ]
         },
-        "format": {
-          "const": "list",
-          "type": "string"
-        },
         "grain": {
           "enum": [
             "municipality",
@@ -447,13 +415,6 @@
           "minimum": 0,
           "type": "integer"
         },
-        "order": {
-          "enum": [
-            "asc",
-            "desc"
-          ],
-          "type": "string"
-        },
         "romanized": {
           "type": "boolean"
         },
@@ -464,9 +425,6 @@
           "type": "string"
         },
         "state": {
-          "type": "string"
-        },
-        "timezone": {
           "type": "string"
         },
         "timezones": {
@@ -559,10 +517,6 @@
             }
           ]
         },
-        "format": {
-          "const": "list",
-          "type": "string"
-        },
         "grain": {
           "enum": [
             "municipality",
@@ -604,13 +558,6 @@
         "name": {
           "type": "string"
         },
-        "order": {
-          "enum": [
-            "asc",
-            "desc"
-          ],
-          "type": "string"
-        },
         "page": {
           "type": "boolean"
         },
@@ -628,9 +575,6 @@
           "type": "string"
         },
         "state": {
-          "type": "string"
-        },
-        "timezone": {
           "type": "string"
         },
         "timezones": {
@@ -726,10 +670,6 @@
             }
           ]
         },
-        "format": {
-          "const": "list",
-          "type": "string"
-        },
         "grain": {
           "enum": [
             "municipality",
@@ -778,13 +718,6 @@
           "minimum": 0,
           "type": "integer"
         },
-        "order": {
-          "enum": [
-            "asc",
-            "desc"
-          ],
-          "type": "string"
-        },
         "radius": {
           "exclusiveMinimum": 0,
           "type": "number"
@@ -799,9 +732,6 @@
           "type": "string"
         },
         "state": {
-          "type": "string"
-        },
-        "timezone": {
           "type": "string"
         },
         "timezones": {
@@ -855,10 +785,6 @@
         },
         "deep": {
           "type": "boolean"
-        },
-        "format": {
-          "const": "resource",
-          "type": "string"
         },
         "grain": {
           "enum": [
@@ -964,10 +890,6 @@
             }
           ]
         },
-        "format": {
-          "const": "list",
-          "type": "string"
-        },
         "grain": {
           "enum": [
             "municipality",
@@ -1026,13 +948,6 @@
           "minimum": 0,
           "type": "integer"
         },
-        "order": {
-          "enum": [
-            "asc",
-            "desc"
-          ],
-          "type": "string"
-        },
         "page": {
           "type": "boolean"
         },
@@ -1049,9 +964,6 @@
           "type": "string"
         },
         "state": {
-          "type": "string"
-        },
-        "timezone": {
           "type": "string"
         },
         "timezones": {
@@ -1150,16 +1062,6 @@
       "required": [
         "number"
       ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "company_coverage",
-    "inputSchema": {
-      "properties": {},
       "type": "object"
     },
     "annotations": {
@@ -1340,6 +1242,9 @@
       "properties": {
         "code": {
           "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
         },
         "lang": {
           "maxLength": 64,
@@ -1556,6 +1461,23 @@
     }
   },
   {
+    "name": "email_verify",
+    "inputSchema": {
+      "properties": {
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "email"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "emoji",
     "inputSchema": {
       "properties": {
@@ -1651,13 +1573,6 @@
         "max_version": {
           "type": "string"
         },
-        "profile": {
-          "enum": [
-            "full",
-            "compact"
-          ],
-          "type": "string"
-        },
         "subcategory": {
           "type": "string"
         },
@@ -1711,16 +1626,6 @@
         "direction",
         "shortcode_source"
       ],
-      "type": "object"
-    },
-    "annotations": {
-      "readOnlyHint": true
-    }
-  },
-  {
-    "name": "emoji_metadata",
-    "inputSchema": {
-      "properties": {},
       "type": "object"
     },
     "annotations": {

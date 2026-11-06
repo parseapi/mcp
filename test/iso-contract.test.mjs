@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { connect, body } from './helpers.mjs';
-const cases = JSON.parse(readFileSync(new URL('./fixtures/iso-contract.json', import.meta.url), 'utf8')).filter(item => !item.operation.startsWith('currency'));
+const cases = JSON.parse(readFileSync(new URL('./fixtures/iso-contract.json', import.meta.url), 'utf8'));
 for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact']) {
  test(`ISO response contracts remain raw over ${transport}/${mode}`, async t => {
   let sample; const calls=[];

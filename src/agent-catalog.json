@@ -1,14 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "api_version": "2.0.0",
+  "api_version": "2.1.0",
   "operations": {
     "email": {
       "operation": "email",
       "endpoint": "GET /email/{email}",
       "determines": [
         "Email syntax and domain mail routing",
-        "Consumer, disposable and role-address classifications",
-        "With deep=true, a mailbox deliverability observation"
+        "Consumer, disposable and role-address classifications"
       ],
       "does_not_determine": [
         "Recipient identity, consent or ownership",
@@ -16,29 +15,17 @@
         "A new mailbox probe on every request"
       ],
       "required_context": [
-        "email: a complete email address",
-        "deep=true only when a mailbox check is needed"
+        "email: a complete email address"
       ],
       "freshness": {
-        "mode": "observation_reuse",
+        "mode": "dns_ttl",
         "mail_routing": {
           "mode": "dns_ttl",
           "positive_cache_max_seconds": 3600,
           "negative_cache_max_seconds": 300,
           "shorter_dns_ttl_wins": true,
           "stale_if_error": false
-        },
-        "mailbox_corpus_reuse_max_seconds": {
-          "deliverable": 604800,
-          "catchall": 2592000,
-          "undeliverable": 7776000
-        },
-        "mailbox_response_cache_ttl_seconds": 86400,
-        "mailbox_local_cache_ttl_seconds": 3600,
-        "effective_max_age_seconds": null,
-        "effective_max_age_status": "not_guaranteed; response-cache refreshes can retain a verdict beyond corpus reuse windows",
-        "actual_age_seconds": null,
-        "actual_age_status": "not_exposed"
+        }
       },
       "uncertainty": {
         "valid": {
@@ -51,34 +38,11 @@
         },
         "domain_type": {
           "null": "No supported reserved namespace classification"
-        },
-        "deep.deliverable": {
-          "true": "Mailbox likely exists",
-          "false": "Negative verification, eligible local disposable/no-route rejection, or invalid syntax that skipped verification; check valid first",
-          "null": "Mailbox check did not complete; no verification unit is charged"
-        },
-        "deep.catchall": {
-          "true": "Domain accepts all addresses; an individual mailbox is not established",
-          "false": "Not classified as catchall, including invalid input and local rejection where no mailbox probe ran",
-          "null": "Mailbox check did not complete"
-        },
-        "deep": {
-          "omitted": "Not requested",
-          "empty_object": "Requested with an app key; mailbox verification is locked"
         }
       },
       "billing": {
         "pooled_requests_per_success": 1,
-        "metered": {
-          "name": "email",
-          "when": "deep=true and a valid-syntax eligible check completes",
-          "units_per_completed_check": 1,
-          "cache_hits_bill_units": true,
-          "incomplete_check_units": 0,
-          "eligible_local_negative_check_units": 1,
-          "invalid_syntax_check_units": 0,
-          "locked_deep_check_units": 0
-        },
+        "metered": null,
         "monetary_quote": null,
         "account_state": "unknown; included balance, on-demand access, accepted rates and spend cap require account state"
       },
@@ -93,18 +57,12 @@
           "public": "Allowed browser origin required",
           "app": "Allowed X-App-Id required"
         },
-        "deep": {
-          "secret_or_public": "Uses available included verifications or enabled on-demand allowance, including on Free",
-          "app": "Locked; returns deep: {} without a verification",
-          "restricted_demo_key": "Metered deep is denied"
-        },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access, quotas and spending controls still apply"
       },
       "retry": {
         "client": "javascript_sdk_and_mcp",
         "default_retries": 2,
-        "deep_default_retries": 0,
         "retry_http_statuses": [
           429,
           500,
@@ -114,10 +72,10 @@
         ],
         "retry_network_errors": true,
         "successful_unknown_retried": false,
-        "guidance": "Do not infer a retry from null. Repeated completed deep checks consume additional verification units; a transport failure does not prove the previous attempt was unbilled. DNS failures can return 503 before mailbox verification."
+        "guidance": "Basic syntax and routing checks do not establish mailbox deliverability. Use email_verify explicitly for that metered operation."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/email/help",
+        "help": "https://api.parseapi.com/version/2.1.0/email/help",
         "guide": "https://parseapi.com/docs/email"
       }
     },
@@ -152,18 +110,14 @@
           "false": "Registry reported registered",
           "null": "No usable current registry observation, or this name is a subdomain, public suffix or unsupported registration suffix; availability is unknown"
         },
-        "deep": {
-          "omitted": "Not requested",
-          "empty_object": "Plan does not unlock registration details, or registration is unavailable"
-        },
-        "deep.registration": {
+        "registration": {
           "omitted": "No entitled, usable registration observation"
         },
-        "deep.registration.dnssec": {
+        "registration.dnssec": {
           "true": "Registry supplied evidence of signed delegation",
           "false": "Registry supplied evidence of unsigned delegation",
           "null": "Registry did not supply delegation-signing evidence",
-          "omitted": "No usable registered-domain detail; an unregistered observation contains only registered=false"
+          "omitted": "No usable registered-domain detail; unregistered availability is reported in Core"
         }
       },
       "billing": {
@@ -186,7 +140,7 @@
         },
         "deep": {
           "entitlement": "Paid plan; app keys retain plan-deep access",
-          "locked": "Returns deep: {}"
+          "locked": "Returns absent optional fields"
         },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
@@ -206,7 +160,7 @@
         "guidance": "available=null is a completed HTTP response with an unknown fact, not evidence the domain is free. Do not retry automatically from null; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/domain/help",
+        "help": "https://api.parseapi.com/version/2.1.0/domain/help",
         "guide": "https://parseapi.com/docs/domain"
       }
     },
@@ -249,10 +203,6 @@
         "http_status": {
           "404": "DNS name does not exist",
           "503": "Temporary DNS failure; no negative verdict"
-        },
-        "deep": {
-          "omitted": "Not requested",
-          "empty_object": "Requested; this product has no additional deep fields"
         }
       },
       "billing": {
@@ -276,7 +226,7 @@
         },
         "deep": {
           "entitlement": "All records are core on every plan",
-          "requested": "Returns deep: {}"
+          "requested": "Returns absent optional fields"
         },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
@@ -296,7 +246,7 @@
         "guidance": "An empty records array and a DNS-name 404 are negative answers, not transient failures. Reuse records only within their remaining TTL; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/dns/help",
+        "help": "https://api.parseapi.com/version/2.1.0/dns/help",
         "guide": "https://parseapi.com/docs/dns"
       }
     },
@@ -331,9 +281,6 @@
         },
         "http_status": {
           "503": "Temporary DNS failure; no negative verdict"
-        },
-        "deep": {
-          "omitted": "This product has no deep response fields"
         }
       },
       "billing": {
@@ -374,7 +321,7 @@
         "guidance": "Do not retry solely because mx is empty. Use email for mail-route validation or dns for explicit A/AAAA records; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/mx/help",
+        "help": "https://api.parseapi.com/version/2.1.0/mx/help",
         "guide": "https://parseapi.com/docs/mx"
       }
     },
@@ -382,7 +329,7 @@
       "operation": "country",
       "endpoint": "GET /country/{code}",
       "determines": [
-        "Country everyday identity and references by ISO2, ISO3 or name: names (name, name_full, name_local), demonym, primary country code, iso_alpha3 and iso_numeric, continent, region, subregion, currency, calling code, flag, languages, timezones, borders, bloc codes and capital with coordinates",
+        "Country everyday identity and references by ISO2, ISO3 or name: names (name, name_full, name_local), demonym, primary country code, iso_alpha3 and iso_numeric, continent, region, subregion, currency, calling code, flag, languages, timezones, borders, bloc codes, capital with coordinates, and included postal_format and postal_regex form guidance",
         "With entitled deep=true, specialist geography, population, economic and national reference attributes"
       ],
       "does_not_determine": [
@@ -401,25 +348,27 @@
         "actual_age_status": "not_exposed; population observation evidence remains internal"
       },
       "uncertainty": {
+        "postal_format": {
+          "null": "Postal-style guidance unavailable; one example may not cover every valid format"
+        },
+        "postal_regex": {
+          "null": "Postal syntax pattern unavailable; a match does not establish existence or deliverability"
+        },
         "name_local": {
           "null": "Native name unavailable or identical to the original name before display translation"
         },
-        "deep.water_area": {
+        "water_area": {
           "null": "Unknown or inconsistent with the archived total",
           "zero": "Reported zero water area"
         },
-        "deep.coastline": {
+        "coastline": {
           "null": "Unknown",
           "zero": "Reported landlocked coastline"
         },
-        "deep": {
-          "omitted": "Not requested",
-          "empty_object": "Requested but the plan does not unlock the profile"
-        },
-        "deep.tax.name": {
+        "tax.name": {
           "null": "No national consumption levy is named; local levies may still apply"
         },
-        "deep.tax.rate": {
+        "tax.rate": {
           "null": "Unavailable or no national levy applies",
           "zero": "Known zero national reference rate"
         },
@@ -455,7 +404,7 @@
         },
         "deep": {
           "entitlement": "Paid plan; app keys retain plan-deep access",
-          "locked": "Returns deep: {}"
+          "locked": "Returns absent optional fields"
         },
         "effective_access": null,
         "effective_access_status": "not_checked; key fences, account access and quotas still apply"
@@ -475,7 +424,7 @@
         "guidance": "Do not retry to fill null reference fields or a locked deep object. Preserve unknowns and distinguish reported zero from null; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/country/help",
+        "help": "https://api.parseapi.com/version/2.1.0/country/help",
         "guide": "https://parseapi.com/docs/country"
       }
     },
@@ -484,7 +433,7 @@
       "endpoint": "GET /time or /time/{timezone}",
       "determines": [
         "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-        "The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
+        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
         "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, source wall-time resolution",
         "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
       ],
@@ -500,7 +449,7 @@
         "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
         "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
         "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-        "targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
         "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
       ],
       "freshness": {
@@ -521,15 +470,11 @@
           "false": "The active timezone rule does not carry its DST indicator",
           "null": "Source timezone is unresolved"
         },
-        "deep.name": {
+        "name": {
           "null": "Friendly display name unavailable or inconsistent with the pinned rule"
         },
-        "deep.next_dst": {
+        "next_dst": {
           "null": "No UTC offset change found within 400 days, or source timezone unresolved; not a promise of no future changes"
-        },
-        "deep": {
-          "omitted": "Not requested",
-          "object": "Requested; optional detail is included on paid plans or with retained Deep access. Locked requests return {}"
         },
         "http_status": {
           "400": "Invalid input, or a repeated/nonexistent source wall time with disambiguation=reject. Supply an explicit UTC offset or choose earlier/later",
@@ -541,7 +486,7 @@
           "null": "Source is unresolved or ambiguous; no target instant was guessed",
           "array": "Ordered requested target objects, including duplicates; all share the same captured instant"
         },
-        "deep.resolution": {
+        "resolution": {
           "null": "Now, explicit-offset input, no conversion, or unresolved source; no wall-time ambiguity was evaluated",
           "object": "Actual unique/overlap/gap classification, applied policy, signed wall adjustment in seconds, and two chronological alternatives for overlap/gap (empty for unique)"
         },
@@ -556,7 +501,7 @@
           "ambiguous": "Multiple or truncated candidates; choose/refine explicitly",
           "not_found": "No usable match in the available data; not proof the place does not exist"
         },
-        "deep.season": {
+        "season": {
           "null": "No current interval or next DST-flag interval starting within 400 days, or source unresolved",
           "object": "Current continuous DST-flag interval, otherwise the next beginning within 400 days; nullable start/end boundaries preserve limits",
           "endpoint_null": "Boundary absent from pinned rules or outside supported UTC years 0001 through 9999"
@@ -604,7 +549,7 @@
         "guidance": "Do not retry unresolved/ambiguous locations or rejected wall times automatically. Correct the input or choose a resolution. Retried calls with omitted at evaluate a later now; pin an explicit instant when repeatability matters."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/time/help",
+        "help": "https://api.parseapi.com/version/2.1.0/time/help",
         "guide": "https://parseapi.com/docs/time"
       }
     },
@@ -653,27 +598,27 @@
       },
       "uncertainty": {
         "bin": {
-          "value": "Normalized input string; compare deep.prefix to this value when Deep is requested",
+          "value": "Normalized input string; compare prefix to this value when Deep is requested",
           "invalid": "HTTP 400; malformed input is not an unknown-prefix result"
         },
         "brand": {
           "value": "Network key determined independently of issuer records; brand_name is its display name",
           "null": "Unknown or ambiguous among reviewed network rules; send more prefix digits when available, up to 11"
         },
-        "deep.prefix": {
+        "prefix": {
           "null": "HTTP 200: fewer than six digits or no recorded directory match; not a verdict about a card or account",
           "equals_bin": "An exact recorded-prefix match for the supplied digits; individual fields can still be null",
           "shorter_than_bin": "A broader reference match only; an eight-digit input matching six digits does not establish an exact eight-digit allocation"
         },
-        "deep.metadata": {
+        "metadata": {
           "null": "Unknown in the one matched record. A more specific record masks its parent, including null fields; never backfill from a shorter prefix"
         },
-        "deep.prepaid": {
+        "prepaid": {
           "true": "Explicitly recorded as prepaid",
           "false": "Explicitly recorded as not prepaid",
           "null": "Unknown, not false"
         },
-        "deep.type": {
+        "type": {
           "null": "Unknown or mixed funding type"
         },
         "logo": {
@@ -716,7 +661,7 @@
         "guidance": "Do not retry a successful unknown prefix or null fields to manufacture a match. Honor Retry-After; waits over five seconds return the API error without automatic retry."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/card/help",
+        "help": "https://api.parseapi.com/version/2.1.0/card/help",
         "guide": "https://parseapi.com/docs/card",
         "attribution": "https://parseapi.com/legal/attribution#bin"
       }
@@ -792,7 +737,7 @@
         "guidance": "Do not retry an empty match list automatically. Correct or broaden the identifier query."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/time/help",
+        "help": "https://api.parseapi.com/version/2.1.0/time/help",
         "guide": "https://parseapi.com/docs/time"
       }
     },
@@ -815,18 +760,15 @@
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
-        "deep": {
-          "omitted": "Not requested."
-        },
-        "deep.base": {
+        "base": {
           "omitted": "No available loaded parent variant"
         },
-        "deep.artwork": {
+        "artwork": {
           "omitted_style": "Within an explicitly returned artwork object, the style has no verified asset for this glyph. Compact catalog records deliberately omit artwork."
         },
         "shortcode_source": "Named presets have explicit provenance and compatibility caveats; missing or ambiguous aliases are not fabricated"
@@ -867,7 +809,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -883,24 +825,21 @@
         "Complete translations merely from an accepted language"
       ],
       "required_context": [
-        "query: 1–256 characters",
-        "limit: 1–50; offset: 0–100000 when paging is required",
+        "query: 1\u2013256 characters",
+        "limit: 1\u201350; offset: 0\u2013100000 when paging is required",
         "Filtered or explicit-offset search returns total and next_offset; legacy plain-query envelope is preserved"
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
-        "deep": {
-          "omitted": "Not requested."
-        },
-        "deep.base": {
+        "base": {
           "omitted": "No available loaded parent variant"
         },
-        "deep.artwork": {
+        "artwork": {
           "omitted_style": "Within an explicitly returned artwork object, the style has no verified asset for this glyph. Compact catalog records deliberately omit artwork."
         },
         "shortcode_source": "Named presets have explicit provenance and compatibility caveats; missing or ambiguous aliases are not fabricated"
@@ -941,7 +880,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -957,23 +896,20 @@
       ],
       "required_context": [
         "Omit q to browse",
-        "limit: 1–50; offset: 0–100000",
+        "limit: 1\u201350; offset: 0\u2013100000",
         "Stop when next_offset is null"
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
-        "deep": {
-          "omitted": "Not requested."
-        },
-        "deep.base": {
+        "base": {
           "omitted": "No available loaded parent variant"
         },
-        "deep.artwork": {
+        "artwork": {
           "omitted_style": "Within an explicitly returned artwork object, the style has no verified asset for this glyph. Compact catalog records deliberately omit artwork."
         },
         "shortcode_source": "Named presets have explicit provenance and compatibility caveats; missing or ambiguous aliases are not fabricated"
@@ -1014,7 +950,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1033,9 +969,9 @@
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "billing": {
         "pooled_requests_per_success": 1,
@@ -1069,64 +1005,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
-        "guide": "https://parseapi.com/docs/emoji"
-      }
-    },
-    "emoji_metadata": {
-      "operation": "emoji_metadata",
-      "endpoint": "GET /emoji/metadata",
-      "determines": [
-        "Loaded inventory total, content edition, completeness and required notices",
-        "Loaded artwork coverage, source licenses and notices"
-      ],
-      "does_not_determine": [
-        "A guarantee that every upstream artwork source supports the newest Unicode release",
-        "Account entitlement or a monetary quote"
-      ],
-      "required_context": [
-        "No required input",
-        "The API and MCP return the same metadata; data notices are embedded and artwork notice files are linked"
-      ],
-      "freshness": {
-        "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
-      },
-      "billing": {
-        "pooled_requests_per_success": 1,
-        "account_state": "unknown; account allowance, credentials, quotas and accepted terms are not evaluated"
-      },
-      "access": {
-        "api_key_required": true,
-        "key_types": [
-          "secret",
-          "public",
-          "app"
-        ],
-        "key_fences": {
-          "public": "Allowed browser origin required",
-          "app": "Allowed X-App-Id required"
-        },
-        "effective_access_status": "Not checked; credential fences, account access and quotas still apply."
-      },
-      "retry": {
-        "client": "javascript_sdk_and_mcp",
-        "default_retries": 2,
-        "retry_http_statuses": [
-          429,
-          500,
-          502,
-          503,
-          504
-        ],
-        "retry_network_errors": true,
-        "successful_unknown_retried": false,
-        "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
-      },
-      "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1134,43 +1013,35 @@
       "operation": "emoji_catalog",
       "endpoint": "GET /emoji/catalog",
       "determines": [
-        "Downloadable JSON records within explicit inventory scope",
-        "JSON qualification maps, source aliases, legacy winners and native search facts for offline clients"
+        "One compact JSON catalog download URL; the download contains inventory, lookup maps and required notices."
       ],
       "does_not_determine": [
         "A full catalog embedded in MCP model context",
         "A translated label for every row merely from a supported locale"
       ],
       "required_context": [
-        "JSON compact profile by default; profile=full includes artwork and encoding detail",
-        "Optional filters and language; download_url requires an authenticated HTTP request",
-        "Compact is the default; request profile=full for artwork. MCP metadata describes the complete inventory; the downloaded file supplies the selected total and scope."
+        "Optional catalog filters and display language. Download with an API key."
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
-        "deep": {
-          "omitted": "Not requested."
-        },
-        "deep.base": {
+        "base": {
           "omitted": "No available loaded parent variant"
         },
-        "deep.artwork": {
+        "artwork": {
           "omitted_style": "Within an explicitly returned artwork object, the style has no verified asset for this glyph. Compact catalog records deliberately omit artwork."
         },
         "shortcode_source": "Named presets have explicit provenance and compatibility caveats; missing or ambiguous aliases are not fabricated"
       },
       "billing": {
-        "pooled_requests_per_success": 1,
-        "deep_extra_units": 0,
-        "account_state": "unknown; account allowance, credentials, quotas and accepted terms are not evaluated",
-        "mcp_pooled_requests_per_success": 1,
-        "mcp_behavior": "One metadata read. Following download_url performs one separate pooled request; local operations use no pooled requests.",
-        "offline_operations_extra_units": 0
+        "pooled_requests_per_success": 0,
+        "metered": null,
+        "monetary_quote": null,
+        "download": "The separate catalog request uses the ordinary pooled read."
       },
       "access": {
         "api_key_required": true,
@@ -1203,7 +1074,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1225,18 +1096,15 @@
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
-        "deep": {
-          "omitted": "Not requested."
-        },
-        "deep.base": {
+        "base": {
           "omitted": "No available loaded parent variant"
         },
-        "deep.artwork": {
+        "artwork": {
           "omitted_style": "Within an explicitly returned artwork object, the style has no verified asset for this glyph. Compact catalog records deliberately omit artwork."
         }
       },
@@ -1276,7 +1144,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1298,9 +1166,9 @@
       ],
       "freshness": {
         "mode": "pinned_reference",
-        "edition_field": "metadata.edition on catalog/metadata",
-        "completeness_field": "metadata.completeness on catalog/metadata",
-        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age."
+        "edition_field": "metadata.edition on the catalog download",
+        "actual_age_status": "Not exposed; a pinned source revision does not establish observation age.",
+        "completeness_field": "metadata.completeness.complete on the catalog download; null is unknown"
       },
       "uncertainty": {
         "shortcode_source": "Named presets have explicit provenance and compatibility caveats; missing or ambiguous aliases are not fabricated",
@@ -1338,7 +1206,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1359,7 +1227,6 @@
         "mode": "matched_annual_editions",
         "age_basis": "Calendar editions identify retained dates; completeness, pending dates and verification qualify annual review",
         "source_observations": "Source-byte checks do not renew annual date review",
-        "immutable_selection": "Explicit edition pins select public rows only, one unambiguous edition per reached year",
         "actual_age_seconds": null
       },
       "uncertainty": {
@@ -1375,7 +1242,7 @@
       },
       "access": {
         "plans": "all",
-        "credentials": "Existing permitted API or app key; API 2.0.0 only",
+        "credentials": "Existing permitted API or app key; API 2.1.0",
         "deep": "Not accepted; complete collection metadata is core",
         "effective_access": null,
         "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
@@ -1383,11 +1250,10 @@
       "required_context": [
         "country: two-letter country code",
         "from and to: real inclusive civil dates, at most 731 dates",
-        "Optional type and region; a region must be represented in every reached annual calendar",
-        "Optional edition: one distinct public-calendar hash per reached year, at most three; no observance selector with pins"
+        "Optional type and region; a region must be represented in every reached annual calendar"
       ],
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/holiday/help",
+        "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
         "reference": "https://parseapi.com/docs/holiday"
       },
       "retry": {
@@ -1415,16 +1281,6 @@
           "region": {
             "type": "string"
           },
-          "edition": {
-            "type": "array",
-            "minItems": 1,
-            "maxItems": 3,
-            "uniqueItems": true,
-            "items": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          },
           "to": {
             "type": "string",
             "format": "date"
@@ -1436,54 +1292,6 @@
           "to"
         ],
         "additionalProperties": false
-      }
-    },
-    "holiday_events": {
-      "operation": "holiday_events",
-      "endpoint": "GET /holiday/{country}/events",
-      "determines": [
-        "One cursor page of retained public-calendar corrections, with before/after records and previous/new editions"
-      ],
-      "does_not_determine": [
-        "Employer closure, pay or leave entitlement",
-        "Municipal, half-day, bank or sector-specific rules outside each calendar scope",
-        "Official verification of curated observances or calculated forecasts",
-        "The current local date in a country; the caller supplies its civil anchor"
-      ],
-      "freshness": {
-        "mode": "immutable_retained_change_history",
-        "age_basis": "Calendar editions identify retained dates; completeness, pending dates and verification qualify annual review",
-        "actual_age_seconds": null
-      },
-      "uncertainty": {
-        "complete": false,
-        "history_boundary": "history.retained_since declares the retained boundary; no earlier transitions inferred",
-        "empty_page": "No retained matching events; inspect coverage separately",
-        "cursor": "Unknown cursors 404; another country/year cursor 400"
-      },
-      "billing": {
-        "pooled_requests_per_success": 1,
-        "metered": null,
-        "monetary_quote": null
-      },
-      "access": {
-        "plans": "all",
-        "credentials": "Existing permitted API or app key; API 2.0.0 only",
-        "deep": "Not accepted; complete collection metadata is core",
-        "effective_access": null,
-        "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
-      },
-      "required_context": [
-        "country: exact calendar country",
-        "Optional year and limit from 1 to 100; after is the last immutable event ID"
-      ],
-      "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/holiday/help",
-        "reference": "https://parseapi.com/docs/holiday"
-      },
-      "retry": {
-        "successful_unknown_retried": false,
-        "guidance": "Validation and unavailable-year errors remain explicit; temporary 503 errors follow returned retry guidance."
       }
     },
     "holiday": {
@@ -1500,8 +1308,7 @@
       ],
       "required_context": [
         "country: a two-letter country code",
-        "Optional year/month/day select a real civil period; full dates use the date path",
-        "Optional edition pins select an exact retained public-calendar version"
+        "Optional year/month/day select a real civil period; full dates use the date path"
       ],
       "freshness": {
         "mode": "stored_annual_calendars",
@@ -1525,7 +1332,7 @@
         "effective_access": null
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/holiday/help",
+        "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
         "reference": "https://parseapi.com/docs/holiday"
       },
       "retry": {
@@ -1550,7 +1357,6 @@
             "mode": "matched_annual_editions",
             "age_basis": "Retained annual review/publication dates; null review timestamps remain unknown",
             "source_observations": "Source-byte checks do not renew annual date review",
-            "immutable_selection": "Explicit edition pins select public rows only, one unambiguous edition per reached year",
             "actual_age_seconds": null
           },
           "uncertainty": {
@@ -1566,7 +1372,7 @@
           },
           "access": {
             "plans": "all",
-            "credentials": "Existing permitted API or app key; API 2.0.0 only",
+            "credentials": "Existing permitted API or app key; API 2.1.0",
             "deep": "Not accepted; complete collection metadata is core",
             "effective_access": null,
             "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
@@ -1574,11 +1380,10 @@
           "required_context": [
             "country: two-letter country code",
             "from and to: real inclusive civil dates, at most 731 dates",
-            "Optional type and region; a region must be represented in every reached annual calendar",
-            "Optional edition: one distinct public-calendar hash per reached year, at most three; no observance selector with pins"
+            "Optional type and region; a region must be represented in every reached annual calendar"
           ],
           "docs": {
-            "help": "https://api.parseapi.com/version/2.0.0/holiday/help",
+            "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
             "reference": "https://parseapi.com/docs/holiday"
           },
           "retry": {
@@ -1606,16 +1411,6 @@
               "region": {
                 "type": "string"
               },
-              "edition": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 3,
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "pattern": "^[a-f0-9]{64}$"
-                }
-              },
               "to": {
                 "type": "string",
                 "format": "date"
@@ -1628,54 +1423,6 @@
             ],
             "additionalProperties": false
           }
-        },
-        "holiday_events": {
-          "operation": "holiday_events",
-          "endpoint": "GET /holiday/{country}/events",
-          "determines": [
-            "One cursor page of retained public-calendar corrections, with before/after records and previous/new editions"
-          ],
-          "does_not_determine": [
-            "Employer closure, pay or leave entitlement",
-            "Municipal, half-day, bank or sector-specific rules outside each calendar scope",
-            "Official verification of curated observances or calculated forecasts",
-            "The current local date in a country; the caller supplies its civil anchor"
-          ],
-          "freshness": {
-            "mode": "immutable_retained_change_history",
-            "age_basis": "created is first-recorded Unix seconds, not source publication or a renewed review",
-            "actual_age_seconds": null
-          },
-          "uncertainty": {
-            "complete": false,
-            "history_boundary": "history.retained_since declares the retained boundary; no earlier transitions inferred",
-            "empty_page": "No retained matching events; inspect coverage separately",
-            "cursor": "Unknown cursors 404; another country/year cursor 400"
-          },
-          "billing": {
-            "pooled_requests_per_success": 1,
-            "metered": null,
-            "monetary_quote": null
-          },
-          "access": {
-            "plans": "all",
-            "credentials": "Existing permitted API or app key; API 2.0.0 only",
-            "deep": "Not accepted; complete collection metadata is core",
-            "effective_access": null,
-            "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
-          },
-          "required_context": [
-            "country: exact calendar country",
-            "Optional year and limit from 1 to 100; after is the last immutable event ID"
-          ],
-          "docs": {
-            "help": "https://api.parseapi.com/version/2.0.0/holiday/help",
-            "reference": "https://parseapi.com/docs/holiday"
-          },
-          "retry": {
-            "successful_unknown_retried": false,
-            "guidance": "Validation and unavailable-year errors remain explicit; temporary 503 errors follow returned retry guidance."
-          }
         }
       }
     },
@@ -1684,7 +1431,7 @@
       "endpoint": "GET /postal/{code}?country={country}",
       "determines": [
         "Postal code, qualified ZIP type, available place names, coordinates and timezone",
-        "Optional paid Deep adds area, elevation, population, tax references, neighbors and metro associations where available"
+        "Optional paid Deep adds area, elevation, population, currency, grouped tax references, up to eight same-country neighbor codes and metro associations where available"
       ],
       "does_not_determine": [
         "Street-address deliverability or USPS DPV",
@@ -1740,7 +1487,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1803,7 +1550,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1865,7 +1612,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1873,11 +1620,11 @@
       "operation": "city",
       "endpoint": "GET /city/{name}",
       "endpoints": {
-        "resource": "GET /city/id/{id}?format=resource",
+        "resource": "GET /city/id/{id}",
         "typeahead": "GET /city?q={query}",
-        "browse": "GET /city?browse=true&format=list",
+        "browse": "GET /city?browse=true",
         "spelling": "GET /city/search?q={query}&match={exact|prefix|fuzzy}",
-        "nearby_coordinates": "GET /city?lat={lat}&lon={lon}&nearby=true&format=list",
+        "nearby_coordinates": "GET /city?lat={lat}&lon={lon}&nearby=true",
         "children": "GET /city/id/{id}/children",
         "ancestors": "GET /city/id/{id}/ancestors",
         "siblings": "GET /city/id/{id}/siblings",
@@ -1904,8 +1651,8 @@
         "Keep all filters, limit, language and shape options unchanged when reusing next_cursor"
       ],
       "response": {
-        "resource": "format=resource: object=city and the complete ordinary City fields, including own id",
-        "collection": "format=list: object=list, data and next_cursor; keep request filters unchanged for continuation",
+        "resource": "Lookup: complete ordinary City fields, including its id",
+        "collection": "Each route retains its default cities or nearby collection and pagination; explicit /city/search and relationships retain canonical data lists",
         "legacy": "Default lookup, typeahead and named-nearby envelopes remain compatible",
         "geojson": "format=geojson: Feature or FeatureCollection; null geometry when coordinates are unavailable"
       },
@@ -1975,10 +1722,115 @@
         ]
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.0.0/city/help",
+        "help": "https://api.parseapi.com/version/2.1.0/city/help",
         "guide": "https://parseapi.com/docs/city",
         "selection": "https://parseapi.com/docs/city#choose-a-city",
         "continuity": "https://parseapi.com/docs/city#stable-ids"
+      }
+    },
+    "email_verify": {
+      "operation": "email_verify",
+      "endpoint": "POST /email/verify",
+      "determines": [
+        "A complete Email result and, when completed, a mailbox deliverability observation."
+      ],
+      "does_not_determine": [
+        "Recipient identity, consent or ownership",
+        "Guaranteed delivery to an inbox",
+        "A new mailbox probe on every request"
+      ],
+      "required_context": [
+        "email: a complete email address in the JSON request body."
+      ],
+      "freshness": {
+        "mode": "observation_reuse",
+        "mail_routing": {
+          "mode": "dns_ttl",
+          "positive_cache_max_seconds": 3600,
+          "negative_cache_max_seconds": 300,
+          "shorter_dns_ttl_wins": true,
+          "stale_if_error": false
+        },
+        "mailbox_corpus_reuse_max_seconds": {
+          "deliverable": 604800,
+          "catchall": 2592000,
+          "undeliverable": 7776000
+        },
+        "mailbox_response_cache_ttl_seconds": 86400,
+        "mailbox_local_cache_ttl_seconds": 3600,
+        "effective_max_age_seconds": null,
+        "effective_max_age_status": "not_guaranteed; response-cache refreshes can retain a verdict beyond corpus reuse windows",
+        "actual_age_seconds": null,
+        "actual_age_status": "not_exposed"
+      },
+      "uncertainty": {
+        "valid": {
+          "true": "Syntax is valid; this does not establish mailbox existence",
+          "false": "Syntax is invalid"
+        },
+        "domain_valid": {
+          "true": "MX or permitted A/AAAA fallback supplies a mail route",
+          "false": "When valid=true, no usable mail route, including an explicit null MX. When valid=false, routing was not checked"
+        },
+        "domain_type": {
+          "null": "No supported reserved namespace classification"
+        },
+        "deliverable": {
+          "true": "Mailbox likely exists",
+          "false": "Negative verification, eligible local disposable/no-route rejection, or invalid syntax that skipped verification; check valid first",
+          "null": "Mailbox check did not complete; no verification unit is charged"
+        },
+        "catchall": {
+          "true": "Domain accepts all addresses; an individual mailbox is not established",
+          "false": "Not classified as catchall, including invalid input and local rejection where no mailbox probe ran",
+          "null": "Mailbox check did not complete"
+        }
+      },
+      "billing": {
+        "pooled_requests_per_success": 1,
+        "metered": {
+          "name": "email",
+          "when": "A valid-syntax eligible mailbox check completes.",
+          "units_per_completed_check": 1,
+          "cache_hits_bill_units": true,
+          "incomplete_check_units": 0,
+          "eligible_local_negative_check_units": 1,
+          "invalid_syntax_check_units": 0,
+          "locked_deep_check_units": 0
+        },
+        "monetary_quote": null,
+        "account_state": "unknown; included balance, on-demand access, accepted rates and spend cap require account state"
+      },
+      "access": {
+        "api_key_required": true,
+        "key_types": [
+          "secret",
+          "public"
+        ],
+        "key_fences": {
+          "public": "Allowed browser origin required",
+          "app": "Allowed X-App-Id required"
+        },
+        "effective_access": null,
+        "effective_access_status": "not_checked; key fences, account access, quotas and spending controls still apply"
+      },
+      "retry": {
+        "client": "javascript_sdk_and_mcp",
+        "default_retries": 0,
+        "retry_http_statuses": [
+          429,
+          500,
+          502,
+          503,
+          504
+        ],
+        "retry_network_errors": true,
+        "successful_unknown_retried": false,
+        "guidance": "Do not infer a retry from null. Repeated completed checks consume additional verification units; a transport failure does not prove the previous attempt was unbilled. DNS failures can return 503 before mailbox verification."
+      },
+      "docs": {
+        "help": "https://api.parseapi.com/version/2.1.0/email/help",
+        "guide": "https://parseapi.com/docs/email"
       }
     }
   }

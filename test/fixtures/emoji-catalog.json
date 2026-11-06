@@ -36,15 +36,13 @@
         "heart"
       ],
       "category": "Smileys & Emotion",
-      "deep": {
-        "version": "0.6",
-        "keywords": [
-          "heart",
-          "love"
-        ],
-        "subcategory": "emotion",
-        "artwork": {}
-      }
+      "version": "0.6",
+      "keywords": [
+        "heart",
+        "love"
+      ],
+      "subcategory": "emotion",
+      "artwork": {}
     }
   ],
   "forms": {

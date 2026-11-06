@@ -11,7 +11,7 @@ async function setup(t, { key = 'test_key', transport = 'http', mode = 'compact'
 	const calls = [];
 	t.mock.method(globalThis, 'fetch', async (input, init) => {
 		calls.push({ url: new URL(String(input)), init });
-		return fetch ? fetch(calls.at(-1)) : response({ future: null, zero: 0, negative: false, empty: [], deep: {} });
+		return fetch ? fetch(calls.at(-1)) : response({ future: null, zero: 0, negative: false, empty: [] });
 	});
 	const rpc = await connect(key, transport, { mode });
 	t.after(() => rpc.close());
@@ -45,10 +45,10 @@ test('discovery is local, versioned and separates static policy from account fac
 	const data = body(raw);
 	assert.deepEqual(raw.result.structuredContent, data);
 	assert.equal(data.schema_version, '1.0.0');
-	assert.equal(data.api_version, '2.0.0');
+	assert.equal(data.api_version, '2.1.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
-	assert.deepEqual(data.policy_operations, ["card", "city", "country", "dns", "domain", "email", "emoji", "emoji_browse", "emoji_catalog", "emoji_categories", "emoji_convert", "emoji_metadata", "emoji_parse", "emoji_search", "holiday", "mx", "postal", "postal_distance", "postal_nearby", "time", "time_zones"]);
+	assert.deepEqual(data.policy_operations, ["card", "city", "country", "dns", "domain", "email", "email_verify", "emoji", "emoji_browse", "emoji_catalog", "emoji_categories", "emoji_convert", "emoji_parse", "emoji_search", "holiday", "mx", "postal", "postal_distance", "postal_nearby", "time", "time_zones"]);
 	const source = JSON.parse(await readFile(new URL('../src/agent-catalog.json', import.meta.url), 'utf8'));
 	assert.deepEqual(data.operations[0].policy, source.operations.email);
 	assert.equal(data.operations[0].policy_available, true);
@@ -70,8 +70,8 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 66);
-	assert.equal(names.length, 66);
+	assert.equal(new Set(names).size, 64);
+	assert.equal(names.length, 64);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);
@@ -85,7 +85,7 @@ test('Card remains discoverable by product name and BIN/IIN terms', async (t) =>
 	for (const query of ['card', 'BIN', 'IIN']) {
 		const data = body(await rpc.call('discover', { query }));
 		assert.ok(data.operations.some(operation => operation.name === 'card'), query);
-		if (query === 'BIN') assert.ok(data.operations.some(operation => operation.name === 'bin'), query);
+		assert.ok(!data.operations.some(operation => operation.name === 'bin'), query);
 	}
 	const detail = body(await rpc.call('discover', { operation: 'card' })).operations[0];
 	assert.deepEqual(detail.inputSchema.required, ['bin']);
@@ -98,7 +98,7 @@ test('invalid discovery and compact arguments never call HTTP', async (t) => {
 	for (const args of [{ limit: 21 }, { offset: -1 }, { query: '' }, { query: 'a'.repeat(257) }, { operation: 'email', query: 'email' }]) {
 		assert.equal((await rpc.call('discover', args)).result.isError, true);
 	}
-	for (const operation of ['swift', 'routing', 'ip_self', 'constructor', 'discover', 'https://example.com']) {
+	for (const operation of ['bin', 'swift', 'routing', 'ip_self', 'constructor', 'discover', 'https://example.com']) {
 		assert.equal(body(await rpc.call('discover', { operation })).code, 'invalid_request');
 		assert.equal(body(await rpc.call('lookup', { operation, arguments: {} })).code, 'invalid_request');
 	}
@@ -117,16 +117,16 @@ test('compact lookup preserves every existing route, query, payload and API pin'
 	for (const [name, args, pathname, query = {}] of cases) {
 		const result = await rpc.call('lookup', { operation: name, arguments: args });
 		const payload = body(result);
-		assert.deepEqual(name === 'emoji_catalog' ? payload.metadata : payload, { future: null, zero: 0, negative: false, empty: [], deep: {} });
-		if (name === 'emoji_catalog') assert.equal(payload.download_url, 'https://api.parseapi.com/emoji/catalog?profile=compact');
+		if (name === 'emoji_catalog') { assert.deepEqual(payload, {download_url:'https://api.parseapi.com/emoji/catalog'}); continue; }
+		assert.deepEqual(payload, { future: null, zero: 0, negative: false, empty: [] });
 		const call = calls.at(-1);
 		assert.equal(call.url.pathname, pathname, name);
 		assert.deepEqual(Object.fromEntries(call.url.searchParams), query, name);
-		assert.equal(new Headers(call.init.headers).get('parse-version'), '2.0.0');
+		assert.equal(new Headers(call.init.headers).get('x-api-version'), '2.1.0');
 		assert.equal(new Headers(call.init.headers).get('x-api-key'), 'test_key');
 		assert.equal(call.init.redirect, 'manual');
 	}
-	assert.equal(calls.length, cases.length);
+	assert.equal(calls.length, cases.filter(([name]) => name !== 'emoji_catalog').length);
 	await rpc.call('lookup', { operation: 'country', arguments: { code: 'DE', lang: 'fr' } });
 	assert.equal(calls.at(-1).url.searchParams.get('lang'), 'fr');
 });

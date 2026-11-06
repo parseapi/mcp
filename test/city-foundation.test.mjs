@@ -5,7 +5,7 @@ import { connect, body } from './helpers.mjs';
 for (const transport of ['stdio','http']) for (const mode of ['full','compact']) {
 	test(`City options and optional parent/population remain usable over ${transport}/${mode}`, async t=>{
 		const calls=[];
-		const payload={id:'city_222222222222',name:'Fixture',country:'JP',grain:'subdivision',parent:{id:'city_333333333333',name:null,name_local:'市',country:'JP',state:'14',type:'city',grain:'municipality',future:true},deep:{population:0,population_observed_on:'2025-12-31',population_basis:'registered_population'},future:true};
+		const payload={ id: 'city_222222222222', name: 'Fixture', country: 'JP', grain: 'subdivision', parent: { id: 'city_333333333333', name: null, name_local: '市', country: 'JP', state: '14', type: 'city', grain: 'municipality', future: true }, future: true, population: 0, population_observed_on: '2025-12-31', population_basis: 'registered_population' };
 		t.mock.method(globalThis,'fetch',async(input,init)=>{calls.push({url:new URL(String(input)),init});return new Response(JSON.stringify(payload));});
 		const rpc=await connect('test',transport,{mode});t.after(()=>rpc.close());
 		const common={country:'JP',state:'14',type:'ward',grain:'subdivision',hierarchy:true,deep:true,lang:'ja'};
@@ -20,7 +20,7 @@ for (const transport of ['stdio','http']) for (const mode of ['full','compact'])
 			assert.deepEqual(body(result),payload);
 			assert.equal(calls.at(-1).url.pathname,path);
 			assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams),Object.fromEntries(Object.entries(expected).map(([k,v])=>[k,String(v)])));
-			assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'),'2.0.0');
+			assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.1.0');
 		}
 		const before=calls.length;
 		const invalid={name:'Fixture',grain:'city'};

@@ -64,7 +64,7 @@ for (const transport of ['stdio', 'http']) {
 			assert.equal(pathPost.init.method, 'POST');
 			assert.deepEqual(JSON.parse(pathPost.init.body), { path: points, samples: 512 });
 			for (const { init } of calls) {
-				assert.equal(new Headers(init.headers).get('parse-version'), '2.0.0');
+				assert.equal(new Headers(init.headers).get('x-api-version'), '2.1.0');
 				assert.equal(new Headers(init.headers).get('x-api-key'), 'fixture');
 				assert.ok(init.signal instanceof AbortSignal);
 			}

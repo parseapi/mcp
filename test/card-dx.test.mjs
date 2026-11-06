@@ -44,7 +44,7 @@ for (const transport of ['stdio', 'http']) {
 				assert.deepEqual(body(await card({ bin })), record);
 				assert.equal(decodeURIComponent(calls.at(-1).url.pathname.slice('/card/'.length)), bin);
 				assert.equal(calls.at(-1).url.search, '');
-				assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'), '2.0.0');
+				assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.1.0');
 			}
 			const detail = body(await rpc.call('discover', { operation: 'card' })).operations[0];
 			assert.deepEqual(Object.keys(detail.inputSchema.properties), ['bin', 'deep']);
@@ -57,18 +57,18 @@ for (const transport of ['stdio', 'http']) {
 			for (const field of ['type', 'maxLength', 'pattern']) {
 				assert.equal(detail.policy.input_schema.properties.bin[field], detail.inputSchema.properties.bin[field]);
 			}
-			assert.match(detail.policy.uncertainty.bin.value, /compare deep.prefix to this value/);
-			assert.match(detail.policy.uncertainty['deep.prefix'].null, /HTTP 200/);
-			assert.match(detail.policy.uncertainty['deep.prefix'].equals_bin, /fields can still be null/);
-			assert.match(detail.policy.uncertainty['deep.prefix'].shorter_than_bin, /broader reference match/i);
-			assert.match(detail.policy.uncertainty['deep.metadata'].null, /never backfill/);
-			assert.equal(detail.policy.uncertainty['deep.prepaid'].null, 'Unknown, not false');
+			assert.match(detail.policy.uncertainty.bin.value, /compare prefix to this value/);
+			assert.match(detail.policy.uncertainty['prefix'].null, /HTTP 200/);
+			assert.match(detail.policy.uncertainty['prefix'].equals_bin, /fields can still be null/);
+			assert.match(detail.policy.uncertainty['prefix'].shorter_than_bin, /broader reference match/i);
+			assert.match(detail.policy.uncertainty['metadata'].null, /never backfill/);
+			assert.equal(detail.policy.uncertainty['prepaid'].null, 'Unknown, not false');
 			assert.equal(detail.policy.freshness.mixed_source_ages, true);
 			assert.equal(detail.policy.freshness.actual_age_seconds, null);
 			assert.equal(detail.policy.access.effective_access, null);
 			assert.equal(detail.policy.billing.monetary_quote, null);
 			assert.equal(detail.policy.retry.successful_unknown_retried, false);
-			assert.equal(detail.policy.docs.help, 'https://api.parseapi.com/version/2.0.0/card/help');
+			assert.equal(detail.policy.docs.help, 'https://api.parseapi.com/version/2.1.0/card/help');
 			assert.equal(calls.length, valid.length, 'Discovery must not make another API request');
 			await card({ bin:'51', deep:true });
 			assert.equal(calls.at(-1).url.search, '?deep=true');

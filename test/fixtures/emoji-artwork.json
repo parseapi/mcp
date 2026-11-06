@@ -138,45 +138,43 @@
       "rocket"
     ],
     "category": "Travel & Places",
-    "deep": {
-      "codepoints": [
-        "U+1F680"
-      ],
-      "hex": "1F680",
-      "status": "fully-qualified",
-      "version": "0.6",
-      "keywords": [
-        "rocket",
-        "launch",
-        "rockets",
-        "space",
-        "travel",
-        "ship"
-      ],
-      "skins": [],
-      "subcategory": "transport-air",
-      "artwork": {
-        "noto": {
-          "svg": "https://cdn.parseapi.com/emoji/noto/18.0.0/1f680.svg",
-          "png": {
-            "32": "https://cdn.parseapi.com/emoji/noto/18.0.0/32/1f680.png",
-            "72": "https://cdn.parseapi.com/emoji/noto/18.0.0/72/1f680.png",
-            "128": "https://cdn.parseapi.com/emoji/noto/18.0.0/128/1f680.png",
-            "512": "https://cdn.parseapi.com/emoji/noto/18.0.0/512/1f680.png"
-          }
-        },
-        "twemoji": {
-          "svg": "https://cdn.parseapi.com/emoji/twemoji/17.0.3/1f680.svg",
-          "png": {
-            "72": "https://cdn.parseapi.com/emoji/twemoji/17.0.3/72/1f680.png"
-          }
-        },
-        "openmoji": {
-          "svg": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/1f680.svg",
-          "png": {
-            "72": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/72/1f680.png",
-            "618": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/618/1f680.png"
-          }
+    "codepoints": [
+      "U+1F680"
+    ],
+    "hex": "1F680",
+    "status": "fully-qualified",
+    "version": "0.6",
+    "keywords": [
+      "rocket",
+      "launch",
+      "rockets",
+      "space",
+      "travel",
+      "ship"
+    ],
+    "skins": [],
+    "subcategory": "transport-air",
+    "artwork": {
+      "noto": {
+        "svg": "https://cdn.parseapi.com/emoji/noto/18.0.0/1f680.svg",
+        "png": {
+          "32": "https://cdn.parseapi.com/emoji/noto/18.0.0/32/1f680.png",
+          "72": "https://cdn.parseapi.com/emoji/noto/18.0.0/72/1f680.png",
+          "128": "https://cdn.parseapi.com/emoji/noto/18.0.0/128/1f680.png",
+          "512": "https://cdn.parseapi.com/emoji/noto/18.0.0/512/1f680.png"
+        }
+      },
+      "twemoji": {
+        "svg": "https://cdn.parseapi.com/emoji/twemoji/17.0.3/1f680.svg",
+        "png": {
+          "72": "https://cdn.parseapi.com/emoji/twemoji/17.0.3/72/1f680.png"
+        }
+      },
+      "openmoji": {
+        "svg": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/1f680.svg",
+        "png": {
+          "72": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/72/1f680.png",
+          "618": "https://cdn.parseapi.com/emoji/openmoji/17.0.0/618/1f680.png"
         }
       }
     }

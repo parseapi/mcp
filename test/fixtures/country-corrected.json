@@ -62,49 +62,47 @@
     "lat": 38.89,
     "lon": -77.05
   },
-  "deep": {
-    "population": 340110988,
-    "gdp_usd": 30769700000000,
-    "gdp_per_capita_usd": 90026.52,
-    "population_growth_percent": 0.52,
-    "urban_population_percent": 80.19,
-    "internet_users_percent": 94.69,
-    "area": 9629091,
-    "land_area": null,
-    "water_area": null,
-    "coastline": 19924,
-    "lowest_point": {
-      "name": "Death Valley",
-      "elevation": -86
-    },
-    "highest_point": {
-      "name": "Mount McKinley",
-      "elevation": 6190
-    },
-    "elevation_average": 760,
-    "tld": ".us",
-    "week_start": "sunday",
-    "units": "imperial",
-    "driving_side": "right",
-    "plugs": [
-      "A",
-      "B"
-    ],
-    "voltage": 120,
-    "frequency": 60,
-    "emergency": {
-      "police": "911",
-      "ambulance": "911",
-      "fire": "911"
-    },
-    "postal_format": "#####",
-    "postal_regex": "^(?:(\\d{5})(?:[ \\-](\\d{4}))?)$",
-    "tax": {
-      "name": null,
-      "rate": null
-    },
-    "ioc": "USA",
-    "fifa": "USA",
-    "plate": "USA"
-  }
+  "population": 340110988,
+  "gdp_usd": 30769700000000,
+  "gdp_per_capita_usd": 90026.52,
+  "population_growth_percent": 0.52,
+  "urban_population_percent": 80.19,
+  "internet_users_percent": 94.69,
+  "area": 9629091,
+  "land_area": null,
+  "water_area": null,
+  "coastline": 19924,
+  "lowest_point": {
+    "name": "Death Valley",
+    "elevation": -86
+  },
+  "highest_point": {
+    "name": "Mount McKinley",
+    "elevation": 6190
+  },
+  "elevation_average": 760,
+  "tld": ".us",
+  "week_start": "sunday",
+  "units": "imperial",
+  "driving_side": "right",
+  "plugs": [
+    "A",
+    "B"
+  ],
+  "voltage": 120,
+  "frequency": 60,
+  "emergency": {
+    "police": "911",
+    "ambulance": "911",
+    "fire": "911"
+  },
+  "postal_format": "#####",
+  "postal_regex": "^(?:(\\d{5})(?:[ \\-](\\d{4}))?)$",
+  "tax": {
+    "name": null,
+    "rate": null
+  },
+  "ioc": "USA",
+  "fifa": "USA",
+  "plate": "USA"
 }

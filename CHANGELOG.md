@@ -1,9 +1,12 @@
 # Changelog
 
-## 1.12.4 — 2026-11-01
+## 1.13.0 — 2026-11-02
 
-- Correct documentation to match existing Deep access, complete Core reference data and retired national Company behavior.
-- Preserve all business response fields, models, methods, dependencies and access.
+- Select API `2.1.0` through the existing client factory. Requested profile detail uses natural field homes instead of a response `.deep` bag.
+- **Breaking field-read migration:** update existing `.deep` reads, User-Agent identity objects and Postal/Weather detail reads with your application code. This minor version changes existing field reads; upgrade the SDK and application code together.
+- Use explicit Email verification; Carrier/HLR return their complete selected result. Preserve recorded Form/Bulk contracts and earlier saved results.
+- Time success returns a compact matched `location`; ambiguity choices remain explicit. Omit unused `resolution`, City match `source`/`edit_distance`, and Holiday JSON calendar fingerprints. Update readers that relied on those removed fields.
+- Keep optional fields absent when unrequested/unavailable and preserve `null`, `false` and `0`. See the API 2.1 upgrade section in the README.
 
 ## 1.12.3 — 2026-11-01
 

@@ -15,20 +15,20 @@ for(const transport of ['stdio','http'])for(const mode of ['full','compact']) {
     const relations={...list,city_id:id,relationship:'children',coverage:'partial'};
     const distance={object:'city_distance',from:id,to:id,distance:0,distance_mi:0,method:'great_circle'};
     for(const [operation,args,path,query,result] of [
-      ['city',{name:'Vienna',format:'resource',},'/city/Vienna',{format:'resource',},resource],
-      ['city_id',{id,format:'resource',},`/city/id/${id}`,{format:'resource',},resource],
-      ['city_search',{query:'Vi',match:'fuzzy',max_distance:1,format:'list',countries:['AT','CH'],exclude_countries:['JP'],timezones:['Europe/Vienna','Europe/Zurich'],min_elevation:-10,max_elevation:0,min_population:0,sort:'country,-population,name'},'/city/search',{q:'Vi',match:'fuzzy',max_distance:'1',format:'list',countries:'AT,CH',exclude_countries:'JP',timezones:'Europe/Vienna,Europe/Zurich',min_elevation:'-10',max_elevation:'0',min_population:'0',sort:'country,-population,name'},list],
-      ['city_nearby',{name:'Vienna',format:'list',},'/city/Vienna/nearby',{format:'list',},list],
+      ['city',{name:'Vienna',},'/city/Vienna',{},resource],
+      ['city_id',{id,},`/city/id/${id}`,{},resource],
+      ['city_search',{query:'Vi',match:'fuzzy',max_distance:1,countries:['AT','CH'],exclude_countries:['JP'],timezones:['Europe/Vienna','Europe/Zurich'],min_elevation:-10,max_elevation:0,min_population:0,sort:'country,-population,name'},'/city/search',{q:'Vi',match:'fuzzy',max_distance:'1',countries:'AT,CH',exclude_countries:'JP',timezones:'Europe/Vienna,Europe/Zurich',min_elevation:'-10',max_elevation:'0',min_population:'0',sort:'country,-population,name'},list],
+      ['city_nearby',{name:'Vienna',},'/city/Vienna/nearby',{},list],
       ['city_children',{id,cursor:'opaque+/=',limit:2,deep:true,lang:'de'},`/city/id/${id}/children`,{cursor:'opaque+/=',limit:'2',deep:'true',lang:'de'},relations],
       ['city_ancestors',{id,},`/city/id/${id}/ancestors`,{},{...relations,relationship:'ancestors'}],
       ['city_siblings',{id,hierarchy:true},`/city/id/${id}/siblings`,{hierarchy:'true'},{...relations,relationship:'siblings',parent_id:null}],
-      ['city_id',{id,format:'resource',romanized:true},`/city/id/${id}`,{format:'resource',romanized:'true'},{"id":"city_7aj899nvwyku","object":"city","name_romanized":"Kitakyūshū","romanization_language":"ja-Latn"}],
+      ['city_id',{id,romanized:true},`/city/id/${id}`,{romanized:'true'},{"id":"city_7aj899nvwyku","object":"city","name_romanized":"Kitakyūshū","romanization_language":"ja-Latn"}],
       ['city_distance',{from:id,to:id},`/city/id/${id}/distance/${id}`,{},distance],
     ]) {
       payload=result;
       const answer=mode==='compact'?await rpc.call('lookup',{operation,arguments:args}):await rpc.call(operation,args);
-      assert.deepEqual(body(answer),result);assert.equal(calls.at(-1).url.pathname,path);assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams),query);
-      assert.equal(new Headers(calls.at(-1).init.headers).get('Parse-Version'),'2.0.0');
+      assert.deepEqual(body(answer),operation==='city_search' && args.match ? {q:args.query,cities:result.data,next_cursor:result.next_cursor} : result);assert.equal(calls.at(-1).url.pathname,path);assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams),query);
+      assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.1.0');
     }
     payload={...distance,distance:null,distance_mi:null};
     assert.deepEqual(body(mode==='compact'?await rpc.call('lookup',{operation:'city_distance',arguments:{from:id,to:id}}):await rpc.call('city_distance',{from:id,to:id})),payload);
@@ -43,7 +43,7 @@ for(const transport of ['stdio','http'])for(const mode of ['full','compact']) {
   test(`City409 candidates and unrelated errors on ${transport}/${mode}`,async t=>{
     const safe={id:'city_7aj899nvwyku',object:'city',name:'Vienna',name_local:'Wien',country:'AT',state:null};
     let status=409,code='ambiguous_city',calls=0;
-    t.mock.method(globalThis,'fetch',async()=>{calls++;return new Response(JSON.stringify({code,message:'Choose a city',docs:null,request_id:'req_city',candidates:[{...safe,deep:{population:99}},safe,safe]}),{status,headers:{'Retry-After':'60'}});});
+    t.mock.method(globalThis,'fetch',async()=>{calls++;return new Response(JSON.stringify({code,message:'Choose a city',docs:null,request_id:'req_city',candidates:[{ ...safe, population: 99 },safe,safe]}),{status,headers:{'Retry-After':'60'}});});
     const rpc=await connect('fixture',transport,{mode});t.after(()=>rpc.close());
     for(const pair of [[409,'ambiguous_city'],[409,'conflict'],[400,'ambiguous_city'],[429,'rate_limited']]) {
       [status,code]=pair;

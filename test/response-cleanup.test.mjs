@@ -7,8 +7,6 @@ import { body, connect } from './helpers.mjs';
 const cases = [
   ['timezones', 'time_zones', { query: 'New York', details: true }],
   ['time', 'time', { iata: 'JFK', at: '2026-10-13T16:00:00Z', deep: true }],
-  ['emoji-metadata', 'emoji_metadata', {}],
-  ['company-coverage', 'company_coverage', {}],
   ['company-profile', 'company_id', { id: 'co_222222222222', deep: true }],
 ];
 for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact']) {
@@ -18,7 +16,7 @@ for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact'
     t.mock.method(globalThis, 'fetch', async (_input, init) => {
       requests++;
       const headers = new Headers(init.headers);
-      assert.equal(headers.get('Parse-Version'), '2.0.0');
+      assert.equal(headers.get('X-API-Version'), '2.1.0');
       assert.equal(headers.get('Parse-Response'), null);
       return Response.json(expected);
     });

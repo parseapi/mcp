@@ -37,9 +37,7 @@
     "body": {
       "state": "CA",
       "country": "US",
-      "deep": {
-        "iso_3166_2": "US-CA"
-      }
+      "iso_3166_2": "US-CA"
     }
   },
   {
@@ -59,13 +57,11 @@
     "deep": true,
     "body": {
       "language": "hr",
-      "deep": {
-        "iso3": "hrv",
-        "countries": [
-          "BA",
-          "HR"
-        ]
-      }
+      "iso3": "hrv",
+      "countries": [
+        "BA",
+        "HR"
+      ]
     }
   },
   {
@@ -88,6 +84,42 @@
     "body": {
       "language": "gsw",
       "iso_alpha3": "gsw"
+    }
+  },
+  {
+    "operation": "currency",
+    "code": "USD",
+    "deep": false,
+    "body": {
+      "currency": "USD",
+      "numeric": 840
+    }
+  },
+  {
+    "operation": "currency",
+    "code": "USD",
+    "deep": false,
+    "body": {
+      "currency": "USD",
+      "iso_numeric": 840
+    }
+  },
+  {
+    "operation": "currency",
+    "code": "XXX",
+    "deep": false,
+    "body": {
+      "currency": "XXX",
+      "iso_numeric": null
+    }
+  },
+  {
+    "operation": "currency",
+    "code": "XXX",
+    "deep": false,
+    "body": {
+      "currency": "XXX",
+      "iso_numeric": 0
     }
   }
 ]

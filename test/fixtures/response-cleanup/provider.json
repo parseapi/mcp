@@ -18,14 +18,12 @@
   "postal": null,
   "country": null,
   "phone": null,
-  "deep": {
-    "deactivated_at": null,
-    "medicare": null,
-    "opt_out": null,
-    "enrollments": null,
-    "enumerated_at": null,
-    "updated_at": null,
-    "reactivated_at": null,
-    "taxonomies": null
-  }
+  "deactivated_at": null,
+  "medicare": null,
+  "opt_out": null,
+  "enrollments": null,
+  "enumerated_at": null,
+  "updated_at": null,
+  "reactivated_at": null,
+  "taxonomies": null
 }

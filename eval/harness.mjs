@@ -13,10 +13,13 @@ export function fixtureFetch(scenario, attempts) {
 		const headers = new Headers(init.headers ?? (input instanceof Request ? input.headers : undefined));
 		const query = Object.fromEntries(url.searchParams);
 		const method = init.method ?? (input instanceof Request ? input.method : 'GET');
-		const match = url.origin === 'https://api.parseapi.com' && method === 'GET'
-			? scenario.fixtures.find(item => item.path === url.pathname && isDeepStrictEqual(item.query, query)) : undefined;
+		let requestBody;
+		try { requestBody = init.body === undefined ? undefined : JSON.parse(String(init.body)); } catch { requestBody = null; }
+		const match = url.origin === 'https://api.parseapi.com'
+			? scenario.fixtures.find(item => (item.method ?? 'GET') === method && item.path === url.pathname
+				&& isDeepStrictEqual(item.query, query) && isDeepStrictEqual(item.requestBody, requestBody)) : undefined;
 		const attempt = {
-			path: url.pathname, query, matched: Boolean(match), apiVersion: headers.get('parse-version'),
+			path: url.pathname, query, matched: Boolean(match), apiVersion: headers.get('x-api-version'),
 			status: match?.status ?? null,
 			simulatedCostMicrousd: match?.simulatedCostMicrousd ?? 0,
 			simulatedBilledUnits: structuredClone(match?.simulatedBilledUnits ?? {}),

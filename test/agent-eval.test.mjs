@@ -10,7 +10,7 @@ function referenceTrace(scenario) {
 	return {
 		mode: 'full', answer: structuredClone(scenario.expected),
 		httpAttempts: Array.from({ length: scenario.expectedHttpAttempts }, () => ({
-			path: fixture.path, query: structuredClone(fixture.query), matched: true, apiVersion: '2.0.0', status: fixture.status,
+			path: fixture.path, query: structuredClone(fixture.query), matched: true, apiVersion: '2.1.0', status: fixture.status,
 			simulatedCostMicrousd: fixture.simulatedCostMicrousd, simulatedBilledUnits: structuredClone(fixture.simulatedBilledUnits),
 		})),
 		toolCalls: [{ name: 'discover' }, { name: scenario.operation }],
@@ -126,7 +126,7 @@ test('offline fetch rejects unmatched hosts, requests and query arguments withou
 	const scenario = scenarios[0];
 	const attempts = [];
 	const fetch = fixtureFetch(scenario, attempts);
-	const headers = { 'parse-version': '2.0.0' };
+	const headers = { 'x-api-version': '2.1.0' };
 	assert.equal((await fetch(`https://api.parseapi.com${scenario.fixtures[0].path}`, { headers })).status, 200);
 	for (const url of ['https://example.net/email/jane%40example.com', 'https://api.parseapi.com/email/other%40example.com', 'https://api.parseapi.com/email/jane%40example.com?unknown=true']) {
 		await assert.rejects(fetch(url, { headers }), /Offline benchmark rejected/);

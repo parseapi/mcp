@@ -6,6 +6,8 @@ Official ParseAPI MCP server. Look up places, addresses, companies, email, phone
 
 One URL, nothing to install. Add the server and sign in once in the browser. Free plan works.
 
+The shared hosted service remains on API 2.0. Installing this package selects API 2.1 for your local server without changing the shared service.
+
 ```json
 {
   "mcpServers": {
@@ -38,7 +40,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
   "mcpServers": {
     "parseAPI": {
       "command": "npx",
-      "args": ["-y", "parseapi-mcp"],
+      "args": ["-y", "parseapi-mcp@1.13.0"],
       "env": { "PARSEAPI_KEY": "your-api-key" }
     }
   }
@@ -47,7 +49,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## API versions
 
-Since version 1.0.0, the package explicitly selects the API contract supported by this MCP package. Every API tool request sends `Parse-Version: 2.0.0`, matching this release's tool descriptions and SDK response types. The contract is fixed for both local stdio and hosted HTTP, including retries. Your key, OAuth identity and team's saved default stay the same.
+Since version 1.0.0, the package explicitly selects the API contract supported by this MCP package. This version sends `X-API-Version: 2.1.0` on every API tool request, matching its tool descriptions and SDK response types. The contract is fixed for local stdio and HTTP servers running this package, including retries. The shared hosted service remains on its existing API 2.0 release. Your key, OAuth identity and team's saved default stay the same. The API still accepts earlier `Parse-Version` request pins.
 
 For local stdio, pin the MCP package version in your application configuration and test the new release before deploying it. A future major MCP upgrade can select a newer API contract. There is no version argument to add to individual tool calls. The hosted service uses the API contract supported by its deployed MCP release.
 
@@ -64,13 +66,13 @@ spellings. Use the existing lookup methods for each resource.
 
 ## Tools
 
-Full mode provides 68 local lookup tools and 67 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
+Full mode provides 65 local lookup tools and 64 hosted lookup tools, plus `discover` for local metadata and `preflight` for authenticated task estimates. `ip_self` is local only. `time` returns current local time and Unix seconds. It accepts a timezone or coordinates and defaults to UTC when both are omitted. `date` parses the supplied date, or returns today in UTC when omitted. Existing `timezone` calls remain supported with their original arguments. Every lookup returns the JSON the API serves.
 
-Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `company_coverage`, `email`, `card`, `industry`, `industry_search`, `dns`, `asn`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
+Tools follow the lookup names: `country_states`, `city_search`, `postal_nearby`, `address`, `address_search`, `company`, `company_id`, `company_search`, `email`, `card`, `industry`, `industry_search`, `dns`, `asn`, `currency_rate`, and the rest. Text searches take `query`. Company directory search supports one name/domain/ticker/identifier selector or country/exact-SIC discovery filters.
 
 The existing `naics` and `naics_search` tools remain available as compatibility names for Industry.
 
-Industry paid deep records include classification `deep.exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
+Industry paid deep records include classification `exclusions`, each with a description and linked codes. Generic exclusions can have no linked codes. Omitted or null exclusions in older responses remain unknown. Search results also include `match`: the matched `field` (`name`, `term` or `naics`) and `text`, plus `corrections` with `from` and `to` tokens for typo fallback. Corrections are empty for exact, plural and prefix matches. Direct code lookups omit `match`. Older responses may omit it.
 
 Example tool arguments:
 
@@ -87,7 +89,6 @@ Example tool arguments:
 | `address_search` | `{"query":"1600 Pennsylvania","country":"US","city":"Washington","state":"DC"}` |
 | `company_search` | `{"query":"Cloudflare","country":"US"}` |
 | `company_id` | `{"id":"co_xw3f22es6cjq","deep":true}` |
-| `company_coverage` | `{}` |
 | `time` | `{}` (UTC now) |
 | `time` | `{"timezone":"America/New_York","at":"2026-09-05T09:00:00","to":"Asia/Tokyo"}` |
 | `time` | `{"lat":40.71,"lon":-74.01}` |
@@ -96,18 +97,16 @@ Example tool arguments:
 | `time` | `{"timezone":"America/New_York","at":"2026-11-01T01:30:00","to":"UTC","disambiguation":"later"}` |
 | `date` | `{"date":"03/04/2026","format":"dmy"}` |
 | `elevation` | `{"lat":35.2271,"lon":-80.8431}` |
-| `elevation` | `{"points":"39.7392,-104.9903|39.75,-104.98"}` |
-| `elevation` | `{"path":"39.7392,-104.9903|39.75,-104.98","samples":100}` |
+| `elevation` | `{"points":"35.2271,-80.8431|40.7128,-74.006"}` |
+| `elevation` | `{"path":"35.2271,-80.8431|35.5951,-82.5515","samples":100}` |
 
-Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time Deep is available on paid plans in the same pooled request. Existing accounts retain their current Deep access.
+Time uses `disambiguation` only for offsetless `at` with `to` or `targets`. The default `compatible` selects the earlier repeated time or advances a skipped time. `earlier` and `later` choose the respective instant. `reject` returns `ambiguous_time` for repeated times and `nonexistent_time` for skipped times. Prefer it for user-entered appointments. Ask for an explicit offset or the user's choice before retrying a rejected local time. Explicit offsets select an instant directly. Time deep is available in the same pooled request on every plan.
 
-Time Deep includes nullable `resolution`. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones have null resolution.
+Time Deep includes `resolution` when a source wall time needs interpretation. Resolution reports `kind` (`unique`, `overlap` or `gap`), `policy`, signed `adjustment_seconds`, and chronological `alternatives` with exact local `at`, Unix seconds and UTC offset. Unique wall times have no alternatives. Explicit-offset timestamps, current clocks, non-conversion lookups and unknown source zones omit resolution.
 
-Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 points per local batch as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. An accepted local list uses one pooled request, with JSON POST selected automatically for long URLs.
+Elevation accepts exactly one of `lat` and `lon`, `points`, or `path` with `samples`. A point list supports up to 512 coordinates as `lat,lon` pairs separated by `|`, or `enc:` followed by a Google encoded polyline, with at most 12000 characters. The `points` response array preserves input order and duplicate coordinates. Each sample includes meters, feet and grid resolution in meters. Unknown samples stay null. A list uses one pooled request, with JSON POST selected automatically for long URLs.
 
-A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. An accepted local path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
-
-Each local batch is limited to 25 km between any two coordinates and 12 distinct terrain files in total across the fine grid and all possible global fallback files. For paths, both the supplied vertices and generated samples must fit the 25 km span. The terrain file budget applies to the sampled coordinates. This is a span limit, not a limit on cumulative path length. Send longer or more spread-out routes in shorter sections. An over-limit batch returns HTTP 400. MCP does not silently split or discard coordinates.
+A path uses the same string formats with 2-512 vertices and a required integer `samples` count from 2 to 512. The response `points` include both endpoints, spaced uniformly by cumulative great-circle distance along the path. Each segment follows the shortest arc. A segment with antipodal endpoints is rejected because it does not define a unique arc. A path uses one pooled request. `samples` is invalid with a single coordinate or a point list.
 
 Australian `postal` lookup returns core `localities` with suburb choices (`city`, `state`, `state_name`). Null or an omitted field means unknown, while `[]` means the reviewed reference has no eligible choices. A single choice can coexist with `city: null`. Ask for the user's suburb choice and preserve manual entry. These are geographic choices, not mailing-address verification. AU Postal tool results include a separate source notice after the JSON. [G-NAF source, adaptations and licence](https://parseapi.com/legal/attribution#postal-au).
 
@@ -121,8 +120,7 @@ filters and `limit` for another page. Directory Deep adds detail to each company
 pooled request. Existing accounts retain their current Deep access.
 Selected website descriptions, logos, socials and founding claims are returned
 where available. Logo URLs are returned without fetching images. Directory
-tools do not accept `lang`. `company_coverage` describes the edition's records,
-and empty listings do not establish private ownership. The `company` tool
+tools do not accept `lang`. Empty listings do not establish private ownership. The `company` tool
 remains listed for compatibility, but national-number lookups are retired on
 the public API. Use `company_search` and `company_id` for maintained public-company records.
 
@@ -174,7 +172,7 @@ Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertis
 
 `lookup` uses the same input validation, cancellation, version pin, SDK and billing behavior as the named tools. It executes one operation and cannot run arbitrary code or request arbitrary URLs. Full mode is the default and preserves existing named lookup calls. The same process setting supports self-hosted HTTP.
 
-The policy source is the API's `src/route/help/agent-catalog.json`. Current API help exposes the same metadata as `agent`. Frozen API 1.0.0 help stays unchanged. In a ParseAPI workspace, run `npm run catalog:sync` to copy a reviewed policy change, then `npm run catalog:check`. An independent checkout can pass `-- --source /path/to/api`. Package builds use the checked-in copy and do not need the API checkout or a network request.
+The policy source is the API's `src/route/help/agent-catalog.json`. Mini guides contain ordinary HTTP instructions; MCP keeps the tool policies and schemas. Frozen API 1.0.0 help stays unchanged. In a ParseAPI workspace, run `npm run catalog:sync` to copy a reviewed policy change, then `npm run catalog:check`. An independent checkout can pass `-- --source /path/to/api`. Package builds use the checked-in copy and do not need the API checkout or a network request.
 
 ## Bulk files
 
@@ -232,11 +230,13 @@ MIT licensed.
 
 ## Optional detail
 
-Country Core contains the everyday reference: `name`, `name_full`, `name_local`, demonym, `iso_alpha3` and `iso_numeric` country identifiers, continent, region and subregion, currency, calling code, `flag`, language and timezone codes, borders, bloc memberships and `capital: { name, latitude, longitude }`. Paid Deep adds specialist detail, including population, total area and national statistics. `gdp_usd` and `gdp_per_capita_usd` are current US dollars; `population_growth_percent`, `urban_population_percent` and `internet_users_percent` use a 0–100 percent scale (growth can be negative or exceed 100). GDP per person and these three percentages round once to two decimals in the API response. `elevation_average` is average terrain elevation in meters; `lowest_point.elevation` and `highest_point.elevation` keep their point-specific meaning. Unknown stays null and a known zero stays zero. Country tax references are grouped once as `deep.tax: { name, rate }`; the rate remains a percentage. Read capital from the Core object and read the tax name and rate from the Deep tax object.
+Country Core contains the everyday reference: `name`, `name_full`, `name_local`, demonym, `iso_alpha3` and `iso_numeric` country identifiers, continent, region and subregion, currency, calling code, `flag`, language and timezone codes, borders, bloc memberships and `capital: { name, latitude, longitude }`. Paid Deep adds specialist detail, including population, total area and national statistics. `gdp_usd` and `gdp_per_capita_usd` are current US dollars; `population_growth_percent`, `urban_population_percent` and `internet_users_percent` use a 0–100 percent scale (growth can be negative or exceed 100). GDP per person and these three percentages round once to two decimals in the API response. `elevation_average` is average terrain elevation in meters; `lowest_point.elevation` and `highest_point.elevation` keep their point-specific meaning. Unknown stays null and a known zero stays zero. Country tax references are grouped once as `tax: { name, rate }`; the rate remains a percentage. Read capital from the Core object and read optional tax references from `tax.name` and `tax.rate` on that same resource.
 
-Start with the default tool call. Use the same tool with `deep: true` for richer facts. Time, Date, Emoji, Phone, Point and Card offer optional detail on paid plans; existing accounts retain their current Deep access. Language includes every reference fact in Core, and requested Deep is empty. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+Country includes `postal_format` and `postal_regex` on every plan without requesting Deep. `postal_format` is an input hint based on one example, not a complete mask. `postal_regex` checks syntax, not whether a code exists or receives mail. Unavailable values are null.
 
-Search detail belongs to each returned entity. Time conversion puts target display detail in `to.deep`; only the source returns `deep.next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in their paid deep bags.
+Make the ordinary tool call. API 2.1 paid plans include their profile detail automatically; Free returns the complete everyday answer. Existing `deep` inputs remain supported for compatibility. Time, Date, Emoji, Phone, Point and Card offer optional detail on paid plans; existing accounts retain their current Deep access. Language includes every reference fact in Core, and Deep adds no fields. Geographic profiles, Name evidence and NAICS definitions require a paid plan. Carrier and HLR detail stays inside the same metered core unit, including Free allowance units, with no additional charge or second gate.
+
+Search detail belongs to each returned entity. Time conversion puts target display detail in `to`; only the source returns `next_dst`. Name core parsing needs no dictionary lookup. Paid Name deep also returns flat `short`, `directory`, and `initials`. Optional `name_locale` selects CLDR formatting rules, defaults to `en`, and leaves parsing and gender context unchanged. Unavailable formatting is null, and older responses may omit these fields. Country, State and Postal tax references are in a root `tax` object when the optional detail is available.
 
 ## Stack API
 
@@ -250,7 +250,7 @@ Stack checks static homepage HTML and response headers. It returns the checked U
 
 `cms`, `servers`, `frameworks`, `ecommerce`, `analytics`, `chat`, `payments` and `hosting` are arrays because a site can use several technologies in each category. Each entry contains `technology`, `name` and nullable `version`. Technology codes are open strings. A successful check uses empty arrays for categories with no matches. When no HTML page could be checked, `checked_at` and all categories are null. Unknown or conflicting versions are null. Detections describe the checked homepage.
 
-Successful checks may be reused for up to 24 hours. `pretty` optionally formats the wire JSON. Stack uses your plan's request allowance and API version 2.0.0 selected by this client.
+Successful checks may be reused for up to 24 hours. `pretty` optionally formats the wire JSON. Stack uses your plan's request allowance and API version 2.1.0 selected by this client.
 
 The `stack` tool allows 35 seconds per attempt for a first check. MCP cancellation still aborts the request.
 
@@ -277,14 +277,14 @@ GET /emoji/rocket
 {"emoji":"🚀","name":"Rocket","shortcodes":[":rocket:","rocket"],"category":"Travel & Places"}
 ```
 
-Use `deep=true` for Unicode facts, keywords, tone families and available artwork.
+Paid plans include Unicode facts, keywords, tone families and available artwork automatically in API 2.1.
 Core values stay unchanged. Text parsing returns `emojis` with UTF-16 `positions`;
 conversion returns `text` and unresolved tokens with positions and reasons.
 
 The compact JSON catalog contains offline identity, qualification-form and
-shortcode indexes. Request `profile=full` when artwork is needed and `lang` when
-localized names and keywords are needed. `/emoji/metadata` carries dataset
-coverage and shared source notices once. Artwork supports Google Noto, Twemoji
+shortcode indexes. Use `lang` for localized names and keywords. Metadata and
+shared source notices are included in the catalog. Read an individual emoji
+with Deep for its artwork links. Artwork supports Google Noto, Twemoji
 and OpenMoji, with real SVG/PNG availability and immutable first-party URLs.
 A device's emoji font remains the ordinary display.
 
@@ -294,13 +294,13 @@ backend are published. Existing lookup and search contracts are preserved.
 
 ## Canonical City operations
 
-Classic lookup, search, nearest and named-nearby methods retain their default envelopes and required-field models. Browse and coordinate-nearby use canonical lists: `object`, `data` and nullable `next_cursor` (camelCase properties in Swift/Kotlin). Keep all query options unchanged when continuing a page; no client fetches pages automatically.
+Classic lookup, search, nearest and named-nearby methods retain their default envelopes and required-field models. Browse uses `cities` and coordinate-nearby uses `nearby`, with nullable `next_cursor` (camelCase properties in Swift/Kotlin). Keep all query options unchanged when continuing a page; no client fetches pages automatically.
 
 ```json
 {"operation":"city_search","arguments":{"query":"Viena","format":"list","match":"fuzzy","max_distance":1}}
 ```
 
-Select `format=resource` for one City or `format=list` for a collection. Country inclusion/exclusion sets, timezone sets, inclusive population and meter-elevation bounds, stored-center `bbox` and signed multi-key sorting are available for collections. Unknown numeric facts do not match range filters.
+Each route retains its default response. Country inclusion/exclusion sets, timezone sets, inclusive population and meter-elevation bounds, stored-center `bbox` and signed multi-key sorting are available for collections. Unknown numeric facts do not match range filters.
 
 Search defaults to prefix matching. Exact and fuzzy matching are explicit; fuzzy accepts maximum edit distance 1 or 2 and returns `match` evidence (`type`, `source`, `value`, `language`, `edit_distance`). Review a fuzzy choice before storing its ID.
 
@@ -316,6 +316,8 @@ Coverage by country and available fields is described at https://parseapi.com/ci
 
 Conditional `If-None-Match` reads and GeoJSON currently use HTTP directly. A matching City ETag returns 304 without a body; ordinary billing and rate limits apply. These JSON client methods do not supply conditional-cache handling.
 
+IP paid Deep includes supported approximate location, `state_name`, `postal`, `latitude`, `longitude`, `timezone`, routed `network`, `asn_type` and public `proxy` status. Missing facts remain null. Coordinates describe range geography, not device GPS. `asn_type` classifies the origin network, not subscriber connection technology. Proxy/VPN false means unlisted. Optional fields are omitted without the requested detail or access.
+
 ## Capital coordinate migration
 
 Country and State capital coordinates use `latitude` and `longitude`. Update
@@ -324,4 +326,20 @@ Country and State capital coordinates use `latitude` and `longitude`. Update
 
 ## Postal and Weather response corrections
 
-Postal JSON is unchanged: `deep.property_tax` contains `annual_median`; Postal `tax` and `tax_rate` fields remain flat. Weather minute rows use `precipitation_rate` (mm/h) and `precipitation_rate_in` (in/h). Historical `deep.history.precipitation` and `precipitation_in` remain daily totals. Unavailable Weather collections remain `null`; a known empty collection remains `[]`. MCP returns these API values unchanged. Existing clients reading the earlier minute keys must update those reads when using current API 2.0.0; frozen 1.0.0 is preserved.
+In API 2.1, Postal `property_tax` contains `annual_median`; tax is grouped under `tax` with `name`, `rate` and component rates. Weather minute rows use `precipitation_rate` (mm/h) and `precipitation_rate_in` (in/h). Historical `history.precipitation` and `precipitation_in` remain daily totals. Unavailable Weather collections remain `null`; a known empty collection remains `[]`. MCP returns these API values unchanged. Existing clients reading the earlier minute keys must update those reads when using current API 2.1.0; frozen 1.0.0 is preserved.
+
+## API 2.1 upgrade
+
+API 2.1 Time returns the clock first and the matched place in `location`. Read that place directly; `location.candidates` is for unresolved choices. Unused `resolution` is absent. City matches keep the match kind, text and language without the source category or spelling score. Holiday JSON keeps scope and completeness without calendar hashes; explicitly selected work-profile pins remain.
+
+This client targets ParseAPI 2.1.0. Upgrading requires response-reader changes: optional detail now lives on its resource. Read `population` instead of `deep.population`. Deep remains an explicit request for optional detail. Without the request or access, optional fields are absent. A returned null still means unknown. User-Agent device, OS and browser are objects in every mode. Postal tax is one `tax` object. Specialist Weather measurements live in `current`. Metered Carrier and HLR return the complete purchased result without a Deep switch.
+
+Use the `email_verify` tool for mailbox verification. It sends POST `/email/verify` with `{ "email": "person@example.com" }` and defaults to no automatic retries. The earlier Email deep argument is accepted only as a migration alias for that same operation. App keys receive `permission_denied`. Bulk exports retain their existing column names and saved-job recovery.
+
+The 2.0 API is a temporary migration bridge for older installed clients. There is one maintained SDK line using the 2.1 structure.
+
+## Upgrade to API 2.1
+
+This version selects API `2.1.0`. Update existing `.deep` property reads to the fields at their natural homes, such as `country.population`. User-Agent identities are objects; Postal tax and Weather observations keep their documented object homes. Paid profile detail is automatic in API 2.1. Existing explicit depth requests remain supported; verification stays explicit.
+
+**This minor version changes existing field reads.** Upgrade the SDK and your application reads together. Existing factories remain. Email verification is explicit and includes basic validation; Carrier/HLR need no extra detail request. Preserve missing values, `null`, `false` and `0`.

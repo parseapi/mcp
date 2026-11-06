@@ -37,7 +37,7 @@ for (const mode of ['full', 'compact']) for (const transport of ['stdio', 'http'
 	assert.equal(calls.length, 5);
 	for (const call of calls) {
 		assert.equal(new Headers(call.init.headers).get('x-api-key'), 'private_fixture_key');
-		assert.equal(new Headers(call.init.headers).get('parse-version'), '2.0.0');
+		assert.equal(new Headers(call.init.headers).get('x-api-version'), '2.1.0');
 		assert.equal(call.init.redirect, 'manual');
 		assert.ok(call.url.startsWith('https://parseapi.com/api/agent/bulk'));
 	}

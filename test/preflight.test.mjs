@@ -33,7 +33,7 @@ for (const mode of ['compact', 'full']) for (const transport of ['stdio', 'http'
 		assert.deepEqual(JSON.parse(init.body), task);
 		const headers = new Headers(init.headers);
 		assert.equal(headers.get('X-API-Key'), 'fixture');
-		assert.equal(headers.get('Parse-Version'), '2.0.0');
+		assert.equal(headers.get('X-API-Version'), '2.1.0');
 		assert.equal(headers.get('Content-Type'), 'application/json');
 		const tools = (await rpc.request('tools/list', {})).result.tools;
 		const preflight = tools.find(tool => tool.name === 'preflight');
