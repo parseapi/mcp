@@ -337,7 +337,7 @@ API 2.1 Time returns the clock first and the matched place in `location`. Read t
 
 This client targets ParseAPI 2.1.0. Upgrading requires response-reader changes: optional detail now lives on its resource. Read `population` instead of `deep.population`. Deep remains an explicit request for optional detail. Without the request or access, optional fields are absent. A returned null still means unknown. User-Agent device, OS and browser are objects in every mode. Postal tax is one `tax` object. Specialist Weather measurements live in `current`. Metered Carrier and HLR return the complete purchased result without a Deep switch.
 
-Use the `email_verify` tool for mailbox verification. It sends POST `/email/verify` with `{ "email": "person@example.com" }` and defaults to no automatic retries. The earlier Email deep argument is accepted only as a migration alias for that same operation. App keys receive `permission_denied`. Bulk exports retain their existing column names and saved-job recovery.
+Use the `email_verify` tool for mailbox verification. It uses GET `/email/verify?email=person%40example.com` by default, with no automatic retries. The SDK chooses POST before dispatch for inputs that cannot safely fit in a URL; existing POST requests remain supported. The earlier Email deep argument is accepted only as a migration alias for that same operation. App keys receive `permission_denied`. Bulk exports retain their existing column names and saved-job recovery.
 
 The 2.0 API is a temporary migration bridge for older installed clients. There is one maintained SDK line using the 2.1 structure.
 
