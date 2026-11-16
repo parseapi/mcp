@@ -1,6 +1,6 @@
 # parseapi-mcp
 
-This package selects HTTP API `2.2.0`. Its SDK dependency is pinned to `1.15.0`. Use the `api22` npm tag to opt in; the `latest` and `api21` tags keep their existing contracts.
+This package selects HTTP API `2.2.0`. Its SDK dependency is pinned to `1.15.1`. Use the `api22` npm tag to opt in; the `latest` and `api21` tags keep their existing contracts.
 
 Official ParseAPI MCP server. Look up places, addresses, companies, email, phone, weather, timezones, dates and more from your AI agent.
 
