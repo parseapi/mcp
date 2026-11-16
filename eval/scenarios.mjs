@@ -6,9 +6,9 @@ const fixture = (path, body, { query = {}, status = 200, cost = 1000, units = { 
 	const verify = path.startsWith('/email/') && query.deep === 'true';
 	const { deep, ...core } = body;
 	const response = deep && typeof deep === 'object' ? { ...core, ...deep } : body;
-	return { path: verify ? '/email/verify' : path, method: verify ? 'POST' : 'GET',
-		...(verify ? { requestBody: { email: decodeURIComponent(path.slice('/email/'.length)) } } : {}),
-		query: verify ? Object.fromEntries(Object.entries(query).filter(([key]) => key !== 'deep')) : query,
+	return { path: verify ? '/email/verify' : path, method: 'GET',
+
+		query: verify ? { email: decodeURIComponent(path.slice('/email/'.length)), ...Object.fromEntries(Object.entries(query).filter(([key]) => key !== 'deep')) } : query,
 		status, body: response, simulatedCostMicrousd: cost, simulatedBilledUnits: units };
 };
 const emailCore = { email: 'jane@example.com', valid: true, domain: 'example.com', domain_valid: true, disposable: false };

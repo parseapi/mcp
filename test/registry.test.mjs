@@ -180,7 +180,7 @@ for (const [name, args, pathname, query = {}] of cases) {
 		const { url, init } = calls[0];
 		assert.equal(url.pathname, pathname);
 		assert.deepEqual(Object.fromEntries(url.searchParams), query);
-		if (['email', 'email_verify', 'bank', 'bank_us_ach', 'emoji_parse', 'emoji_convert'].includes(name)) {
+		if (['bank', 'bank_us_ach'].includes(name)) {
 			assert.equal(init.method, 'POST');
 			assert.deepEqual(JSON.parse(init.body), ['email', 'email_verify'].includes(name) ? { email: args.email } : name === 'bank' ? args : name.startsWith('emoji_') ? { text: args.text } : { format: 'us_ach', country: 'US', ...args });
 		}

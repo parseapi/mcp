@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.14.1 — 2026-11-16
+
+- Use the GET-based SDK and canonical lookup guidance. Tool names, inputs, response passthrough and API 2.2 selection are unchanged. Existing API POST calls remain supported.
+
 ## 1.13.0 — 2026-11-02
 
 - Select API `2.1.0` through the existing client factory. Requested profile detail uses natural field homes instead of a response `.deep` bag.

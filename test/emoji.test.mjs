@@ -31,7 +31,7 @@ for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact'
 
 for (const transport of ['stdio', 'http']) {
 	for (const mode of ['full', 'compact']) {
-		test(`emoji catalog and private text body on ${transport}/${mode}`, async t => {
+		test(`emoji catalog and encoded text on ${transport}/${mode}`, async t => {
 			const calls = [];
 			const payload = { total: 2, emojis: [{ emoji: '👍🏿', name: 'thumbs up', shortcodes: [], occurrences: 2, positions: [{ start: 2, end: 6 }, { start: 7, end: 11 }], base: '👍', variants: [{ emoji: '👍🏿', tones: ['dark'] }] }], future:true };
 			t.mock.method(globalThis, 'fetch', async (input, init) => {calls.push({url:new URL(String(input)),init});return new Response(JSON.stringify(payload));});
@@ -48,9 +48,9 @@ for (const transport of ['stdio', 'http']) {
 			assert.deepEqual(Object.fromEntries(calls[2].url.searchParams),{include_skin_tones:'false',offset:'2'});
 			assert.equal(calls[3].url.pathname,'/emoji/categories');
 			assert.equal(calls[4].url.pathname,'/emoji/parse');
-			assert.deepEqual(Object.fromEntries(calls[4].url.searchParams),{lang:'fr',deep:'true'});
-			assert.equal(calls[4].init.method,'POST');
-			assert.deepEqual(JSON.parse(calls[4].init.body),{text:'x 👍🏿 👍🏿'});
+			assert.deepEqual(Object.fromEntries(calls[4].url.searchParams),{text:'x 👍🏿 👍🏿',lang:'fr',deep:'true'});
+			assert.equal(calls[4].init.method??'GET','GET');
+			assert.equal(calls[4].init.body,undefined);
 			assert.equal(new Headers(calls[4].init.headers).get('X-API-Version'),'2.2.0');
 			assert.equal(calls.length,5);
 		});
@@ -69,7 +69,7 @@ for(const transport of ['stdio','http']) for(const mode of ['full','compact']) {
   const calls=[];t.mock.method(globalThis,'fetch',async(input,init)=>{calls.push({url:new URL(String(input)),init});return Response.json({text:'🚀',unresolved:[]});});
   const rpc=await connect('test',transport,{mode});t.after(()=>rpc.close());const call=(name,args)=>mode==='compact'?rpc.call('lookup',{operation:name,arguments:args}):rpc.call(name,args);
   assert.equal(body(await call('emoji_convert',{text:':rocket:',direction:'to_emoji',shortcode_source:'github'})).text,"🚀");
-  assert.equal(calls[0].init.method,'POST');assert.deepEqual(JSON.parse(calls[0].init.body),{text:':rocket:'});
+  assert.equal(calls[0].init.method??'GET','GET');assert.equal(calls[0].url.searchParams.get('text'),':rocket:');assert.equal(calls[0].init.body,undefined);
   assert.equal((await call('emoji_convert',{text:'x'.repeat(16001),direction:'to_emoji',shortcode_source:'github'})).result.isError,true);assert.equal(calls.length,1);
  });
 }

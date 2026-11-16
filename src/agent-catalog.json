@@ -1080,7 +1080,7 @@
     },
     "emoji_parse": {
       "operation": "emoji_parse",
-      "endpoint": "POST /emoji/parse",
+      "endpoint": "GET /emoji/parse",
       "determines": [
         "Complete loaded Unicode graphemes, grouped in first-occurrence order",
         "Every occurrence as original UTF-16 positions with exclusive end"
@@ -1091,7 +1091,7 @@
         "Sentiment, intent or native font support"
       ],
       "required_context": [
-        "text: JSON body string, maximum 16000 UTF-16 code units",
+        "text: query string, maximum 16000 UTF-16 code units; existing JSON POST requests remain supported",
         "Positions use UTF-16 code units and exclusive end; they are not codepoint or byte offsets"
       ],
       "freshness": {
@@ -1150,7 +1150,7 @@
     },
     "emoji_convert": {
       "operation": "emoji_convert",
-      "endpoint": "POST /emoji/convert",
+      "endpoint": "GET /emoji/convert",
       "determines": [
         "Converted text using an explicitly named shortcode preset",
         "Unresolved tokens with original UTF-16 offsets and specific reasons"
@@ -1160,7 +1160,7 @@
         "Replacement of unknown or ambiguous literal input"
       ],
       "required_context": [
-        "text: JSON body string, maximum 16000 UTF-16 code units",
+        "text: query string, maximum 16000 UTF-16 code units; existing JSON POST requests remain supported",
         "direction: to_shortcodes or to_emoji",
         "shortcode_source: required cldr, github, slack or discord"
       ],
@@ -1730,7 +1730,7 @@
     },
     "email_verify": {
       "operation": "email_verify",
-      "endpoint": "POST /email/verify",
+      "endpoint": "GET /email/verify",
       "determines": [
         "A complete Email result and, when completed, a mailbox deliverability observation."
       ],
@@ -1740,7 +1740,7 @@
         "A new mailbox probe on every request"
       ],
       "required_context": [
-        "email: a complete email address in the JSON request body."
+        "email: a complete email address in the query string."
       ],
       "freshness": {
         "mode": "observation_reuse",

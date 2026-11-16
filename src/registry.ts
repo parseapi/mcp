@@ -800,11 +800,11 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'emoji_parse',
-		'Extract complete Unicode emoji sequences from text. Results group repeated emoji in first-occurrence order, and positions use UTF-16 code units with an exclusive end. Text is sent in the POST body.',
+		'Extract complete Unicode emoji sequences from text. Results group repeated emoji in first-occurrence order, and positions use UTF-16 code units with an exclusive end. GET sends URL-encoded text; long or URL-incompatible text uses the supported POST body.',
 		{ text: z.string().max(16000).describe('Text to inspect for native Unicode emoji, up to 16000 UTF-16 code units.'), deep: deep.describe('Compatibility flag; paid plans include reference detail inside each result automatically.') },
 		(c, a, request) => c.emoji.parse(a.text, { ...request, deep: a.deep })
 	);
-	tool('emoji_convert', 'Convert Unicode emoji to a named shortcode preset or decode that preset. Unknown, unavailable and ambiguous inputs remain literal with reasons and original UTF-16 offsets. Text is sent in the POST body.',
+	tool('emoji_convert', 'Convert Unicode emoji to a named shortcode preset or decode that preset. Unknown, unavailable and ambiguous inputs remain literal with reasons and original UTF-16 offsets. GET sends URL-encoded text; long or URL-incompatible text uses the supported POST body.',
 		{text:z.string().max(16000),direction:z.enum(['to_shortcodes','to_emoji']),shortcode_source:z.enum(['cldr','github','slack','discord'])},
 		(c,a,request)=>c.emoji.convert(a.text,{...request,direction:a.direction,shortcodeSource:a.shortcode_source}));
 
