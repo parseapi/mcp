@@ -14,7 +14,7 @@ for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact'
 			const url = new URL(String(input));
 			assert.equal(url.pathname, '/country/US');
 			assert.equal(url.search, '');
-			assert.equal(new Headers(init.headers).get('X-API-Version'), '2.1.0');
+			assert.equal(new Headers(init.headers).get('X-API-Version'), '2.2.0');
 			return new Response(JSON.stringify(values[calls++]));
 		});
 		const rpc = await connect('fixture', transport, { mode });

@@ -9,7 +9,7 @@ import { registerBulk } from './bulk.js';
 
 import packageJson from '../package.json' with { type: 'json' };
 export const VERSION = packageJson.version;
-const API_VERSION = '2.1.0';
+const API_VERSION = '2.2.0';
 const AU_POSTAL_NOTICE = 'Incorporates or developed using G-NAF © Geoscape Australia licensed by the Commonwealth of Australia under the Open Geo-coded National Address File (G-NAF) End User Licence Agreement. Geographic choices are not mailing-address verification. Source, adaptations and licence: https://parseapi.com/legal/attribution#postal-au';
 
 type Client = ReturnType<typeof parseAPI>;
@@ -18,7 +18,7 @@ export type Transport = 'stdio' | 'http';
 const deep = z
 	.boolean()
 	.optional()
-	.describe('Legacy profile request flag. API 2.1 paid plans include profile detail automatically. Existing access rules and explicit metered operations remain unchanged.');
+	.describe('Legacy profile request flag. API 2.2 paid plans include profile detail automatically. Existing access rules and explicit metered operations remain unchanged.');
 const lat = z.number().min(-90).max(90).describe('Latitude in decimal degrees');
 const lon = z.number().min(-180).max(180).describe('Longitude in decimal degrees');
 const iso2 = (what: string) => z.string().describe(`ISO 3166-1 alpha-2 ${what}, e.g. US`);
@@ -63,7 +63,7 @@ function cityCollectionArguments(args: { min_population?: number; max_population
 		bbox: args.bbox, sort: args.sort, page: args.page || undefined, cursor: args.cursor, romanized: args.romanized || undefined };
 }
 
-const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
+const languageTools = new Set(["ip","ip_self","asn","company","continent","continent_countries","country","country_states","state","state_counties","county","state_districts","district","city","city_id","city_search","city_nearest","city_nearby","postal","postal_nearby","postal_distance","currency","language","date","time","timezone","emoji","emoji_search","emoji_browse","emoji_parse","emoji_catalog","point","city_list","city_nearby_coordinates","city_children","city_ancestors","city_siblings"]);
 const displayLanguage = z.string().min(2).max(64).optional()
 	.describe('Optional display language, such as fr or zh-Hant. IDs, numeric values and input parsing stay unchanged.');
 
@@ -78,6 +78,14 @@ const emojiFilters = {
 	deep: deep.describe("Include optional detail when supported; access follows this operation's plan or included-unit rules."),
 };
 
+
+/** Preserve the published alias tools' result keys without duplicating facts. */
+function legacyDistrictResult(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(legacyDistrictResult);
+	if (!value || typeof value !== 'object') return value;
+	const names: Record<string, string> = { county: 'district', county_name: 'district_name', county_name_local: 'district_name_local', counties: 'districts' };
+	return Object.fromEntries(Object.entries(value).filter(([key]) => !(key === 'iso_code' && Object.hasOwn(value, 'county'))).map(([key, item]) => [Object.hasOwn(names, key) ? names[key] : key, legacyDistrictResult(item)]));
+}
 
 /**
  * One server, every ParseAPI lookup as a tool. `key` null serves the funnel:
@@ -189,7 +197,7 @@ export function buildServer(key: string | null, transport: Transport, options: {
 	);
 	tool(
 		'state',
-		'Look up a state or province by code or name, with its full iso_subdivision identifier. Paid plans include its demographic and tax profile automatically. Pass country to resolve a colliding code.',
+		'Look up a state or province by code or name, with its full iso_code identifier. Paid plans include its demographic and tax profile automatically. Pass country to resolve a colliding code.',
 		{
 			code: z.string().describe('State code or name, e.g. colorado, NC'),
 			country: countryOpt,
@@ -197,27 +205,39 @@ export function buildServer(key: string | null, transport: Transport, options: {
 		},
 		(c, a, request) => c.state(a.code, { ...request, deep: a.deep, country: a.country })
 	);
-	tool(
-		'state_districts',
-		'List the districts, counties or departments of a state. Paid plans include population to each result automatically.',
-		{
-			code: z.string().describe('State code or name, e.g. NC, colorado'),
-			country: countryOpt,
-			deep: deep.describe('Include population in each district on a paid plan.'),
-		},
-		(c, a, request) => c.state.districts(a.code, { ...request, deep: a.deep, country: a.country })
-	);
-	tool(
-		'district',
-		'Look up a district, county or department by code or name. Paid plans include area, population and seat automatically. Pass state to resolve a colliding name. Paid deep property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
-		{
-			code: z.string().describe('District code or name, e.g. 37081, guilford county'),
-			country: countryOpt,
-			state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
-			deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
-		},
-		(c, a, request) => c.district(a.code, { ...request, deep: a.deep, country: a.country, state: a.state })
-	);
+	for (const deprecated of [false, true]) {
+		tool(
+			deprecated ? 'state_districts' : 'state_counties',
+			deprecated
+				? 'Deprecated alias for state_counties. Retains historical districts/district result keys for existing tool callers. Paid plans include population automatically.'
+				: 'List the counties and comparable administrative areas of a state, including nullable ISO 3166-2 iso_code on each item. Paid plans include population in each result automatically.',
+			{
+				code: z.string().describe('State code or name, e.g. NC, colorado'),
+				country: countryOpt,
+				deep: deep.describe('Include population in each county on a paid plan.'),
+			},
+			async (c, a, request) => {
+				const result = await c.state.counties(a.code, { ...request, deep: a.deep, country: a.country });
+				return deprecated ? legacyDistrictResult(result) : result;
+			}
+		);
+		tool(
+			deprecated ? 'district' : 'county',
+			deprecated
+				? 'Deprecated alias for county. Retains the historical district result key for existing tool callers.'
+				: 'Look up a county or comparable administrative area by code or name, with nullable ISO 3166-2 iso_code. Paid plans include area, population and seat automatically. Pass state to resolve a colliding name. Property_tax contains annual_median, currency and period: median annual tax payable on owner-occupied homes in the area, adjusted to the final year of that period. It is not a rate or property bill. Unsupported, missing and censored estimates are null.',
+			{
+				code: z.string().describe('County code or name, e.g. 37081, guilford county'),
+				country: countryOpt,
+				state: z.string().optional().describe('ADM1 code or name to disambiguate, e.g. NC or louisiana'),
+				deep: deep.describe('Compatibility flag; paid plans include this profile detail automatically.'),
+			},
+			async (c, a, request) => {
+				const result = await c.county(a.code, { ...request, deep: a.deep, country: a.country, state: a.state });
+				return deprecated ? legacyDistrictResult(result) : result;
+			}
+		);
+	}
 	tool(
 		'city',
 		'Resolve a city name to coordinates, timezone and administrative context. Paid plans include demographic and geographic detail automatically. Pass country or state for name ties.',

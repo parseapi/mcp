@@ -44,7 +44,7 @@ for (const transport of ['stdio', 'http']) {
 				assert.deepEqual(body(await card({ bin })), record);
 				assert.equal(decodeURIComponent(calls.at(-1).url.pathname.slice('/card/'.length)), bin);
 				assert.equal(calls.at(-1).url.search, '');
-				assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.1.0');
+				assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.2.0');
 			}
 			const detail = body(await rpc.call('discover', { operation: 'card' })).operations[0];
 			assert.deepEqual(Object.keys(detail.inputSchema.properties), ['bin', 'deep']);
@@ -68,7 +68,7 @@ for (const transport of ['stdio', 'http']) {
 			assert.equal(detail.policy.access.effective_access, null);
 			assert.equal(detail.policy.billing.monetary_quote, null);
 			assert.equal(detail.policy.retry.successful_unknown_retried, false);
-			assert.equal(detail.policy.docs.help, 'https://api.parseapi.com/version/2.1.0/card/help');
+			assert.equal(detail.policy.docs.help, 'https://api.parseapi.com/version/2.2.0/card/help');
 			assert.equal(calls.length, valid.length, 'Discovery must not make another API request');
 			await card({ bin:'51', deep:true });
 			assert.equal(calls.at(-1).url.search, '?deep=true');

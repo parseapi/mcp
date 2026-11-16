@@ -16,7 +16,7 @@ for (const transport of ['stdio', 'http']) for (const mode of ['full', 'compact'
     t.mock.method(globalThis, 'fetch', async (_input, init) => {
       requests++;
       const headers = new Headers(init.headers);
-      assert.equal(headers.get('X-API-Version'), '2.1.0');
+      assert.equal(headers.get('X-API-Version'), '2.2.0');
       assert.equal(headers.get('Parse-Response'), null);
       return Response.json(expected);
     });

@@ -1237,6 +1237,37 @@
     }
   },
   {
+    "name": "county",
+    "inputSchema": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
     "name": "currency",
     "inputSchema": {
       "properties": {
@@ -2161,6 +2192,34 @@
   },
   {
     "name": "state",
+    "inputSchema": {
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string"
+        },
+        "deep": {
+          "type": "boolean"
+        },
+        "lang": {
+          "maxLength": 64,
+          "minLength": 2,
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "type": "object"
+    },
+    "annotations": {
+      "readOnlyHint": true
+    }
+  },
+  {
+    "name": "state_counties",
     "inputSchema": {
       "properties": {
         "code": {

@@ -10,7 +10,7 @@ if (sourceAt !== -1 && !args[sourceAt + 1]) throw new Error('--source needs an A
 const sourceRoot = sourceAt === -1 ? fileURLToPath(new URL('../../../api/', import.meta.url)) : resolve(args[sourceAt + 1]);
 const registry = await readFile(new URL('../src/registry.ts', import.meta.url), 'utf8');
 const apiVersion = registry.match(/const API_VERSION = '([^']+)'/)?.[1];
-const source = await readFile(resolve(sourceRoot, apiVersion === '2.1.0' ? 'src/route/help/agent-catalog-2.1.json' : 'src/route/help/agent-catalog.json'), 'utf8');
+const source = await readFile(resolve(sourceRoot, apiVersion === '2.2.0' ? 'src/route/help/agent-catalog-2.2.json' : apiVersion === '2.1.0' ? 'src/route/help/agent-catalog-2.1.json' : 'src/route/help/agent-catalog.json'), 'utf8');
 const catalog = JSON.parse(source);
 if (catalog.schema_version !== '1.0.0' || catalog.api_version !== apiVersion || !catalog.operations) {
 	throw new Error('Review the agent catalog schema and API version before syncing');

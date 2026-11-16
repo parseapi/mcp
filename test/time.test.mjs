@@ -24,7 +24,7 @@ for (const transport of ['stdio', 'http']) {
 					assert.deepEqual(body(await time({ ...context, at: '2026-11-01T01:30:00', to: 'UTC', disambiguation })), payload);
 					assert.equal(calls.at(-1).url.searchParams.get('disambiguation'), disambiguation);
 					assert.equal(calls.at(-1).url.searchParams.get('at'), '2026-11-01T01:30:00');
-					assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.1.0');
+					assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'), '2.2.0');
 				}
 			}
 			const before = calls.length;

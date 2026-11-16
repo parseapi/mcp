@@ -28,7 +28,7 @@ for(const transport of ['stdio','http'])for(const mode of ['full','compact']) {
       payload=result;
       const answer=mode==='compact'?await rpc.call('lookup',{operation,arguments:args}):await rpc.call(operation,args);
       assert.deepEqual(body(answer),operation==='city_search' && args.match ? {q:args.query,cities:result.data,next_cursor:result.next_cursor} : result);assert.equal(calls.at(-1).url.pathname,path);assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams),query);
-      assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.1.0');
+      assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.2.0');
     }
     payload={...distance,distance:null,distance_mi:null};
     assert.deepEqual(body(mode==='compact'?await rpc.call('lookup',{operation:'city_distance',arguments:{from:id,to:id}}):await rpc.call('city_distance',{from:id,to:id})),payload);

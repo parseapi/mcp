@@ -51,7 +51,7 @@ for (const transport of ['stdio', 'http']) {
 			assert.deepEqual(Object.fromEntries(calls[4].url.searchParams),{lang:'fr',deep:'true'});
 			assert.equal(calls[4].init.method,'POST');
 			assert.deepEqual(JSON.parse(calls[4].init.body),{text:'x 👍🏿 👍🏿'});
-			assert.equal(new Headers(calls[4].init.headers).get('X-API-Version'),'2.1.0');
+			assert.equal(new Headers(calls[4].init.headers).get('X-API-Version'),'2.2.0');
 			assert.equal(calls.length,5);
 		});
 	}

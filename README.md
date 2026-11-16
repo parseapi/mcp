@@ -1,12 +1,14 @@
 # parseapi-mcp
 
+This package selects HTTP API `2.2.0`. Its SDK dependency is pinned to `1.15.0`. Use the `api22` npm tag to opt in; the `latest` and `api21` tags keep their existing contracts.
+
 Official ParseAPI MCP server. Look up places, addresses, companies, email, phone, weather, timezones, dates and more from your AI agent.
 
 ## Hosted
 
 One URL, nothing to install. Add the server and sign in once in the browser. Free plan works.
 
-The shared hosted service remains on API 2.0. Installing this package selects API 2.1 for your local server without changing the shared service.
+Installing a local package does not update the shared hosted service. Hosted activation is reviewed separately.
 
 ```json
 {
@@ -40,7 +42,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
   "mcpServers": {
     "parseAPI": {
       "command": "npx",
-      "args": ["-y", "parseapi-mcp@1.13.0"],
+      "args": ["-y", "parseapi-mcp@api22"],
       "env": { "PARSEAPI_KEY": "your-api-key" }
     }
   }
@@ -49,7 +51,7 @@ CI and headless setups skip the browser with a key from [parseapi.com](https://p
 
 ## API versions
 
-Since version 1.0.0, the package explicitly selects the API contract supported by this MCP package. This version sends `X-API-Version: 2.1.0` on every API tool request, matching its tool descriptions and SDK response types. The contract is fixed for local stdio and HTTP servers running this package, including retries. The shared hosted service remains on its existing API 2.0 release. Your key, OAuth identity and team's saved default stay the same. The API still accepts earlier `Parse-Version` request pins.
+Since version 1.0.0, the package explicitly selects the API contract supported by this MCP package. This version sends `X-API-Version: 2.2.0` on every API tool request, matching its tool descriptions and SDK response types. The contract is fixed for local stdio and HTTP servers running this package, including retries. The shared hosted service remains on its existing API 2.0 release. Your key, OAuth identity and team's saved default stay the same. The API still accepts earlier `Parse-Version` request pins.
 
 For local stdio, pin the MCP package version in your application configuration and test the new release before deploying it. A future major MCP upgrade can select a newer API contract. There is no version argument to add to individual tool calls. The hosted service uses the API contract supported by its deployed MCP release.
 
@@ -58,8 +60,9 @@ MCP packages older than 1.0.0 keep their existing behavior and use the team's de
 ## ISO identifiers
 
 Country uses `iso_alpha3` and `iso_numeric`, State uses the full
-`iso_subdivision` code such as `US-CA`, Language uses `iso_alpha3`, and Currency
-uses `iso_numeric`. Primary `country`, `state`, `language` and `currency` codes
+`iso_code` such as `US-CA`, Language uses `iso_alpha3`, and Currency
+uses `iso_numeric`. County lookup and State county-list items include nullable
+`iso_code` for an exact recorded ISO 3166-2 assignment; unsupported assignments stay null. Primary `country`, `state`, `language` and `currency` codes
 keep their meaning. Results retain the selected API contract's exact keys,
 values, nulls and nesting. Earlier server contracts retain their earlier ISO
 spellings. Use the existing lookup methods for each resource.
@@ -161,7 +164,7 @@ The estimate allows up to three attempts per ordinary lookup and one per Email D
 For a compact tool catalog, set `PARSEAPI_MCP_MODE=compact` on the MCP process:
 
 ```bash
-PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@1.6.0
+PARSEAPI_MCP_MODE=compact npx -y parseapi-mcp@api22
 ```
 
 Set `PARSEAPI_KEY` in the process environment for lookups. Compact mode advertises three tools, `discover`, `preflight` and `lookup`. After discovering an operation, pass its exact name and arguments:
@@ -340,6 +343,12 @@ The 2.0 API is a temporary migration bridge for older installed clients. There i
 
 ## Upgrade to API 2.1
 
-This version selects API `2.1.0`. Update existing `.deep` property reads to the fields at their natural homes, such as `country.population`. User-Agent identities are objects; Postal tax and Weather observations keep their documented object homes. Paid profile detail is automatic in API 2.1. Existing explicit depth requests remain supported; verification stays explicit.
+API `2.1.0` introduced natural fields. Update existing `.deep` property reads to the fields at their natural homes, such as `country.population`. User-Agent identities are objects; Postal tax and Weather observations keep their documented object homes. Paid profile detail is automatic in API 2.1. Existing explicit depth requests remain supported; verification stays explicit.
 
 **This minor version changes existing field reads.** Upgrade the SDK and your application reads together. Existing factories remain. Email verification is explicit and includes basic validation; Carrier/HLR need no extra detail request. Preserve missing values, `null`, `false` and `0`.
+
+## County migration: HTTP API 2.2
+
+This source selects HTTP API `2.2.0`. County is the public name for counties and comparable administrative areas internationally. Use `county` and the State counties operation. Read `county`, `county_name`, `county_name_local` and `counties` in affected geography results; City `capital_of` uses `county` for this administrative level. Actual local types such as `department` and `district` retain their meaning.
+
+This is a breaking field-read upgrade from earlier contracts. Canonical tools are `county` and `state_counties`. Deprecated `district` and `state_districts` tools preserve their historical result keys and omit the added County `iso_code` through a tool-only adapter; other geography tools use the canonical County fields. Hosted activation requires a separate compatibility review. Update property reads before upgrading. Older installed packages keep their existing API contract, and this client does not change an account's saved default. The shared hosted service and existing npm tags are unchanged by this opt-in package.

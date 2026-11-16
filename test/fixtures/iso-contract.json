@@ -121,5 +121,27 @@
       "currency": "XXX",
       "iso_numeric": 0
     }
+  },
+  {
+    "operation": "state",
+    "code": "CA",
+    "country": "US",
+    "deep": false,
+    "body": {
+      "state": "CA",
+      "country": "US",
+      "iso_code": "US-CA"
+    }
+  },
+  {
+    "operation": "state",
+    "code": "AA",
+    "country": "US",
+    "deep": false,
+    "body": {
+      "state": "AA",
+      "country": "US",
+      "iso_code": null
+    }
   }
 ]

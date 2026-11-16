@@ -45,7 +45,7 @@ test('discovery is local, versioned and separates static policy from account fac
 	const data = body(raw);
 	assert.deepEqual(raw.result.structuredContent, data);
 	assert.equal(data.schema_version, '1.0.0');
-	assert.equal(data.api_version, '2.1.0');
+	assert.equal(data.api_version, '2.2.0');
 	assert.equal(data.effective_access, 'not_evaluated');
 	assert.equal(data.pricing, 'not_quoted');
 	assert.deepEqual(data.policy_operations, ["card", "city", "country", "dns", "domain", "email", "email_verify", "emoji", "emoji_browse", "emoji_catalog", "emoji_categories", "emoji_convert", "emoji_parse", "emoji_search", "holiday", "mx", "postal", "postal_distance", "postal_nearby", "time", "time_zones"]);
@@ -70,8 +70,8 @@ test('discovery searches, pages and explicitly identifies unreviewed policy', as
 		names.push(...page.operations.map(t => t.name));
 		offset = page.next_offset;
 	} while (offset !== null);
-	assert.equal(new Set(names).size, 64);
-	assert.equal(names.length, 64);
+	assert.equal(new Set(names).size, 66);
+	assert.equal(names.length, 66);
 	assert.ok(!names.some(n => ['ip_self', 'swift', 'routing', 'litigator', 'rnd', 'screenshot', 'url', 'discover', 'lookup'].includes(n)));
 	const unreviewed = body(await rpc.call('discover', { operation: 'date' })).operations[0];
 	assert.equal(unreviewed.policy_available, false);
@@ -122,7 +122,7 @@ test('compact lookup preserves every existing route, query, payload and API pin'
 		const call = calls.at(-1);
 		assert.equal(call.url.pathname, pathname, name);
 		assert.deepEqual(Object.fromEntries(call.url.searchParams), query, name);
-		assert.equal(new Headers(call.init.headers).get('x-api-version'), '2.1.0');
+		assert.equal(new Headers(call.init.headers).get('x-api-version'), '2.2.0');
 		assert.equal(new Headers(call.init.headers).get('x-api-key'), 'test_key');
 		assert.equal(call.init.redirect, 'manual');
 	}

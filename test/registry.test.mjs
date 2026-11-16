@@ -188,7 +188,7 @@ for (const [name, args, pathname, query = {}] of cases) {
 		assert.ok(init.signal instanceof AbortSignal);
 		const headers = new Headers(init.headers);
 		assert.equal(headers.get('x-api-key'), 'test_key');
-		assert.equal(headers.get('x-api-version'), '2.1.0');
+		assert.equal(headers.get('x-api-version'), '2.2.0');
 		assert.equal(headers.has('parse-version'), false);
 		if (name === 'useragent') assert.equal(headers.get('user-agent'), args.ua);
 	});
@@ -204,7 +204,7 @@ for (const transport of ['stdio', 'http']) {
 		for (const { url, init } of calls) {
 			assert.equal(url.pathname, '/country/US');
 			assert.equal(url.search, '');
-			assert.equal(new Headers(init.headers).get('x-api-version'), '2.1.0');
+			assert.equal(new Headers(init.headers).get('x-api-version'), '2.2.0');
 			assert.equal(new Headers(init.headers).get('x-api-key'), 'test_key');
 			assert.equal(init.redirect, 'manual');
 		}
@@ -215,7 +215,7 @@ test('display language reaches each supported tool request and stays request-loc
 	const { rpc, calls } = await setup(t);
 	const { result } = await rpc.request('tools/list', {});
 	const localized = result.tools.filter(tool => !tool.name.startsWith('bulk_') && tool.inputSchema.properties.lang).map(tool => tool.name);
-	assert.equal(localized.length, 35);
+	assert.equal(localized.length, 37);
 	for (const name of localized) {
 		const [, args, pathname, query = {}] = cases.find(([candidate]) => candidate === name);
 		const called = await rpc.call(name, { ...args, lang: 'zh-Hant-HK' });

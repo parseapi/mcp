@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "api_version": "2.1.0",
+  "api_version": "2.2.0",
   "operations": {
     "email": {
       "operation": "email",
@@ -75,7 +75,7 @@
         "guidance": "Basic syntax and routing checks do not establish mailbox deliverability. Use email_verify explicitly for that metered operation."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/email/help",
+        "help": "https://api.parseapi.com/version/2.2.0/email/help",
         "guide": "https://parseapi.com/docs/email"
       }
     },
@@ -160,7 +160,7 @@
         "guidance": "available=null is a completed HTTP response with an unknown fact, not evidence the domain is free. Do not retry automatically from null; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/domain/help",
+        "help": "https://api.parseapi.com/version/2.2.0/domain/help",
         "guide": "https://parseapi.com/docs/domain"
       }
     },
@@ -246,7 +246,7 @@
         "guidance": "An empty records array and a DNS-name 404 are negative answers, not transient failures. Reuse records only within their remaining TTL; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/dns/help",
+        "help": "https://api.parseapi.com/version/2.2.0/dns/help",
         "guide": "https://parseapi.com/docs/dns"
       }
     },
@@ -321,7 +321,7 @@
         "guidance": "Do not retry solely because mx is empty. Use email for mail-route validation or dns for explicit A/AAAA records; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/mx/help",
+        "help": "https://api.parseapi.com/version/2.2.0/mx/help",
         "guide": "https://parseapi.com/docs/mx"
       }
     },
@@ -424,7 +424,7 @@
         "guidance": "Do not retry to fill null reference fields or a locked deep object. Preserve unknowns and distinguish reported zero from null; respect rate and quota errors."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/country/help",
+        "help": "https://api.parseapi.com/version/2.2.0/country/help",
         "guide": "https://parseapi.com/docs/country"
       }
     },
@@ -433,7 +433,7 @@
       "endpoint": "GET /time or /time/{timezone}",
       "determines": [
         "Local ISO time, integer Unix seconds, UTC offset and the timezone-rule DST flag at one instant",
-        "The same captured instant in one destination with to, or in 1\u201310 ordered destinations with targets",
+        "The same captured instant in one destination with to, or in 1–10 ordered destinations with targets",
         "With deep=true, friendly name, exact total and standard offsets, signed seasonal saving, the next offset change, full applicable seasonal boundaries, source wall-time resolution",
         "Exact location evidence for explicit IP, city, country, airport, supported port or US address input, with ambiguity retained as candidates"
       ],
@@ -449,7 +449,7 @@
         "at accepts an ISO date or timestamp with at most three fractional digits; omit it for now. Unix seconds are output, not input",
         "Without to or targets, offsetless at means UTC. With to or targets, it means source wall time",
         "disambiguation defaults to compatible: earlier occurrence on overlap, forward by the actual gap. earlier, later or reject apply only to offsetless conversion; an explicit offset identifies the instant",
-        "targets is a comma-separated list of 1\u201310 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
+        "targets is a comma-separated list of 1–10 IANA IDs, mutually exclusive with to. Duplicates remain ordered; any invalid target rejects the whole conversion",
         "For location.status=ambiguous, choose a returned candidate timezone or refine context. not_found and truncated results never guess a source instant. Airport/port codes and countries are explicit selectors, not arbitrary path identifiers."
       ],
       "freshness": {
@@ -549,7 +549,7 @@
         "guidance": "Do not retry unresolved/ambiguous locations or rejected wall times automatically. Correct the input or choose a resolution. Retried calls with omitted at evaluate a later now; pin an explicit instant when repeatability matters."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/time/help",
+        "help": "https://api.parseapi.com/version/2.2.0/time/help",
         "guide": "https://parseapi.com/docs/time"
       }
     },
@@ -661,7 +661,7 @@
         "guidance": "Do not retry a successful unknown prefix or null fields to manufacture a match. Honor Retry-After; waits over five seconds return the API error without automatic retry."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/card/help",
+        "help": "https://api.parseapi.com/version/2.2.0/card/help",
         "guide": "https://parseapi.com/docs/card",
         "attribution": "https://parseapi.com/legal/attribution#bin"
       }
@@ -737,7 +737,7 @@
         "guidance": "Do not retry an empty match list automatically. Correct or broaden the identifier query."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/time/help",
+        "help": "https://api.parseapi.com/version/2.2.0/time/help",
         "guide": "https://parseapi.com/docs/time"
       }
     },
@@ -809,7 +809,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -825,8 +825,8 @@
         "Complete translations merely from an accepted language"
       ],
       "required_context": [
-        "query: 1\u2013256 characters",
-        "limit: 1\u201350; offset: 0\u2013100000 when paging is required",
+        "query: 1–256 characters",
+        "limit: 1–50; offset: 0–100000 when paging is required",
         "Filtered or explicit-offset search returns total and next_offset; legacy plain-query envelope is preserved"
       ],
       "freshness": {
@@ -880,7 +880,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -896,7 +896,7 @@
       ],
       "required_context": [
         "Omit q to browse",
-        "limit: 1\u201350; offset: 0\u2013100000",
+        "limit: 1–50; offset: 0–100000",
         "Stop when next_offset is null"
       ],
       "freshness": {
@@ -950,7 +950,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1005,7 +1005,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1074,7 +1074,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1144,7 +1144,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1206,7 +1206,7 @@
         "guidance": "Do not retry to fill missing source facts or unsupported glyphs. Ordinary retries can consume additional pooled requests; rate and quota limits still apply."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/emoji/help",
+        "help": "https://api.parseapi.com/version/2.2.0/emoji/help",
         "guide": "https://parseapi.com/docs/emoji"
       }
     },
@@ -1242,7 +1242,7 @@
       },
       "access": {
         "plans": "all",
-        "credentials": "Existing permitted API or app key; API 2.1.0",
+        "credentials": "Existing permitted API or app key; API 2.2.0",
         "deep": "Not accepted; complete collection metadata is core",
         "effective_access": null,
         "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
@@ -1253,7 +1253,7 @@
         "Optional type and region; a region must be represented in every reached annual calendar"
       ],
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
+        "help": "https://api.parseapi.com/version/2.2.0/holiday/help",
         "reference": "https://parseapi.com/docs/holiday"
       },
       "retry": {
@@ -1332,7 +1332,7 @@
         "effective_access": null
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
+        "help": "https://api.parseapi.com/version/2.2.0/holiday/help",
         "reference": "https://parseapi.com/docs/holiday"
       },
       "retry": {
@@ -1372,7 +1372,7 @@
           },
           "access": {
             "plans": "all",
-            "credentials": "Existing permitted API or app key; API 2.1.0",
+            "credentials": "Existing permitted API or app key; API 2.2.0",
             "deep": "Not accepted; complete collection metadata is core",
             "effective_access": null,
             "preflight_and_tasks": "Unsupported by the current single-value preflight/task execution contract; use a direct collection lookup."
@@ -1383,7 +1383,7 @@
             "Optional type and region; a region must be represented in every reached annual calendar"
           ],
           "docs": {
-            "help": "https://api.parseapi.com/version/2.1.0/holiday/help",
+            "help": "https://api.parseapi.com/version/2.2.0/holiday/help",
             "reference": "https://parseapi.com/docs/holiday"
           },
           "retry": {
@@ -1487,7 +1487,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.2.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1550,7 +1550,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.2.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1612,7 +1612,7 @@
         "guidance": "A successful response with unknown facts is a completed result, not a reason to retry. Respect explicit unavailable errors and retry guidance."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/postal/help",
+        "help": "https://api.parseapi.com/version/2.2.0/postal/help",
         "guide": "https://parseapi.com/docs/postal"
       }
     },
@@ -1671,8 +1671,8 @@
       },
       "errors": {
         "400": "Invalid controls or cursor from another query/catalog; restart pagination when the edition changes",
-        "409": "ambiguous_city under ambiguity=error; bounded safe candidates without Deep",
         "404": "City ID or name is not present in the serving catalog",
+        "409": "ambiguous_city under ambiguity=error; bounded safe candidates without Deep",
         "503": "Required catalog or admitted spelling index unavailable"
       },
       "billing": {
@@ -1722,7 +1722,7 @@
         ]
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/city/help",
+        "help": "https://api.parseapi.com/version/2.2.0/city/help",
         "guide": "https://parseapi.com/docs/city",
         "selection": "https://parseapi.com/docs/city#choose-a-city",
         "continuity": "https://parseapi.com/docs/city#stable-ids"
@@ -1829,7 +1829,7 @@
         "guidance": "Do not infer a retry from null. Repeated completed checks consume additional verification units; a transport failure does not prove the previous attempt was unbilled. DNS failures can return 503 before mailbox verification."
       },
       "docs": {
-        "help": "https://api.parseapi.com/version/2.1.0/email/help",
+        "help": "https://api.parseapi.com/version/2.2.0/email/help",
         "guide": "https://parseapi.com/docs/email"
       }
     }

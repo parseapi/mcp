@@ -20,7 +20,7 @@ for (const transport of ['stdio','http']) for (const mode of ['full','compact'])
 			assert.deepEqual(body(result),payload);
 			assert.equal(calls.at(-1).url.pathname,path);
 			assert.deepEqual(Object.fromEntries(calls.at(-1).url.searchParams),Object.fromEntries(Object.entries(expected).map(([k,v])=>[k,String(v)])));
-			assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.1.0');
+			assert.equal(new Headers(calls.at(-1).init.headers).get('X-API-Version'),'2.2.0');
 		}
 		for(const [operation,args,expected] of [
 			['city_list',{}, {browse:'true',}],

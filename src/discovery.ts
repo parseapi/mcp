@@ -99,7 +99,7 @@ export function registerDiscovery(server: McpServer, operations: Map<string, Cat
 	if (mode !== 'compact') return;
 	server.registerTool('lookup', {
 		title: 'Run a ParseAPI lookup',
-		description: 'Run one ParseAPI operation found with discover. Pass its exact name and arguments. Uses the same validation, API 2.0.0 contract, credentials and billing as the named lookup. Reads can consume pooled or paid units. Ordinary lookups can retry twice, metered checks default to no retries.',
+		description: 'Run one ParseAPI operation found with discover. Pass its exact name and arguments. Uses the same validation, API 2.2.0 contract, credentials and billing as the named lookup. Reads can consume pooled or paid units. Ordinary lookups can retry twice, metered checks default to no retries.',
 		inputSchema: z.object({ operation: z.string().min(1).max(64), arguments: object }),
 		annotations: { readOnlyHint: true, idempotentHint: false },
 	}, async (args, context) => {
